@@ -1,0 +1,86 @@
+{
+    "DailyRewardsTask": {
+        "doc": "$daily_rewards_task_doc",
+        "next": [
+            "DailyRewardsMail",
+            "DailyRewardsQuest",
+            "DailyRewardsEnd"
+        ]
+    },
+    "DailyRewardsMail": {
+        "desc": "庭院：进入邮件",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "邮件"
+                // TODO(实测): 补充邮件入口 roi；若无文字请改用模板匹配
+            }
+        },
+        "action": "Click",
+        "post_delay": 1000,
+        "next": [
+            "DailyRewardsClaimAllMail",
+            "[JumpBack]CommonClose"
+        ]
+    },
+    "DailyRewardsClaimAllMail": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "一键领取",
+                    "全部领取"
+                ]
+            }
+        },
+        "action": "Click",
+        "post_delay": 800,
+        "next": [
+            "[JumpBack]CommonRewardPopup",
+            "[JumpBack]CommonConfirm",
+            "DailyRewardsQuest"
+        ]
+    },
+    "DailyRewardsQuest": {
+        "desc": "打开任务界面",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "任务",
+                    "花合战"
+                ]
+                // TODO(实测): 补充庭院任务入口 roi
+            }
+        },
+        "action": "Click",
+        "post_delay": 1000,
+        "next": [
+            "DailyRewardsClaim",
+            "[JumpBack]CommonClose"
+        ]
+    },
+    "DailyRewardsClaim": {
+        "desc": "反复领取当前页所有可领奖励",
+        "max_hit": 30,
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "领取",
+                    "一键领取"
+                ]
+            }
+        },
+        "action": "Click",
+        "post_delay": 600,
+        "next": [
+            "[JumpBack]CommonRewardPopup",
+            "DailyRewardsClaim",
+            "DailyRewardsEnd"
+        ]
+    },
+    "DailyRewardsEnd": {
+        "desc": "没有可领取项时结束"
+    }
+}

@@ -1,0 +1,490 @@
+{
+    "task": [
+        {
+            "name": "mitama",
+            "label": "$mitama_task",
+            "entry": "MitamaTask",
+            "option": [
+                "选择关卡",
+                "自定义作战次数",
+                "开启加成",
+                "更换队伍"
+                // "是否组队"
+                // "掉落统计上报"
+            ],
+            "description": "$mitama_task_doc"
+        }
+    ],
+    "option": {
+        "选择关卡": {
+            "type": "select",
+            "label": "选择关卡",
+            "default_case": "魂B(虚无)",
+            "cases": [
+                {
+                    "name": "魂十(拾层)",
+                    "pipeline_override": {
+                        "MitamaSelectBaqin": {
+                            "recognition": {
+                                "param": {
+                                    "expected": [
+                                        "拾层"
+                                    ]
+                                }
+                            }
+                        },
+                        "MitamaTask": {
+                            "action": {
+                                "param": {
+                                    "custom_action_param": {
+                                        "stage_name": "魂十(拾层)"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "魂土(悲鸣)",
+                    "pipeline_override": {
+                        "MitamaSelectBaqin": {
+                            "recognition": {
+                                "param": {
+                                    "expected": [
+                                        "悲鸣"
+                                    ]
+                                }
+                            }
+                        },
+                        "MitamaTask": {
+                            "action": {
+                                "param": {
+                                    "custom_action_param": {
+                                        "stage_name": "魂土(悲鸣)"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "魂王(神罚)",
+                    "pipeline_override": {
+                        "MitamaSelectBaqin": {
+                            "recognition": {
+                                "param": {
+                                    "expected": [
+                                        "神罚"
+                                    ]
+                                }
+                            }
+                        },
+                        "MitamaTask": {
+                            "action": {
+                                "param": {
+                                    "custom_action_param": {
+                                        "stage_name": "魂王(神罚)"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "魂B(虚无)",
+                    "pipeline_override": {
+                        "MitamaSelectBaqin": {
+                            "recognition": {
+                                "param": {
+                                    "expected": [
+                                        "虚无"
+                                    ]
+                                }
+                            }
+                        },
+                        "MitamaTask": {
+                            "action": {
+                                "param": {
+                                    "custom_action_param": {
+                                        "stage_name": "魂B(虚无)"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "自定义作战次数": {
+            "type": "switch",
+            "label": "自定义作战次数",
+            "default_case": "Yes",
+            "cases": [
+                {
+                    "name": "No",
+                    "pipeline_override": {}
+                },
+                {
+                    "name": "Yes",
+                    "pipeline_override": {},
+                    "option": [
+                        "御魂作战次数"
+                    ]
+                }
+            ],
+            "description": "关闭时会清空体力"
+        },
+        "御魂作战次数": {
+            "type": "input",
+            "label": "次数",
+            "inputs": [
+                {
+                    "name": "作战次数",
+                    "pipeline_type": "int",
+                    "default": "30",
+                    "pattern_msg": "请输入作战次数，如30",
+                    "verify": "^(0|[1-9]\\d*)$",
+                    "description": "请输入作战次数，如30"
+                }
+            ],
+            "pipeline_override": {
+                "MitamaTask": {
+                    "action": {
+                        "param": {
+                            "custom_action_param": {
+                                "target_count": "{作战次数}"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "开启加成": {
+            "type": "switch",
+            "label": "开启加成",
+            "default_case": "Yes",
+            "cases": [
+                {
+                    "name": "No",
+                    "pipeline_override": {
+                        "MitamaEnableBuff": {
+                            "enabled": false
+                        },
+                        "MitamaDisableBuff": {
+                            "enabled": false
+                        }
+                    }
+                },
+                {
+                    "name": "Yes",
+                    "pipeline_override": {
+                        "MitamaEnableBuff": {
+                            "enabled": true
+                        },
+                        "MitamaDisableBuff": {
+                            "enabled": true
+                        }
+                    }
+                }
+            ]
+        },
+        "更换队伍": {
+            "type": "switch",
+            "label": "更换队伍",
+            "default_case": "No",
+            "cases": [
+                {
+                    "name": "No",
+                    "pipeline_override": {
+                        "MitamaPreset": {
+                            "enabled": false
+                        }
+                    }
+                },
+                {
+                    "name": "Yes",
+                    "pipeline_override": {
+                        "MitamaPreset": {
+                            "enabled": true
+                        }
+                    },
+                    "option": [
+                        "队伍选择"
+                    ]
+                }
+            ]
+        },
+        "队伍选择": {
+            "type": "input",
+            "label": "队伍选择",
+            "inputs": [
+                {
+                    "name": "分组",
+                    "pipeline_type": "string",
+                    "default": "默认分组",
+                    "pattern_msg": "分组名称",
+                    "description": "分组名称"
+                },
+                {
+                    "name": "队伍",
+                    "pipeline_type": "string",
+                    "default": "默认队伍",
+                    "pattern_msg": "队伍名称",
+                    "description": "队伍名称"
+                }
+            ],
+            "pipeline_override": {
+                "MitamaSelectTeamGroupConfigured": {
+                    "recognition": {
+                        "param": {
+                            "expected": [
+                                "{分组}"
+                            ]
+                        }
+                    }
+                },
+                "MitamaCheckTeamGroupSelected": {
+                    "recognition": {
+                        "param": {
+                            "all_of": [
+                                {
+                                    "sub_name": "MitamaSelectedTeamGroupText",
+                                    "recognition": {
+                                        "type": "OCR",
+                                        "param": {
+                                            "roi": [
+                                                411,
+                                                161,
+                                                112,
+                                                372
+                                            ],
+                                            "expected": [
+                                                "{分组}"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "recognition": {
+                                        "type": "ColorMatch",
+                                        "param": {
+                                            "roi": "MitamaSelectedTeamGroupText",
+                                            "method": 4,
+                                            "lower": [
+                                                235,
+                                                175,
+                                                80
+                                            ],
+                                            "upper": [
+                                                255,
+                                                230,
+                                                175
+                                            ],
+                                            "count": 50
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                },
+                "MitamaSelectPresetTeamConfigured": {
+                    "recognition": {
+                        "param": {
+                            "expected": [
+                                "{队伍}"
+                            ]
+                        }
+                    }
+                },
+                "MitamaClickPresetTeamIcon": {
+                    "recognition": {
+                        "param": {
+                            "all_of": [
+                                {
+                                    "sub_name": "MitamaPresetTeamText",
+                                    "recognition": {
+                                        "type": "OCR",
+                                        "param": {
+                                            "roi": [
+                                                273,
+                                                59,
+                                                1007,
+                                                559
+                                            ],
+                                            "expected": [
+                                                "{队伍}"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "recognition": {
+                                        "type": "TemplateMatch",
+                                        "param": {
+                                            "roi": "MitamaPresetTeamText",
+                                            "roi_offset": [
+                                                0,
+                                                -25,
+                                                500,
+                                                50
+                                            ],
+                                            "template": "Mitama/MitamaPresetTeam.png",
+                                            "threshold": 0.8
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "是否组队": {
+            "type": "switch",
+            "label": "是否组队",
+            "default_case": "No",
+            "cases": [
+                {
+                    "name": "No",
+                    "pipeline_override": {
+                        "MitamaBattleModeDestination": {
+                            "next": [
+                                "MitamaChallenge"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Yes",
+                    "pipeline_override": {},
+                    "option": [
+                        "身份",
+                        "队友"
+                    ]
+                }
+            ]
+        },
+        "身份": {
+            "type": "select",
+            "label": "身份",
+            "default_case": "队长",
+            "cases": [
+                {
+                    "name": "队长",
+                    "pipeline_override": {
+                        "MitamaBattleModeDestination": {
+                            "next": [
+                                "MitamaTeamLeader"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "队员",
+                    "pipeline_override": {
+                        "MitamaBattleModeDestination": {
+                            "next": [
+                                "MitamaTeamMember"
+                            ]
+                        },
+                        "MitamaCountDetermine": {
+                            "action": {
+                                "param": {
+                                    "custom_action_param": {
+                                        "continue_node": "MitamaMemberReady"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "队友": {
+            "type": "input",
+            "label": "队友",
+            "inputs": [
+                {
+                    "name": "队友昵称",
+                    "pipeline_type": "string",
+                    "default": "",
+                    "pattern_msg": "请输入队友昵称",
+                    "description": "请输入队友昵称"
+                }
+            ],
+            "pipeline_override": {
+                "MitamaFindTeammate": {
+                    "recognition": {
+                        "param": {
+                            "expected": [
+                                "{队友昵称}"
+                            ]
+                        }
+                    }
+                },
+                "MitamaFindLeaderInvite": {
+                    "recognition": {
+                        "param": {
+                            "expected": [
+                                "{队友昵称}"
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "掉落统计上报": {
+            "type": "switch",
+            "label": "掉落统计上报",
+            "default_case": "No",
+            "cases": [
+                {
+                    "name": "No",
+                    "pipeline_override": {
+                        "MitamaDropStatistics": {
+                            "enabled": false
+                        }
+                    }
+                },
+                {
+                    "name": "Yes",
+                    "pipeline_override": {
+                        "MitamaDropStatistics": {
+                            "enabled": true
+                        }
+                    },
+                    "option": [
+                        "掉落上报地址"
+                    ]
+                }
+            ],
+            "description": "默认仅在本地日志统计。开启后向配置地址 POST 结构化掉落数据，不上传截图、设备信息或玩家标识。"
+        },
+        "掉落上报地址": {
+            "type": "input",
+            "label": "掉落上报地址",
+            "inputs": [
+                {
+                    "name": "掉落上报地址",
+                    "pipeline_type": "string",
+                    "default": "",
+                    "pattern_msg": "请输入 http:// 或 https:// 开头的上报接口地址",
+                    "verify": "^https?://.+$",
+                    "description": "接收 JSON POST 的接口地址"
+                }
+            ],
+            "pipeline_override": {
+                "MitamaTask": {
+                    "action": {
+                        "param": {
+                            "custom_action_param": {
+                                "drop_report_url": "{掉落上报地址}"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

@@ -1,6 +1,7 @@
-name: install
+name: Build and Release MaaOnmyoji
 
 env:
+  PROJECT_NAME: MaaOnmyoji
   # 版本控制：
   # - 设置 VERSION 为空字符串时，下载 latest 版本
   # - 设置 VERSION 为具体版本号时（如 v1.2.3），下载指定版本
@@ -11,20 +12,6 @@ on:
   push:
     tags:
       - "v*"
-    branches:
-      - "**"
-    paths:
-      - ".github/workflows/install.yml"
-      - "assets/**"
-      - "**.py"
-  pull_request:
-    branches:
-      - "**"
-    paths:
-      - ".github/workflows/install.yml"
-      - "assets/**"
-      - "**.py"
-  workflow_dispatch:
 
 jobs:
   meta:
@@ -69,17 +56,55 @@ jobs:
 
   install:
     needs: meta
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.runner }}
     strategy:
       matrix:
-        os: [win, macos, linux, android]
-        arch: [aarch64, x86_64]
+        include:
+          - os: win
+            arch: x86_64
+            runner: windows-latest
+          - os: win
+            arch: aarch64
+            runner: windows-11-arm
+          - os: macos
+            arch: x86_64
+            runner: macos-15-intel
+          - os: macos
+            arch: aarch64
+            runner: macos-latest
+          - os: linux
+            arch: x86_64
+            runner: ubuntu-latest
+          - os: linux
+            arch: aarch64
+            runner: ubuntu-24.04-arm
+          - os: android
+            arch: x86_64
+            runner: ubuntu-latest
+          - os: android
+            arch: aarch64
+            runner: ubuntu-24.04-arm
       fail-fast: false
 
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: true
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      - uses: astral-sh/setup-uv@v7
+
+      - name: Cache Python release dependencies
+        if: matrix.os != 'android'
+        uses: actions/cache@v4
+        with:
+          path: .cache
+          key: python-release-${{ runner.os }}-${{ matrix.arch }}-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            python-release-${{ runner.os }}-${{ matrix.arch }}-
 
       - name: Download MaaFramework
         uses: robinraju/release-downloader@v1
@@ -119,12 +144,14 @@ jobs:
       
       - name: Install
         shell: bash
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
           if [[ "${{ matrix.os }}" != "android" ]]; then
             if [ -d "MFA" ]; then
               echo "Copying MFA files to install directory..."
               mkdir -p install
-              rsync -av --ignore-existing MFA/ install/
+              cp -a -n MFA/. install/
               echo "MFA files copied successfully."
             else
               echo "MFA directory not found, skipping copy."
@@ -138,10 +165,30 @@ jobs:
           python ./install.py ${{ needs.meta.outputs.tag }} ${{ matrix.os }} ${{ matrix.arch }}
           cd ..
 
+      - name: Apply app icon
+        if: matrix.os == 'win'
+        shell: bash
+        run: |
+          if [[ ! -f "favicon.ico" ]]; then
+            echo "[ERR] Project icon not found: favicon.ico"
+            exit 1
+          fi
+          if [[ ! -f rcedit.exe ]]; then
+            curl -fsSL https://github.com/electron/rcedit/releases/download/v2.0.0/rcedit-x64.exe -o rcedit.exe
+          fi
+          exe="install/MaaOnmyoji.exe"
+          if [[ ! -f "$exe" ]]; then
+            echo "[ERR] Windows executable not found: $exe"
+            exit 1
+          fi
+          ./rcedit.exe "$exe" --set-icon "favicon.ico"
+          echo "[OK] Applied Windows executable icon: $exe"
+
       - uses: actions/upload-artifact@v4
         with:
-          name: MaaXXX-${{ matrix.os }}-${{ matrix.arch }}
+          name: ${{ env.PROJECT_NAME }}-${{ matrix.os }}-${{ matrix.arch }}
           path: "install"
+          retention-days: ${{ needs.meta.outputs.is_release == 'true' && 90 || 3 }}
 
   changelog:
     name: Generate changelog
@@ -193,11 +240,10 @@ jobs:
           prerelease: ${{ needs.meta.outputs.is_prerelease == 'true' }}
 
         # Mirror酱为第三方分发服务，新项目默认关闭
-        # 若有需要请联系 Mirror酱 开通，直接自行开启是无法使用的
+        # 若有需要请联系 Mirror酱开通，直接自行开启是无法使用的
         # https://mirrorchyan.com/
       - name: Trigger MirrorChyanUploading
-        if: false
-        # if: ${{ github.repository_owner == 'MaaXYZ' }}
+        if: ${{ github.repository_owner == 'MaaXYZ' }}
         shell: bash
         run: |
           gh workflow run --repo $GITHUB_REPOSITORY mirrorchyan_release.yml -f tag=${{ needs.meta.outputs.tag }}

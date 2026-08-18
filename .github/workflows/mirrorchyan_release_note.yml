@@ -10,8 +10,8 @@ on:
       tag:
         default: ''
         required: false
-  release:
-    types: [edited] # [edited, published]
+  # release:
+  #   types: [edited, published]
 
 jobs:
   mirrorchyan:

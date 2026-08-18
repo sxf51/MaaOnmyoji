@@ -1,0 +1,208 @@
+{
+    "CommonActivityTask": {
+        "desc": "通用：重复挑战",
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "TargetCountInit",
+                "custom_action_param": {
+                    "target_count": -1
+                }
+            }
+        },
+        "next": [
+            "CommonActivityInsufficientAP",
+            "CommonActivityChallenge",
+            "[JumpBack]CommonRefuseBounty",
+            "[JumpBack]CommonCutscene",
+            "[JumpBack]CommonActivityPrepare",
+            "[JumpBack]CommonClickAuto",
+            "[JumpBack]CommonActivityChallenging",
+            "CommonActivityBattleResult"
+        ]
+    },
+    "CommonActivityChallenge": {
+        "desc": "重复挑战：点击挑战",
+        "timeout": 180000,
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    1067,
+                    564,
+                    212,
+                    154
+                ],
+                "expected": [
+                    "挑战",
+                    "搜寻",
+                    "开启"
+                ]
+            }
+        },
+        "action": "Click",
+        "post_delay": 500,
+        "next": [
+            "CommonActivityInsufficientAP",
+            "CommonActivityChallenge",
+            "[JumpBack]CommonRefuseBounty",
+            "[JumpBack]CommonCutscene",
+            "[JumpBack]CommonActivityPrepare",
+            "[JumpBack]CommonClickAuto",
+            "[JumpBack]CommonActivityChallenging",
+            "CommonActivityBattleResult"
+        ]
+    },
+    "CommonActivityPrepare": {
+        "desc": "重复挑战：准备",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    1127,
+                    564,
+                    101,
+                    50
+                ],
+                "expected": [
+                    "准备"
+                ]
+            }
+        },
+        "action": "Click",
+        "next": []
+    },
+    "CommonActivityChallenging": {
+        "desc": "重复挑战：挑战中",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    692,
+                    676,
+                    574,
+                    43
+                ],
+                "expected": [
+                    "妖术",
+                    "普攻"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": []
+    },
+    "CommonActivityBattleResult": {
+        "desc": "重复挑战：点击屏幕继续",
+        "timeout": 20000,
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    545,
+                    669,
+                    189,
+                    44
+                ],
+                "expected": [
+                    "点击屏幕继续"
+                ]
+            }
+        },
+        "action": "Click",
+        "next": [
+            "[JumpBack]CommonRefuseBounty",
+            "CommonActivityBattleResult",
+            "[JumpBack]CommonCutscene",
+            "CommonActivityFinishOnce"
+        ]
+    },
+    "CommonActivityFinishOnce": {
+        "desc": "重复挑战：完成一次挑战",
+        "timeout": 20000,
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    1067,
+                    564,
+                    212,
+                    154
+                ],
+                "expected": [
+                    "挑战",
+                    "搜寻"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "CommonActivityComplete"
+        ]
+    },
+    "CommonActivityComplete": {
+        "desc": "重复挑战：记录一次成功挑战",
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "TargetCountProgress",
+                "custom_action_param": {
+                    "count": 1
+                }
+            }
+        },
+        "next": [
+            "CommonActivityCountDetermine"
+        ]
+    },
+    "CommonActivityCountDetermine": {
+        "desc": "重复挑战：判断是否继续挑战",
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "TargetCountDetermine",
+                "custom_action_param": {
+                    "decision_node": "CommonActivityCountDetermine",
+                    "continue_node": "CommonActivityChallenge",
+                    "finish_node": "CommonActivityFinish"
+                }
+            }
+        },
+        "next": [
+            "[JumpBack]CommonActivityBattleResult",
+            "CommonActivityChallenge"
+        ]
+    },
+    "CommonActivityInsufficientAP": {
+        "desc": "重复挑战：体力或代币不足时结束",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    163,
+                    109,
+                    939,
+                    440
+                ],
+                "expected": [
+                    "不足",
+                    "购买",
+                    "限购"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "CommonActivityFinish"
+        ]
+    },
+    "CommonActivityFinish": {
+        "desc": "重复挑战：达到目标次数后结束",
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "TargetCountFinish"
+            }
+        }
+    }
+}

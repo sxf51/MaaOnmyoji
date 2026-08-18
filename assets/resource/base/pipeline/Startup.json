@@ -1,0 +1,362 @@
+{
+    "StartupTask": {
+        "desc": "启动游戏，并依次处理更新、资源下载、启动动画、区服选择和登录",
+        "action": {
+            "type": "StartApp",
+            "param": {
+                "package": "com.netease.onmyoji.wyzymnqsd_cps"
+            }
+        },
+        "post_delay": 3000,
+        "next": [
+            "Startup"
+        ],
+        "on_error": [
+            "SelectPackage"
+        ]
+    },
+    "Startup": {
+        "desc": "启动流程总入口",
+        "post_wait_freezes": 300,
+        "timeout": 60000,
+        "next": [
+            "StartupHome",
+            "[JumpBack]StartupUpdateConfirm",
+            "[JumpBack]StartupDownloading",
+            "startupMain",
+            "[JumpBack]ReturnMainHomeButton",
+            "[JumpBack]ReturnMainBackButton",
+            "[JumpBack]CommonNetworkRetry",
+            "[JumpBack]StartupSkipAnimation"
+        ]
+    },
+    "StartupUpdateConfirm": {
+        "desc": "检查更新后出现的更新、下载或重试按钮",
+        "max_hit": 10,
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    400,
+                    360,
+                    480,
+                    260
+                ],
+                "expected": [
+                    "更新",
+                    "下载",
+                    "确认",
+                    "重试"
+                ]
+            }
+        },
+        "action": "Click",
+        "post_delay": 1500
+    },
+    "StartupDownloading": {
+        "desc": "等待更新或资源下载完成",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    31,
+                    606,
+                    1217,
+                    110
+                ],
+                "expected": [
+                    "正在连接服务器",
+                    "资源",
+                    "加载中",
+                    "加载进度"
+                ]
+            }
+        },
+        "post_wait_freezes": {
+            "time": 1000,
+            "target": [
+                240,
+                570,
+                800,
+                140
+            ]
+        },
+        "post_delay": 1000
+    },
+    "StartupSkipAnimation": {
+        "desc": "点击屏幕跳过启动动画",
+        "max_hit": 5,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    671,
+                    219,
+                    395,
+                    362
+                ]
+            }
+        },
+        "post_delay": 1500
+    },
+    "startupMain": {
+        "desc": "登录界面",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    456,
+                    506,
+                    389,
+                    118
+                ],
+                "expected": [
+                    "切换"
+                ]
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "DisableNode",
+                "custom_action_param": {
+                    "node_name": "StartupSkipAnimation"
+                }
+            }
+        },
+        "next": [
+            "StartupHome",
+            "[JumpBack]StartupCheckServer",
+            "[JumpBack]StartupOpenServerList",
+            "[JumpBack]StartupSelectServer",
+            "[JumpBack]StartupDownloading",
+            "[JumpBack]CommonNetworkRetry"
+        ]
+    },
+    "StartupOpenServerList": {
+        "desc": "切换按钮",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    456,
+                    506,
+                    389,
+                    118
+                ],
+                "expected": [
+                    "切换"
+                ]
+            }
+        },
+        "action": "Click",
+        "post_delay": 8000
+    },
+    "StartupSelectServer": {
+        "desc": "选择区域",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    160,
+                    100,
+                    960,
+                    520
+                ],
+                "expected": [
+                    "[一-龥]+"
+                ]
+            }
+        },
+        "action": "Click",
+        "post_delay": 2000
+    },
+    "StartupCheckServer": {
+        "desc": "检查是否已选择区服",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    454,
+                    509,
+                    225,
+                    35
+                ],
+                "expected": [
+                    "[一-龥]+"
+                ]
+            }
+        },
+        "next": [
+            "StartupHome",
+            "StartupEnterGame",
+            "StartupDownloading"
+        ]
+    },
+    "StartupEnterGame": {
+        "desc": "选定区服后点击进入游戏",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    430,
+                    500,
+                    420,
+                    180
+                ],
+                "expected": [
+                    "进入游戏"
+                ]
+            }
+        },
+        "action": "Click",
+        "post_delay": 2000
+    },
+    "StartupHome": {
+        "desc": "通过颜色标志、设备时间和玩家身份共同判断主界面",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    {
+                        "recognition": {
+                            "type": "ColorMatch",
+                            "param": {
+                                "roi": [
+                                    0,
+                                    10,
+                                    24,
+                                    6
+                                ],
+                                "lower": [
+                                    65,
+                                    44,
+                                    40
+                                ],
+                                "upper": [
+                                    80,
+                                    55,
+                                    57
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "recognition": {
+                            "type": "Custom",
+                            "param": {
+                                "custom_recognition": "StartupHomeIdentity"
+                            }
+                        }
+                    }
+                ],
+                "box_index": 0
+            }
+        }
+    },
+    "StartupHomeTimeOCR": {
+        "desc": "读取主界面左上角时间，供 StartupHomeIdentity 校验",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    198,
+                    5,
+                    67,
+                    22
+                ],
+                "expected": [
+                    "\\d{1,2}\\s*[:：.]\\s*\\d{2}"
+                ]
+            }
+        }
+    },
+    "StartupHomeNicknameOCR": {
+        "desc": "读取主界面玩家昵称，每次 Agent 运行对同一控制器只成功识别一次",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    124,
+                    28,
+                    172,
+                    29
+                ]
+            }
+        }
+    },
+    "ReturnMain": {
+        "desc": "回到主界面",
+        "max_hit": 20,
+        "next": [
+            "StartupHome",
+            "[JumpBack]ReturnMainHomeButton",
+            "[JumpBack]ReturnMainBackButton",
+            "[JumpBack]CommonClose",
+            "[JumpBack]CommonConfirm"
+        ]
+    },
+    "ReturnMainHomeButton": {
+        "desc": "回到主界面",
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    5,
+                    5,
+                    400,
+                    90
+                ],
+                "template": "Home.png",
+                "threshold": 0.8
+            }
+        },
+        "action": "Click",
+        "post_delay": 1000
+    },
+    "ReturnMainBackButton": {
+        "desc": "返回上一级",
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    5,
+                    5,
+                    400,
+                    90
+                ],
+                "template": "Back.png",
+                "threshold": 0.8
+            }
+        },
+        "action": "Click",
+        "post_delay": 1000
+    },
+    "ExitXianTing": {
+        "desc": "退出闲庭",
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "roi": [
+                    41,
+                    38,
+                    36,
+                    33
+                ],
+                "template": "HomeBack.png",
+                "threshold": 0.8
+            }
+        },
+        "action": "Click",
+        "post_delay": 1000
+    },
+    "SelectPackage": {
+        "desc": "默认包名启动失败时列出可能的阴阳师包名",
+        "action": {
+            "type": "Command",
+            "param": {
+                "exec": "adb shell pm list packages | grep onmyoji"
+            }
+        }
+    }
+}

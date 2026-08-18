@@ -1,0 +1,10 @@
+{
+    "ShutdownTask": {
+        "action": {
+            "type": "StopApp",
+            "param": {
+                "package": "com.netease.onmyoji.wyzymnqsd_cps"
+            }
+        }
+    }
+}

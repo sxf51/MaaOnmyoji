@@ -1,0 +1,10 @@
+{
+    "task": [
+        {
+            "name": "daily_rewards",
+            "label": "$daily_rewards_task",
+            "entry": "DailyRewardsTask",
+            "description": "$daily_rewards_task_doc"
+        }
+    ]
+}

@@ -1,0 +1,234 @@
+{
+    "ExampleBezierSwipe": {
+        "doc": "贝塞尔曲线滑动示例：将一条曲线拆分为多段连续直线移动",
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "BezierSwipe",
+                "custom_action_param": {
+                    // 起点支持固定坐标 [x, y]，也支持在线段 line 上均匀随机取点
+                    // 坐标均以 1280 × 720 基准分辨率为准
+                    // "begin": {
+                    //     "line": [
+                    //         [
+                    //             260,
+                    //             600
+                    //         ],
+                    //         [
+                    //             340,
+                    //             600
+                    //         ]
+                    //     ]
+                    // },
+                    "begin": [
+                        989,
+                        343,
+                        105,
+                        115
+                    ],
+                    // 矩形区域格式为 [x, y, width, height]，终点会在区域内均匀随机选取
+                    // 如果需要固定终点，则使用两个元素的 [x, y]
+                    "end": [
+                        374,
+                        324,
+                        118,
+                        118
+                    ],
+                    // 目标总滑动时长，单位毫秒；实际时长可能略受控制器通信开销影响
+                    "duration": 300,
+                    // 随机延长时长的上限，单位毫秒；实际目标时长为 600～800 毫秒
+                    "duration_random": 73,
+                    // 曲线拆分的直线段数；数值越大越平滑，同时触摸移动调用次数也越多
+                    "segments": 24,
+                    // 曲线相对起终点直线的法向偏移量，单位像素；负数会向相反方向弯曲
+                    "deviation": 40,
+                    // 是否使用慢起步、快中段、慢收尾的 smoothstep 缓动
+                    "easing": true,
+                    // 随机数种子，保证每次执行的随机结果一致；不同种子会导致不同的随机结果
+                    "random_seed": 42
+                }
+            }
+        }
+    },
+    "ExampleDisableNode": {
+        "doc": "DisableNode 示例：在本次任务运行期间禁用一个或多个 pipeline 节点",
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "DisableNode",
+                "custom_action_param": {
+                    // 批量禁用时使用 nodes 数组；被禁用的节点之后不会再参与识别和执行
+                    "nodes": [
+                        "ExampleDisabledTargetA",
+                        "ExampleDisabledTargetB"
+                    ]
+                    // 只禁用一个节点时也可以改用："node_name": "ExampleDisabledTargetA"
+                }
+            }
+        }
+    },
+    "ExampleNodeOverride": {
+        "doc": "NodeOverride 示例：运行时覆盖 pipeline 节点配置",
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "NodeOverride",
+                // custom_action_param 的内容会原样传给 context.override_pipeline
+                "custom_action_param": {
+                    "ExampleOverrideTarget": {
+                        // 此处可覆盖 enabled、next、recognition、action 等节点字段
+                        "enabled": false,
+                        "next": [
+                            "ExampleOverrideFallback"
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    "ExampleResetCount": {
+        "doc": "ResetCount 示例：清除节点在当前任务中的命中计数",
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ResetCount",
+                "custom_action_param": {
+                    // nodes 必须是非空数组，常用于需要重新计算次数的循环流程
+                    "nodes": [
+                        "ExampleCountedNodeA",
+                        "ExampleCountedNodeB"
+                    ],
+                    // false：个别节点清除失败仍返回成功；true：任一节点失败即返回失败
+                    "strict": false
+                }
+            }
+        }
+    },
+    "ExampleSubTask": {
+        "doc": "SubTask 示例：依次调度 enabled 分支；分支完成后 disable 自身并回环",
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "SubTask",
+                "custom_action_param": {
+                    // 每次进入 SubTask 时，按顺序选择第一个仍为 enabled 的节点
+                    "sub": [
+                        "ExampleSubTaskA",
+                        "ExampleSubTaskB"
+                    ],
+                    // sub 中的节点全部 disabled 后，明确进入完成分支；不要依赖运行时读取当前节点的 next
+                    "completion_next": [
+                        "ExampleSubTaskDestination"
+                    ],
+                    // 第一次进入后开始计时，所有手动回环共用该总时限
+                    "timeout": 180000
+                }
+            }
+        },
+        // 只有 sub 中所有节点都 disabled 后才会进入这里
+        "next": [
+            "ExampleSubTaskDestination"
+        ]
+    },
+    "ExampleSubTaskA": {
+        "action": "DoNothing",
+        "next": [
+            "ExampleSubTaskASecond"
+        ]
+    },
+    "ExampleSubTaskASecond": {
+        "action": "DoNothing",
+        "next": [
+            "ExampleSubTaskADone"
+        ]
+    },
+    "ExampleSubTaskADone": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "DisableNode",
+                "custom_action_param": {
+                    "node_name": "ExampleSubTaskA"
+                }
+            }
+        },
+        "next": [
+            "ExampleSubTask"
+        ]
+    },
+    "ExampleSubTaskB": {
+        "action": "DoNothing",
+        "next": [
+            "ExampleSubTaskBDone"
+        ]
+    },
+    "ExampleSubTaskBDone": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "DisableNode",
+                "custom_action_param": {
+                    "node_name": "ExampleSubTaskB"
+                }
+            }
+        },
+        "next": [
+            "ExampleSubTask"
+        ]
+    },
+    "ExampleSubTaskDestination": {
+        "action": "DoNothing"
+    },
+    "ExampleTimeWindowRoute": {
+        "doc": "TimeWindowRoute 示例：按北京时间选择活动中或活动外的后续节点",
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "TimeWindowRoute",
+                "custom_action_param": {
+                    // 将 decision_node 的 next 动态替换为 active_node 或 inactive_node
+                    "decision_node": "ExampleTimeWindowDecision",
+                    // ISO 8601 时间不带时区时按北京时间（UTC+8）解释
+                    "start": "2026-07-18T08:00:00",
+                    "end": "2026-07-25T23:59:59",
+                    // 当前北京时间位于 [start, end) 时选择该节点
+                    "active_node": "ExampleTimeWindowActive",
+                    // 不在时间窗口内时选择该节点
+                    "inactive_node": "ExampleTimeWindowInactive"
+                }
+            }
+        },
+        // 路由动作执行后进入决策节点，再由被覆盖的 next 前往最终目标
+        "next": [
+            // "ExampleTimeWindowDecision"
+        ]
+    },
+    "ExampleOCRLog": {
+        "doc": "OCRLog 示例：截取当前画面，运行指定 OCR 节点并把识别文本写入日志",
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "OCRLog",
+                "custom_action_param": {
+                    // recognition 填写一个已配置 OCR recognition 的 pipeline 节点名
+                    "recognition": "ExampleOCRLogRecognition"
+                }
+            }
+        }
+    },
+    "ExampleOCRLogRecognition": {
+        "doc": "供 ExampleOCRLog 调用的 OCR 识别节点，请按实际界面修改 ROI 和识别参数",
+        "recognition": {
+            "type": "OCR",
+            // ROI 格式为 [x, y, width, height]，坐标基于 1280 × 720
+            "param": {
+                "roi": [
+                    0,
+                    0,
+                    1280,
+                    720
+                ]
+            }
+        }
+    }
+}

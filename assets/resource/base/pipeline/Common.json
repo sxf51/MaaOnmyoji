@@ -1,0 +1,159 @@
+{
+    "CommonCutscene": {
+        "desc": "通用过场图",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    545,
+                    669,
+                    189,
+                    44
+                ],
+                "expected": [
+                    "官网",
+                    "yys.163.com"
+                ]
+            }
+        }
+    },
+    "CommonConfirm": {
+        "desc": "通用取消弹窗",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "取消"
+                ]
+                // TODO: 限定到弹窗右下区域
+            }
+        },
+        "action": "Click",
+        "post_delay": 800
+    },
+    "CommonClose": {
+        "desc": "通用关闭按钮；坐标需按 1280x720 基准实测",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "关闭",
+                    "取消"
+                ]
+            }
+        },
+        "action": "Click",
+        "post_delay": 500
+    },
+    "CommonRewardPopup": {
+        "desc": "奖励弹窗",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "获得奖励",
+                    "奖励"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    640,
+                    650,
+                    1,
+                    1
+                ]
+                // TODO: 调整为空白处安全点击坐标
+            }
+        },
+        "post_delay": 800
+    },
+    "CommonInsufficientAP": {
+        "desc": "体力不足时正常结束当前玩法，不自动购买体力",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "体力不足",
+                    "勾玉购买",
+                    "购买体力"
+                ]
+            }
+        }
+    },
+    "CommonBattleFailed": {
+        "desc": "战斗失败后退出结算，交还给玩法节点重试",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "战斗失败",
+                    "失败"
+                ]
+            }
+        },
+        "action": "Click",
+        "post_delay": 1000
+    },
+    "CommonNetworkRetry": {
+        "desc": "网络异常重试",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "重新连接",
+                    "重试"
+                ]
+            }
+        },
+        "action": "Click",
+        "post_delay": 2000
+    },
+    "CommonRefuseBounty": {
+        "desc": "拒绝悬赏封印",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    556,
+                    146,
+                    145,
+                    55
+                ],
+                "expected": [
+                    "悬赏封印"
+                ]
+            }
+        },
+        "action": "Click",
+        "target": [
+            829,
+            493,
+            47,
+            51
+        ], // 接受：[829,395,49,48]
+        "post_delay": 800
+    },
+    "CommonClickAuto": {
+        "desc": "点击自动战斗",
+        "enabled": false, // 进入战斗后会有短暂的“手动”ui显示
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    7,
+                    522,
+                    165,
+                    190
+                ],
+                "expected": [
+                    "手动"
+                ]
+            }
+        },
+        "action": "Click",
+        "post_delay": 800
+    }
+}

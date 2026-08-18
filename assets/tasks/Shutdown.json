@@ -1,0 +1,9 @@
+{
+    "task": [
+        {
+            "name": "shutdown",
+            "label": "$shutdown_task",
+            "entry": "ShutdownTask"
+        }
+    ]
+}

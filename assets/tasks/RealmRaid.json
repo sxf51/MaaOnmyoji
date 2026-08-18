@@ -1,0 +1,10 @@
+{
+    "task": [
+        {
+            "name": "realm_raid",
+            "label": "$realm_raid_task",
+            "entry": "RealmRaidTask",
+            "description": "$realm_raid_task_doc"
+        }
+    ]
+}

@@ -38,5 +38,14 @@
     "[markdown]": {
         "editor.formatOnSave": true,
         "editor.defaultFormatter": "DavidAnson.vscode-markdownlint"
-    }
+    },
+    "python-envs.defaultEnvManager": "ms-python.python:venv",
+    "python-envs.workspaceSearchPaths": [
+        "./.venv"
+    ],
+    "python.defaultInterpreterPath": "${workspaceFolder}/.venv",
+    "python.analysis.extraPaths": [
+        "${workspaceFolder}/agent"
+    ],
+    "python.analysis.autoImportCompletions": true
 }

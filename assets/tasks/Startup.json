@@ -1,0 +1,48 @@
+{
+    "task": [
+        {
+            "name": "startup",
+            "label": "$startup_task",
+            "entry": "StartupTask",
+            "option": [
+                "startup_server"
+            ]
+        }
+    ],
+    "option": {
+        "startup_server": {
+            "type": "input",
+            "label": "区服",
+            "inputs": [
+                {
+                    "name": "server",
+                    "label": "目标区服",
+                    "pipeline_type": "string",
+                    "default": "[一-龥]+",
+                    "verify": "^.+$",
+                    "pattern_msg": "请输入你所在的区，例如：雀之灵"
+                }
+            ],
+            "pipeline_override": {
+                "StartupSelectServer": {
+                    "recognition": {
+                        "param": {
+                            "expected": [
+                                "{server}"
+                            ]
+                        }
+                    }
+                },
+                "StartupCheckServer": {
+                    "recognition": {
+                        "param": {
+                            "expected": [
+                                "{server}"
+                            ]
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

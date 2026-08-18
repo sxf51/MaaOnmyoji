@@ -1,0 +1,22 @@
+{
+    "project_name": "阴阳师小助手",
+    "project_title": "MaaOnmyoji · 阴阳师小助手",
+    "project_description": "阴阳师小助手。图像技术 + 模拟控制，解放双手！由 MaaFramework 强力驱动！",
+    "welcome_message": "欢迎使用 MaaOnmyoji!",
+    "contact_info": "QQ群: 1059393636",
+    "startup_task": "启动游戏",
+    "shutdown_task": "关闭游戏",
+    "mitama_task": "御魂",
+    "mitama_task_doc": "从庭院进入御魂副本并循环挑战；体力不足或达到次数后停止",
+    "common_activity_task": "通用重复挑战",
+    "common_activity_task_doc": "从当前活动挑战界面开始，循环挑战直到达到配置次数，其它循环的挑战任务也能用",
+    "current_activity_task": "当前活动挑战",
+    "current_activity_task_doc": "从当前活动挑战界面开始，循环挑战直到达到配置次数，其它循环的挑战任务也能用",
+    "battle_count": "挑战次数",
+    "exploration_task": "探索副本",
+    "exploration_task_doc": "从庭院进入探索，循环挑战当前选定章节",
+    "realm_raid_task": "结界突破",
+    "realm_raid_task_doc": "从庭院进入结界突破，依次挑战可用目标",
+    "daily_rewards_task": "领取日常奖励",
+    "daily_rewards_task_doc": "领取邮件、任务及常见活动入口中的可领取奖励"
+}

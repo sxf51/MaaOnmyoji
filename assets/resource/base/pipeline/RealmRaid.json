@@ -1,0 +1,119 @@
+{
+    "RealmRaidTask": {
+        "doc": "$realm_raid_task_doc",
+        "next": [
+            "[JumpBack]CommonConfirm",
+            "RealmRaidOpenExplore"
+        ]
+    },
+    "RealmRaidOpenExplore": {
+        "desc": "庭院：进入探索地图",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    597,
+                    118,
+                    156,
+                    118
+                ],
+                "expected": [
+                    "探索",
+                    "探",
+                    "索"
+                ]
+            }
+        },
+        "action": "Click",
+        "post_delay": 1500,
+        "next": [
+            "RealmRaidOpen"
+        ]
+    },
+    "RealmRaidOpen": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    41,
+                    666,
+                    1053,
+                    47
+                ],
+                "expected": "结界突破"
+            }
+        },
+        "action": "Click",
+        "post_delay": 1200,
+        "next": [
+            "RealmRaidSelectTarget",
+            "[JumpBack]CommonConfirm"
+        ]
+    },
+    "RealmRaidSelectTarget": {
+        "desc": "选择一个尚可挑战的对手，最多处理九个目标",
+        "max_hit": 9,
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "进攻"
+                // TODO(实测): 补充对手卡片内“进攻”按钮 roi；必要时设置 index
+            }
+        },
+        "action": "Click",
+        "post_delay": 1000,
+        "next": [
+            "RealmRaidChallenge",
+            "[JumpBack]CommonConfirm"
+        ]
+    },
+    "RealmRaidChallenge": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "进攻",
+                    "挑战"
+                ]
+            }
+        },
+        "action": "Click",
+        "post_delay": 1200,
+        "next": [
+            "RealmRaidBattleResult",
+            "[JumpBack]CommonBattleFailed",
+            "RealmRaidNoTicket"
+        ]
+    },
+    "RealmRaidBattleResult": {
+        "timeout": 180000,
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "点击屏幕继续",
+                    "战斗胜利",
+                    "战斗失败"
+                ]
+            }
+        },
+        "action": "Click",
+        "post_delay": 1000,
+        "next": [
+            "[JumpBack]CommonRewardPopup",
+            "RealmRaidSelectTarget"
+        ]
+    },
+    "RealmRaidNoTicket": {
+        "desc": "突破券不足时正常结束",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "突破券不足",
+                    "挑战券不足"
+                ]
+            }
+        }
+    }
+}

@@ -1,0 +1,32 @@
+{
+    "preset": [
+        {
+            "name": "daily",
+            "label": "日常",
+            "description": "每日任务",
+            "task": [
+                {
+                    "name": "startup"
+                },
+                {
+                    "name": "mitama"
+                },
+                // {
+                //     "name": "exploration"
+                // },
+                // {
+                //     "name": "realm_raid"
+                // },
+                // {
+                //     "name": "daily_rewards"
+                // },
+                {
+                    "name": "shutdown"
+                },
+                {
+                    "name": "common_activity"
+                }
+            ]
+        }
+    ]
+}

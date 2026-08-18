@@ -1,0 +1,59 @@
+{
+    "task": [
+        {
+            "name": "current_activity",
+            "label": "$current_activity_task",
+            "entry": "CurrentActivityTask",
+            "option": [
+                "当期活动自定义作战次数"
+            ],
+            "description": "$current_activity_task_doc"
+        }
+    ],
+    "option": {
+        "当期活动自定义作战次数": {
+            "type": "switch",
+            "label": "自定义作战次数",
+            "default_case": "Yes",
+            "cases": [
+                {
+                    "name": "No",
+                    "pipeline_override": {}
+                },
+                {
+                    "name": "Yes",
+                    "pipeline_override": {},
+                    "option": [
+                        "当期活动作战次数"
+                    ]
+                }
+            ],
+            "description": "关闭时会持续挑战"
+        },
+        "当期活动作战次数": {
+            "type": "input",
+            "label": "次数",
+            "inputs": [
+                {
+                    "name": "作战次数",
+                    "pipeline_type": "int",
+                    "default": "30",
+                    "pattern_msg": "请输入作战次数，如30",
+                    "verify": "^[1-9]\\d*$",
+                    "description": "请输入作战次数，如30"
+                }
+            ],
+            "pipeline_override": {
+                "CurrentActivityTask": {
+                    "action": {
+                        "param": {
+                            "custom_action_param": {
+                                "target_count": "{作战次数}"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

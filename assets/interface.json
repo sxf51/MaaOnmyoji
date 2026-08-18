@@ -4,14 +4,21 @@
     // 文档：https://maafw.xyz/docs/3.3-ProjectInterfaceV2
     // 示例：https://github.com/MaaXYZ/MaaFramework/blob/main/sample/interface.json
     "interface_version": 2,
-    "name": "MaaXXX",
-    "description": "这是一个使用 MaaFramework 创建的新项目。",
-    "contact": "QQ群: 123456789",
+    "name": "MaaOnmyoji",
+    "label": "$project_name",
+    "title": "$project_title",
+    "icon": "favicon.ico",
+    "languages": {
+        "zh_cn": "language/interface_zh.json",
+        "en_us": "language/interface_en.json"
+    },
+    "description": "$project_description",
+    "contact": "$contact_info",
     "license": "MIT",
-    "welcome": "首次使用！欢迎使用 MAA!",
+    "welcome": "$welcome_message",
     // 填写项目地址和版本号可实现自动更新功能
-    "github": "https://github.com/MaaXYZ/MaaPracticeBoilerplate",
-    "version": "1.0.0",
+    "github": "https://github.com/sxf51/MaaOnmyoji",
+    "version": "0.0.1",
     // Mirror酱为第三方分发服务，新项目默认关闭
     // 若有需要请联系 Mirror酱 开通，直接自行开启是无法使用的
     // "mirrorchyan_rid": "MaaXXX",
@@ -27,7 +34,7 @@
             "type": "Win32",
             "win32": {
                 "class_regex": ".*",
-                "window_regex": "Visual Studio",
+                "window_regex": "(阴阳师|Onmyoji).*",
                 // 截图及控制方式，请根据项目实际情况修改
                 // 文档: https://maafw.xyz/docs/2.4-ControlMethods
                 "screencap": "PrintWindow", // 截图方式
@@ -40,70 +47,35 @@
         {
             "name": "官服",
             "path": [
-                "./resource"
+                "./resource/base"
             ]
         },
         {
             "name": "B 服",
             "path": [
-                "./resource"
-                // "./resource_bilibili"
+                "./resource/base"
+                // "./resource/bilibili"
             ]
         }
     ],
-    // 可选的 agent 示例
-    // "agent": {
-    //     "child_exec": "python",
-    //     "child_args": [
-    //         "./agent/main.py"
-    //     ]
-    // },
-    "task": [
-        {
-            "name": "普通任务",
-            "entry": "MyTask1"
-        },
-        {
-            "name": "选项任务",
-            "entry": "MyTask2",
-            "option": [
-                "任务选项1"
-            ]
-        },
-        {
-            "name": "参数任务",
-            "entry": "MyTask3",
-            "option": [
-                "任务选项1"
-            ],
-            "pipeline_override": {}
-        },
-        {
-            "name": "带Custom的任务",
-            "entry": "MyTask4"
-        }
-    ],
-    "option": {
-        "任务选项1": {
-            "type": "select",
-            "cases": [
-                {
-                    "name": "文本1",
-                    "pipeline_override": {
-                        "OcrTask": {
-                            "text": "文本1"
-                        }
-                    }
-                },
-                {
-                    "name": "文本2",
-                    "pipeline_override": {
-                        "OcrTask": {
-                            "text": "文本2"
-                        }
-                    }
-                }
-            ]
-        }
-    }
+    "agent": {
+        "child_exec": "uv",
+        "child_args": [
+            "run",
+            "python",
+            "-u",
+            "../agent/bootstrap.py"
+        ]
+    },
+    "import": [
+        "tasks/preset/Daily.json",
+        "tasks/Startup.json",
+        "tasks/Mitama.json",
+        "tasks/Exploration.json",
+        "tasks/RealmRaid.json",
+        "tasks/DailyRewards.json",
+        "tasks/Shutdown.json",
+        "tasks/CommonActivity.json",
+        "tasks/CurrentActivity.json"
+    ]
 }

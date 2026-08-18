@@ -1,0 +1,38 @@
+{
+    "task": [
+        {
+            "name": "exploration",
+            "label": "$exploration_task",
+            "entry": "ExplorationTask",
+            "option": [
+                "exploration_count"
+            ],
+            "description": "$exploration_task_doc"
+        }
+    ],
+    "option": {
+        "exploration_count": {
+            "type": "input",
+            "label": "$battle_count",
+            "inputs": [
+                {
+                    "name": "count",
+                    "pipeline_type": "int",
+                    "default": "10",
+                    "verify": "^[1-9]\\d*$"
+                }
+            ],
+            "pipeline_override": {
+                "ExplorationTask": {
+                    "action": {
+                        "param": {
+                            "custom_action_param": {
+                                "target_count": "{count}"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

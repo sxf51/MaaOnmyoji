@@ -1,0 +1,160 @@
+{
+    "ExplorationTask": {
+        "doc": "$exploration_task_doc",
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "TargetCountInit",
+                "custom_action_param": {
+                    "target_count": 10
+                }
+            }
+        },
+        "next": [
+            "[JumpBack]CommonConfirm",
+            "[JumpBack]CommonClose",
+            "ExplorationOpen"
+        ]
+    },
+    "ExplorationOpen": {
+        "desc": "庭院：进入探索地图",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    597,
+                    118,
+                    156,
+                    118
+                ],
+                "expected": [
+                    "探索",
+                    "探",
+                    "索"
+                ]
+            }
+        },
+        "action": "Click",
+        "post_delay": 1500,
+        "next": [
+            "ExplorationEnterChapter",
+            "[JumpBack]CommonConfirm"
+        ]
+    },
+    "ExplorationEnterChapter": {
+        "desc": "探索地图：进入当前已选择章节",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "探索",
+                    "普通",
+                    "困难"
+                ]
+                // TODO(实测): 此处必须按目标章节按钮补 roi；也可由 UI 选项覆盖 expected/roi
+            }
+        },
+        "action": "Click",
+        "post_delay": 1200,
+        "next": [
+            "ExplorationFindEnemy",
+            "[JumpBack]CommonConfirm",
+            "[JumpBack]CommonClose"
+        ]
+    },
+    "ExplorationFindEnemy": {
+        "desc": "章节内选择经验/金币/御魂怪物；当前按画面识别到的第一个目标",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "经验",
+                    "金币",
+                    "御魂"
+                ]
+                // TODO(实测): 若气泡 OCR 不稳定，替换为怪物头顶图标模板匹配
+            }
+        },
+        "action": "Click",
+        "post_delay": 1000,
+        "next": [
+            "ExplorationChallenge",
+            "[JumpBack]CommonConfirm"
+        ]
+    },
+    "ExplorationChallenge": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "挑战"
+                // TODO(实测): 补充右下角挑战按钮 roi
+            }
+        },
+        "action": "Click",
+        "post_delay": 1200,
+        "next": [
+            "[JumpBack]CommonInsufficientAP",
+            "ExplorationBattleResult",
+            "[JumpBack]CommonBattleFailed"
+        ]
+    },
+    "ExplorationBattleResult": {
+        "timeout": 180000,
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "点击屏幕继续",
+                    "战斗胜利"
+                ]
+            }
+        },
+        "action": "Click",
+        "post_delay": 1000,
+        "next": [
+            "ExplorationComplete"
+        ]
+    },
+    "ExplorationComplete": {
+        "desc": "通过 Agent 记录一次成功结算",
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "TargetCountProgress",
+                "custom_action_param": {
+                    "count": 1
+                }
+            }
+        },
+        "next": [
+            "[JumpBack]CommonRewardPopup",
+            "[JumpBack]CommonConfirm",
+            "ExplorationCountDetermine"
+        ]
+    },
+    "ExplorationCountDetermine": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "TargetCountDetermine",
+                "custom_action_param": {
+                    "decision_node": "ExplorationCountDetermine",
+                    "continue_node": "ExplorationFindEnemy",
+                    "finish_node": "ExplorationFinish"
+                }
+            }
+        },
+        "next": [
+            "ExplorationFindEnemy"
+        ]
+    },
+    "ExplorationFinish": {
+        "desc": "达到目标次数后结束探索任务",
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "TargetCountFinish"
+            }
+        }
+    }
+}
