@@ -1,86 +1,182 @@
 {
     "DailyRewardsTask": {
         "doc": "$daily_rewards_task_doc",
-        "next": [
-            "DailyRewardsMail",
-            "DailyRewardsQuest",
-            "DailyRewardsEnd"
-        ]
-    },
-    "DailyRewardsMail": {
-        "desc": "庭院：进入邮件",
-        "recognition": {
-            "type": "OCR",
+        "action": {
+            "type": "Custom",
             "param": {
-                "expected": "邮件"
-                // TODO(实测): 补充邮件入口 roi；若无文字请改用模板匹配
+                "custom_action": "ClaimDailyRewards"
             }
-        },
-        "action": "Click",
-        "post_delay": 1000,
-        "next": [
-            "DailyRewardsClaimAllMail",
-            "[JumpBack]CommonClose"
-        ]
+        }
     },
     "DailyRewardsClaimAllMail": {
         "recognition": {
             "type": "OCR",
             "param": {
                 "expected": [
-                    "一键领取",
-                    "全部领取"
+                    "^一键领取$",
+                    "^全部领取$"
+                ],
+                "roi": [
+                    133,
+                    575,
+                    1023,
+                    82
                 ]
             }
         },
-        "action": "Click",
-        "post_delay": 800,
-        "next": [
-            "[JumpBack]CommonRewardPopup",
-            "[JumpBack]CommonConfirm",
-            "DailyRewardsQuest"
-        ]
-    },
-    "DailyRewardsQuest": {
-        "desc": "打开任务界面",
-        "recognition": {
-            "type": "OCR",
+        "action": {
+            "type": "Click",
             "param": {
-                "expected": [
-                    "任务",
-                    "花合战"
-                ]
-                // TODO(实测): 补充庭院任务入口 roi
+                "target": true
             }
-        },
-        "action": "Click",
-        "post_delay": 1000,
-        "next": [
-            "DailyRewardsClaim",
-            "[JumpBack]CommonClose"
-        ]
+        }
     },
     "DailyRewardsClaim": {
-        "desc": "反复领取当前页所有可领奖励",
-        "max_hit": 30,
         "recognition": {
             "type": "OCR",
             "param": {
                 "expected": [
-                    "领取",
-                    "一键领取"
+                    "^领取$",
+                    "^一键领取$"
+                ],
+                "roi": [
+                    978,
+                    224,
+                    148,
+                    313
                 ]
             }
         },
-        "action": "Click",
-        "post_delay": 600,
-        "next": [
-            "[JumpBack]CommonRewardPopup",
-            "DailyRewardsClaim",
-            "DailyRewardsEnd"
-        ]
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        }
     },
-    "DailyRewardsEnd": {
-        "desc": "没有可领取项时结束"
+    "DailyRewardsClaimReward": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "^领取$",
+                    "^一键领取$"
+                ],
+                "roi": [
+                    590,
+                    212,
+                    583,
+                    386
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        }
+    },
+    "DailyRewardPopup": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "获得奖励",
+                "roi": [
+                    391,
+                    103,
+                    511,
+                    230
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    600,
+                    620,
+                    80,
+                    35
+                ]
+            }
+        }
+    },
+    "DailyNoResource": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "体力不足",
+                    "突破券不足",
+                    "挑战券不足",
+                    "结界突破券不足"
+                ],
+                "roi": [
+                    289,
+                    206,
+                    709,
+                    277
+                ]
+            }
+        }
+    },
+    "DailyBattleFailed": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "战斗失败",
+                    "挑战失败",
+                    "^失败$"
+                ],
+                "roi": [
+                    294,
+                    92,
+                    694,
+                    444
+                ]
+            }
+        }
+    },
+    "DailyPrepare": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "^准备$",
+                "roi": [
+                    1083,
+                    526,
+                    180,
+                    131
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        }
+    },
+    "DailyBattleResult": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "点击屏幕继续",
+                "roi": [
+                    495,
+                    637,
+                    298,
+                    82
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        }
     }
 }

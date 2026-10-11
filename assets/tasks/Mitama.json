@@ -8,9 +8,8 @@
                 "选择关卡",
                 "自定义作战次数",
                 "开启加成",
-                "更换队伍"
-                // "是否组队"
-                // "掉落统计上报"
+                "更换队伍",
+                "是否组队"
             ],
             "description": "$mitama_task_doc"
         }
@@ -342,7 +341,7 @@
         },
         "是否组队": {
             "type": "switch",
-            "label": "是否组队",
+            "label": "是否组队（待双账号联测）",
             "default_case": "No",
             "cases": [
                 {
@@ -377,6 +376,15 @@
                             "next": [
                                 "MitamaTeamLeader"
                             ]
+                        },
+                        "MitamaCountDetermine": {
+                            "action": {
+                                "param": {
+                                    "custom_action_param": {
+                                        "continue_node": "MitamaLeaderFight"
+                                    }
+                                }
+                            }
                         }
                     }
                 },
@@ -392,7 +400,7 @@
                             "action": {
                                 "param": {
                                     "custom_action_param": {
-                                        "continue_node": "MitamaMemberReady"
+                                        "continue_node": "MitamaMemberFight"
                                     }
                                 }
                             }
@@ -410,25 +418,17 @@
                     "pipeline_type": "string",
                     "default": "",
                     "pattern_msg": "请输入队友昵称",
-                    "description": "请输入队友昵称"
+                    "description": "请输入队友昵称",
+                    "verify": "^.+$"
                 }
             ],
             "pipeline_override": {
-                "MitamaFindTeammate": {
-                    "recognition": {
+                "MitamaTask": {
+                    "action": {
                         "param": {
-                            "expected": [
-                                "{队友昵称}"
-                            ]
-                        }
-                    }
-                },
-                "MitamaFindLeaderInvite": {
-                    "recognition": {
-                        "param": {
-                            "expected": [
-                                "{队友昵称}"
-                            ]
+                            "custom_action_param": {
+                                "teammate": "{队友昵称}"
+                            }
                         }
                     }
                 }

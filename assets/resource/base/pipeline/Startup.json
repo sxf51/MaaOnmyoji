@@ -286,15 +286,18 @@
         }
     },
     "ReturnMain": {
-        "desc": "回到主界面",
-        "max_hit": 20,
-        "next": [
-            "StartupHome",
-            "[JumpBack]ReturnMainHomeButton",
-            "[JumpBack]ReturnMainBackButton",
-            "[JumpBack]CommonClose",
-            "[JumpBack]CommonConfirm"
-        ]
+        "desc": "重新识别当前页面，优先 Home，否则逐级返回；限定步数及超时",
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "NavigateTo",
+                "custom_action_param": {
+                    "targets": [
+                        "Home"
+                    ]
+                }
+            }
+        }
     },
     "ReturnMainHomeButton": {
         "desc": "回到主界面",

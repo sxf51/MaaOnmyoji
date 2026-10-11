@@ -12,9 +12,24 @@
         },
         "next": [
             "[JumpBack]CommonRefuseBounty",
-            "MitamaOpenExplore",
-            "MitamaOpenZone",
-            "MitamaSelectBaqin"
+            "MitamaNavigate"
+        ]
+    },
+    "MitamaNavigate": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "NavigateTo",
+                "custom_action_param": {
+                    "targets": [
+                        "MitamaStage"
+                    ]
+                }
+            }
+        },
+        "next": [
+            "MitamaSelectBaqin",
+            "[JumpBack]MitamaSwipeBaqin"
         ]
     },
     "MitamaOpenExplore": {
@@ -334,7 +349,17 @@
     "MitamaDisableBuff": {
         "desc": "御魂：加成分支入口",
         "enabled": false,
-        "action": "DoNothing",
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "NavigateTo",
+                "custom_action_param": {
+                    "targets": [
+                        "MitamaStage"
+                    ]
+                }
+            }
+        },
         "next": [
             "[JumpBack]CommonRefuseBounty",
             "MitamaCheckBuffStatusClose",
@@ -843,43 +868,37 @@
         ]
     },
     "MitamaFindTeammate": {
-        "desc": "御魂组队：按昵称选择队友",
-        "recognition": {
-            "type": "OCR",
+        "action": {
+            "type": "Custom",
             "param": {
-                "roi": [
-                    334,
-                    82,
-                    447,
-                    66
-                ],
-                "expected": [
-                    "好友"
-                ]
+                "custom_action": "SelectTeammate"
             }
         },
-        "action": "Click",
-        "post_delay": 500,
         "next": [
-            "[JumpBack]CommonRefuseBounty",
             "MitamaSendInvite"
         ]
     },
     "MitamaSendInvite": {
-        "desc": "御魂组队：发送邀请",
         "recognition": {
             "type": "OCR",
             "param": {
-                "expected": [
-                    "邀请"
+                "expected": "^邀请$",
+                "roi": [
+                    710,
+                    541,
+                    138,
+                    71
                 ]
             }
         },
-        "action": "Click",
-        "post_delay": 500,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
         "next": [
-            "[JumpBack]CommonRefuseBounty",
-            "MitamaLeaderInviteDone"
+            "MitamaLeaderFight"
         ]
     },
     "MitamaLeaderInviteDone": {
@@ -901,12 +920,14 @@
         ]
     },
     "MitamaTeamMember": {
-        "desc": "御魂组队：队员等待指定队长邀请",
-        "action": "DoNothing",
-        "post_delay": 1000,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "WaitLeaderInvitation"
+            }
+        },
         "next": [
-            "[JumpBack]CommonRefuseBounty",
-            "MitamaFindLeaderInvite"
+            "MitamaMemberFight"
         ]
     },
     "MitamaFindLeaderInvite": {
@@ -928,22 +949,27 @@
         ]
     },
     "MitamaAcceptInvite": {
-        "desc": "御魂组队：接受邀请",
         "recognition": {
             "type": "OCR",
             "param": {
                 "expected": [
-                    "接受",
-                    "同意"
+                    "^接受$",
+                    "^同意$"
+                ],
+                "roi": [
+                    560,
+                    300,
+                    470,
+                    310
                 ]
             }
         },
-        "action": "Click",
-        "post_delay": 1000,
-        "next": [
-            "[JumpBack]CommonRefuseBounty",
-            "MitamaMemberReady"
-        ]
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        }
     },
     "MitamaMemberReady": {
         "desc": "御魂组队：队员准备并等待队长开战",
@@ -1214,5 +1240,118 @@
     "MitamaFinishDone": {
         "desc": "御魂：收尾完成并成功结束任务",
         "action": "DoNothing"
+    },
+    "MitamaTeammateName": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "^未配置队友$",
+                "roi": [
+                    431,
+                    179,
+                    492,
+                    351
+                ]
+            }
+        }
+    },
+    "MitamaRoomTeammate": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "^未配置队友$",
+                "roi": [
+                    426,
+                    83,
+                    825,
+                    87
+                ]
+            }
+        }
+    },
+    "MitamaTeamStart": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "协战队伍",
+                "roi": [
+                    90,
+                    15,
+                    150,
+                    50
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    1186,
+                    617,
+                    55,
+                    60
+                ]
+            }
+        }
+    },
+    "MitamaLeaderFight": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "TeamBattle",
+                "custom_action_param": {
+                    "role": "leader"
+                }
+            }
+        },
+        "next": [
+            "MitamaComplete"
+        ]
+    },
+    "MitamaMemberFight": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "TeamBattle",
+                "custom_action_param": {
+                    "role": "member"
+                }
+            }
+        },
+        "next": [
+            "MitamaComplete"
+        ]
+    },
+    "MitamaInvitationText": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "组队邀请",
+                    "邀请.*组队",
+                    "邀请你"
+                ],
+                "roi": [
+                    250,
+                    140,
+                    780,
+                    410
+                ]
+            }
+        }
+    },
+    "MitamaInvitationName": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "^未配置队友$",
+                "roi": [
+                    250,
+                    140,
+                    780,
+                    410
+                ]
+            }
+        }
     }
 }

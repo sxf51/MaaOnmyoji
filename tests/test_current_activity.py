@@ -16,7 +16,7 @@ class CommonActivityPipelineTest(unittest.TestCase):
 
         challenge = pipeline["CommonActivityChallenge"]
         self.assertEqual(challenge["recognition"]["param"]["roi"], [1067, 564, 212, 154])
-        self.assertEqual(challenge["recognition"]["param"]["expected"], ["挑战"])
+        self.assertEqual(challenge["recognition"]["param"]["expected"], ["挑战", "搜寻", "开启"])
 
         challenging = pipeline["CommonActivityChallenging"]
         self.assertEqual(challenging["recognition"]["param"]["expected"], ["妖术", "普攻"])

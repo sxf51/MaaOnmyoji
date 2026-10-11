@@ -4,12 +4,16 @@ import sys
 from custom.action import (  # noqa: F401
     bezier_swipe,
     drop_statistics,
+    daily,
     general,
+    navigation,
     target_count,
+    team,
 )
 from custom.action.drop_statistics import recover_pending_reports, shutdown_reporter
 from custom.reco import general as general_reco  # noqa: F401
 from custom.reco import startup as startup_reco  # noqa: F401
+from custom.reco import page as page_reco  # noqa: F401
 from custom.sink import (
     aspect_ratio,  # noqa: F401
     subtask_state,  # noqa: F401

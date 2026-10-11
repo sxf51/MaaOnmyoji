@@ -1,0 +1,961 @@
+{
+    "PageHome": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "expected": [
+                                    "探索",
+                                    "探",
+                                    "索"
+                                ],
+                                "roi": [
+                                    600,
+                                    116,
+                                    145,
+                                    120
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "expected": [
+                                    "召唤",
+                                    "召",
+                                    "唤"
+                                ],
+                                "roi": [
+                                    1000,
+                                    120,
+                                    150,
+                                    180
+                                ]
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    },
+    "PageExplore": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "expected": "觉醒材料",
+                                "roi": [
+                                    25,
+                                    671,
+                                    125,
+                                    49
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "expected": "结界突破",
+                                "roi": [
+                                    229,
+                                    671,
+                                    127,
+                                    49
+                                ]
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    },
+    "PageMitamaMenu": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "expected": "御魂",
+                                "roi": [
+                                    143,
+                                    12,
+                                    100,
+                                    54
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "expected": "掉落日历",
+                                "roi": [
+                                    1143,
+                                    661,
+                                    135,
+                                    58
+                                ]
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    },
+    "PageMitamaStage": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "expected": "御魂",
+                                "roi": [
+                                    143,
+                                    12,
+                                    100,
+                                    54
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "expected": "挑战",
+                                "roi": [
+                                    1125,
+                                    574,
+                                    140,
+                                    85
+                                ]
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    },
+    "PageChapter": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "expected": "第.*章",
+                                "roi": [
+                                    141,
+                                    9,
+                                    195,
+                                    54
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "expected": "探索",
+                                "roi": [
+                                    1061,
+                                    573,
+                                    156,
+                                    92
+                                ]
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    },
+    "PageChapterField": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": "Exploration/Field.png",
+                "roi": [
+                    990,
+                    616,
+                    232,
+                    103
+                ],
+                "threshold": 0.82
+            }
+        }
+    },
+    "PageRaid": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "expected": "结界突破",
+                                "roi": [
+                                    558,
+                                    70,
+                                    151,
+                                    52
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "expected": "刷新",
+                                "roi": [
+                                    964,
+                                    560,
+                                    180,
+                                    75
+                                ]
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    },
+    "PageRaidTarget": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "^进攻$",
+                "roi": [
+                    643,
+                    347,
+                    153,
+                    85
+                ]
+            }
+        }
+    },
+    "PageMail": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "邮箱",
+                "roi": [
+                    590,
+                    48,
+                    115,
+                    53
+                ]
+            }
+        }
+    },
+    "PageQuests": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "花合战",
+                "roi": [
+                    91,
+                    13,
+                    124,
+                    53
+                ]
+            }
+        }
+    },
+    "PageQuestTasks": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "expected": "花合战",
+                                "roi": [
+                                    91,
+                                    13,
+                                    124,
+                                    53
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "expected": "今日获得经验",
+                                "roi": [
+                                    981,
+                                    171,
+                                    196,
+                                    49
+                                ]
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    },
+    "PageTeamList": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "expected": "组队",
+                                "roi": [
+                                    91,
+                                    10,
+                                    132,
+                                    59
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "expected": "创建队伍",
+                                "roi": [
+                                    982,
+                                    585,
+                                    189,
+                                    77
+                                ]
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    },
+    "PageTeamCreate": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "队伍公开权限",
+                "roi": [
+                    286,
+                    437,
+                    244,
+                    47
+                ]
+            }
+        }
+    },
+    "PageExitExplore": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "确认退出探索",
+                "roi": [
+                    477,
+                    287,
+                    340,
+                    69
+                ]
+            }
+        }
+    },
+    "PageBattle": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "妖术",
+                    "普攻"
+                ],
+                "roi": [
+                    692,
+                    676,
+                    574,
+                    43
+                ]
+            }
+        }
+    },
+    "PageResult": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "点击屏幕继续",
+                "roi": [
+                    495,
+                    637,
+                    298,
+                    82
+                ]
+            }
+        }
+    },
+    "PageLoading": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "官网",
+                    "yys.163.com"
+                ],
+                "roi": [
+                    539,
+                    674,
+                    230,
+                    46
+                ]
+            }
+        }
+    },
+    "NavOpenExplore": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "探索",
+                    "探",
+                    "索"
+                ],
+                "roi": [
+                    600,
+                    116,
+                    145,
+                    120
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        }
+    },
+    "NavOpenRaid": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "结界突破",
+                "roi": [
+                    229,
+                    671,
+                    127,
+                    49
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        }
+    },
+    "NavOpenMitama": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "御魂",
+                "roi": [
+                    149,
+                    670,
+                    85,
+                    50
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        }
+    },
+    "NavOpenBaqi": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "掉落日历",
+                "roi": [
+                    1143,
+                    661,
+                    135,
+                    58
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    160,
+                    210,
+                    100,
+                    100
+                ]
+            }
+        }
+    },
+    "NavClose": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": "Navigation/Close.png",
+                "roi": [
+                    1100,
+                    50,
+                    155,
+                    143
+                ],
+                "threshold": 0.78
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        }
+    },
+    "NavBack": {
+        "recognition": {
+            "type": "Or",
+            "param": {
+                "any_of": [
+                    {
+                        "recognition": {
+                            "type": "TemplateMatch",
+                            "param": {
+                                "template": "Back.png",
+                                "roi": [
+                                    0,
+                                    0,
+                                    110,
+                                    90
+                                ],
+                                "threshold": 0.78
+                            }
+                        }
+                    },
+                    {
+                        "recognition": {
+                            "type": "TemplateMatch",
+                            "param": {
+                                "template": "Navigation/QuestBack.png",
+                                "roi": [
+                                    0,
+                                    0,
+                                    110,
+                                    90
+                                ],
+                                "threshold": 0.8
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        }
+    },
+    "NavConfirmExitExplore": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "确认退出探索",
+                "roi": [
+                    477,
+                    287,
+                    340,
+                    69
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    713,
+                    386,
+                    120,
+                    35
+                ]
+            }
+        }
+    },
+    "NavDismissRaidTarget": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "^进攻$",
+                "roi": [
+                    643,
+                    347,
+                    153,
+                    85
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    850,
+                    557,
+                    80,
+                    30
+                ]
+            }
+        }
+    },
+    "NavOpenMail": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": "Navigation/Mail.png",
+                "roi": [
+                    1100,
+                    3,
+                    110,
+                    65
+                ],
+                "threshold": 0.78
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        }
+    },
+    "NavOpenQuests": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "花合战",
+                "roi": [
+                    742,
+                    641,
+                    108,
+                    60
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        }
+    },
+    "NavExpandHomeMenu": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": "Navigation/HomeMenu.png",
+                "roi": [
+                    1150,
+                    584,
+                    110,
+                    133
+                ],
+                "threshold": 0.78
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        }
+    },
+    "NavQuestTasks": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "任务",
+                "roi": [
+                    1181,
+                    304,
+                    70,
+                    126
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        }
+    },
+    "NavQuestRewards": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "奖励",
+                "roi": [
+                    1181,
+                    170,
+                    70,
+                    125
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        }
+    },
+    "NavCancelCreate": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "取消",
+                "roi": [
+                    331,
+                    550,
+                    147,
+                    82
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        }
+    },
+    "DetectCurrentPage": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "DetectPage"
+            }
+        }
+    },
+    "PageTeamRoom": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "协战队伍",
+                "roi": [
+                    90,
+                    15,
+                    150,
+                    50
+                ]
+            }
+        }
+    },
+    "PageTeamInvite": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "expected": "好友",
+                                "roi": [
+                                    329,
+                                    81,
+                                    111,
+                                    66
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "expected": "^邀请$",
+                                "roi": [
+                                    710,
+                                    541,
+                                    138,
+                                    71
+                                ]
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    },
+    "PageExitTeam": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "确认退出组队面板",
+                "roi": [
+                    483,
+                    281,
+                    330,
+                    71
+                ]
+            }
+        }
+    },
+    "NavCancelInvite": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "^取消$",
+                "roi": [
+                    437,
+                    539,
+                    143,
+                    75
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        }
+    },
+    "NavConfirmExitTeam": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "确认退出组队面板",
+                "roi": [
+                    483,
+                    281,
+                    330,
+                    71
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    690,
+                    423,
+                    125,
+                    30
+                ]
+            }
+        }
+    },
+    "PageReward": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "获得奖励",
+                "roi": [
+                    391,
+                    103,
+                    511,
+                    230
+                ]
+            }
+        }
+    },
+    "PageNoResource": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "体力不足",
+                    "突破券不足",
+                    "挑战券不足",
+                    "结界突破券不足"
+                ],
+                "roi": [
+                    289,
+                    206,
+                    709,
+                    277
+                ]
+            }
+        }
+    },
+    "NavCancelNoResource": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "expected": [
+                                    "体力不足",
+                                    "突破券不足",
+                                    "挑战券不足",
+                                    "结界突破券不足"
+                                ],
+                                "roi": [
+                                    289,
+                                    206,
+                                    709,
+                                    277
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "expected": "^取消$",
+                                "roi": [
+                                    300,
+                                    300,
+                                    660,
+                                    240
+                                ]
+                            }
+                        }
+                    }
+                ],
+                "box_index": 1
+            }
+        },
+        "action": "Click"
+    }
+}

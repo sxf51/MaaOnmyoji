@@ -14,9 +14,9 @@
     "current_activity_task_doc": "从当前活动挑战界面开始，循环挑战直到达到配置次数，其它循环的挑战任务也能用",
     "battle_count": "挑战次数",
     "exploration_task": "探索副本",
-    "exploration_task_doc": "从庭院进入探索，循环挑战当前选定章节",
+    "exploration_task_doc": "识别当前页面并进入配置章节；已在章节内时继续，按双剑图标找怪，结算后计数。",
     "realm_raid_task": "结界突破",
-    "realm_raid_task_doc": "从庭院进入结界突破，依次挑战可用目标",
+    "realm_raid_task_doc": "从当前页导航到个人突破，跳过已攻破目标，每张卡片最多尝试一次，不刷新、不购买。",
     "daily_rewards_task": "领取日常奖励",
-    "daily_rewards_task_doc": "领取邮件、任务及常见活动入口中的可领取奖励"
+    "daily_rewards_task_doc": "领取邮件与花合战文字领取按钮对应的奖励；不含宝箱、付费花礼或限时活动。"
 }

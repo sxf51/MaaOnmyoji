@@ -5,7 +5,8 @@
             "label": "$exploration_task",
             "entry": "ExplorationTask",
             "option": [
-                "exploration_count"
+                "exploration_count",
+                "exploration_chapter"
             ],
             "description": "$exploration_task_doc"
         }
@@ -29,6 +30,26 @@
                             "custom_action_param": {
                                 "target_count": "{count}"
                             }
+                        }
+                    }
+                }
+            }
+        },
+        "exploration_chapter": {
+            "type": "input",
+            "label": "探索地图章节名称（已在章节内时继续当前章节）",
+            "inputs": [
+                {
+                    "name": "chapter",
+                    "default": "第二十八章",
+                    "verify": "^第[一二三四五六七八九十百]+章$"
+                }
+            ],
+            "pipeline_override": {
+                "ExplorationSelectChapter": {
+                    "recognition": {
+                        "param": {
+                            "expected": "{chapter}"
                         }
                     }
                 }
