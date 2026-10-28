@@ -8,6 +8,8 @@ on:
       - ".github/workflows/check.yml"
       - "assets/**"
       - "**.py"
+      - "package.json"
+      - "pnpm-lock.yaml"
   pull_request:
     branches:
       - "**"
@@ -15,6 +17,8 @@ on:
       - ".github/workflows/check.yml"
       - "assets/**"
       - "**.py"
+      - "package.json"
+      - "pnpm-lock.yaml"
   workflow_dispatch:
 
 jobs:
@@ -25,15 +29,19 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Use pnpm
+        uses: pnpm/action-setup@v4
+
       - name: Use Node
         uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: pnpm
 
       - name: Run maa-checker
         run: |
-          npm ci
-          npx @nekosu/maa-tools check
+          pnpm install --frozen-lockfile
+          pnpm exec maa-tools check
 
       - name: Install maafw
         run: |

@@ -1,0 +1,1134 @@
+{
+    "AwakeningTask": {
+        "doc": "导航到配置的觉醒麒麟和层数，按成功结算次数重复挑战。",
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "TargetCountInit",
+                "custom_action_param": {
+                    "target_count": 10
+                }
+            }
+        },
+        "next": [
+            "AwakeningNavigate"
+        ]
+    },
+    "AwakeningNavigate": {
+        "doc": "从当前页面进入觉醒菜单或层数页。",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "NativeNavigationBlocked",
+            "NativeResultBlocked",
+            "[JumpBack]NativeDailyRewardPopup",
+            "[JumpBack]NativeNavCancelNoResource",
+            "[JumpBack]NativeNavConfirmExitExplore",
+            "[JumpBack]NativeNavConfirmExitTeam",
+            "[JumpBack]NativeNavDismissRaidTarget",
+            "[JumpBack]NativeNavCancelInvite",
+            "[JumpBack]NativeNavCancelCreate",
+            "[JumpBack]NativeLoading",
+            "[JumpBack]SafeInput_StartupCloseAnnouncement",
+            "[JumpBack]SafeInput_StartupCancelIllustration",
+            "AwakeningNavigationReady",
+            "[JumpBack]NavigateAwakening"
+        ],
+        "timeout": 60000
+    },
+    "AwakeningNavigationReady": {
+        "doc": "进入觉醒页面后选择配置的麒麟。",
+        "recognition": {
+            "type": "Or",
+            "param": {
+                "any_of": [
+                    "PageAwakeningMenu",
+                    "PageAwakeningStage"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "AwakeningSelectType"
+        ]
+    },
+    "AwakeningTargetType": {
+        "doc": "识别当前层数页右上角的目标麒麟名称。",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "^火麒麟$",
+                "roi": [
+                    910,
+                    92,
+                    350,
+                    88
+                ]
+            }
+        }
+    },
+    "AwakeningSelectType": {
+        "doc": "当前麒麟不符合配置时，切换到指定麒麟。",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "[JumpBack]SafeInput_AwakeningDismissBuffPanel",
+            "AwakeningTypeReady",
+            "SafeInput_AwakeningOpenType",
+            "SafeInput_AwakeningSwitchType"
+        ],
+        "timeout": 15000
+    },
+    "AwakeningTypeReady": {
+        "doc": "确认当前麒麟正确后选择层数。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageAwakeningStage",
+                    "AwakeningTargetType"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "AwakeningSearchLayer"
+        ]
+    },
+    "AwakeningOpenType": {
+        "doc": "在觉醒之塔选择配置的麒麟入口。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageAwakeningMenu"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_AwakeningOpenType"
+        ],
+        "pre_delay": 0,
+        "post_delay": 0,
+        "pre_wait_freezes": 0,
+        "on_error": []
+    },
+    "AwakeningSwitchType": {
+        "doc": "在层数页左侧切换到配置的麒麟。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageAwakeningStage"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_AwakeningSwitchType"
+        ],
+        "pre_delay": 0,
+        "post_delay": 0,
+        "pre_wait_freezes": 0,
+        "on_error": []
+    },
+    "AwakeningLayerText": {
+        "doc": "识别配置的觉醒层数文字。",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "^(拾|十)层$",
+                "roi": [
+                    125,
+                    85,
+                    120,
+                    615
+                ]
+            }
+        }
+    },
+    "AwakeningLayerSelected": {
+        "doc": "确认目标层数的文字及红色选中背景。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageAwakeningStage",
+                    "AwakeningTargetType",
+                    {
+                        "sub_name": "AwakeningSelectedLayerText",
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "expected": "^(拾|十)层$",
+                                "roi": [
+                                    125,
+                                    85,
+                                    120,
+                                    615
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "recognition": {
+                            "type": "ColorMatch",
+                            "param": {
+                                "roi": "AwakeningSelectedLayerText",
+                                "roi_offset": [
+                                    -28,
+                                    -8,
+                                    60,
+                                    16
+                                ],
+                                "method": 4,
+                                "lower": [
+                                    120,
+                                    15,
+                                    10
+                                ],
+                                "upper": [
+                                    255,
+                                    110,
+                                    100
+                                ],
+                                "count": 120
+                            }
+                        }
+                    }
+                ],
+                "box_index": 2
+            }
+        }
+    },
+    "AwakeningSearchLayer": {
+        "doc": "查找配置层数；选中后才进入战前准备。",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "AwakeningLayerReady",
+            "SafeInput_AwakeningSelectLayer",
+            "AwakeningLayerScrollDown",
+            "AwakeningLayerScrollUp"
+        ],
+        "timeout": 20000
+    },
+    "AwakeningLayerReady": {
+        "doc": "已确认目标层数选中，开始战前准备。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "AwakeningLayerSelected"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "AwakeningPreparation"
+        ]
+    },
+    "AwakeningSelectLayer": {
+        "doc": "点击配置的觉醒层数。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageAwakeningStage",
+                    "AwakeningTargetType",
+                    "AwakeningLayerText"
+                ],
+                "box_index": 2
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_AwakeningSelectLayer"
+        ],
+        "pre_delay": 0,
+        "post_delay": 0,
+        "pre_wait_freezes": 0,
+        "on_error": []
+    },
+    "AwakeningLayerScrollDown": {
+        "doc": "滚动觉醒层数列表，查找目标层数。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageAwakeningStage",
+                    "AwakeningTargetType"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_AwakeningLayerScrollDown"
+        ],
+        "pre_delay": 0,
+        "post_delay": 0,
+        "pre_wait_freezes": 0,
+        "on_error": [],
+        "max_hit": 4
+    },
+    "AwakeningLayerScrollUp": {
+        "doc": "滚动觉醒层数列表，查找目标层数。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageAwakeningStage",
+                    "AwakeningTargetType"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_AwakeningLayerScrollUp"
+        ],
+        "pre_delay": 0,
+        "post_delay": 0,
+        "pre_wait_freezes": 0,
+        "on_error": [],
+        "max_hit": 4
+    },
+    "AwakeningPreparation": {
+        "doc": "按顺序完成锁定阵容、更换预设及开启觉醒加成，再进入挑战。",
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "SubTask",
+                "custom_action_param": {
+                    "sub": [
+                        "AwakeningLockTeam",
+                        "AwakeningPreset",
+                        "AwakeningEnableBuff"
+                    ],
+                    "completion_next": [
+                        "AwakeningBattleEntry"
+                    ],
+                    "timeout": 180000
+                }
+            }
+        },
+        "next": [
+            "AwakeningBattleEntry"
+        ],
+        "timeout": 180000
+    },
+    "AwakeningLockTeam": {
+        "doc": "确认阵容锁定；未锁定时点击锁图标。",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "AwakeningLockedTeam",
+            "[JumpBack]SafeInput_AwakeningUnlockTeam"
+        ],
+        "action": "DoNothing"
+    },
+    "AwakeningLockedTeam": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": "Mitama/FormationLocked.png",
+                "roi": [
+                    680,
+                    645,
+                    80,
+                    65
+                ],
+                "threshold": 0.9
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "DisableNode",
+                "custom_action_param": {
+                    "node_name": "AwakeningLockTeam"
+                }
+            }
+        },
+        "next": [
+            "AwakeningPreparation"
+        ]
+    },
+    "AwakeningUnlockTeam": {
+        "doc": "点击未锁定图标，锁定觉醒阵容。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageAwakeningStage",
+                    {
+                        "recognition": {
+                            "type": "TemplateMatch",
+                            "param": {
+                                "template": "Mitama/FormationUnlocked.png",
+                                "roi": [
+                                    680,
+                                    645,
+                                    80,
+                                    65
+                                ],
+                                "threshold": 0.9
+                            }
+                        }
+                    }
+                ],
+                "box_index": 1
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_AwakeningUnlockTeam"
+        ],
+        "pre_delay": 0,
+        "post_delay": 0,
+        "pre_wait_freezes": 0,
+        "on_error": []
+    },
+    "AwakeningBattleEntry": {
+        "doc": "开始一场新挑战前重置点击重试上限。",
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ResetCount",
+                "custom_action_param": {
+                    "nodes": [
+                        "SafeInput_AwakeningChallenge"
+                    ]
+                }
+            }
+        },
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "AwakeningNoResource",
+            "SafeInput_AwakeningChallenge"
+        ]
+    },
+    "AwakeningNoResource": {
+        "doc": "识别明确的体力或挑战券不足提示，停止觉醒挑战。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "DailyNoResource"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "NativeFlowFailed"
+        ]
+    },
+    "AwakeningChallengeButton": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "^挑战$",
+                "roi": [
+                    1110,
+                    560,
+                    170,
+                    160
+                ]
+            }
+        }
+    },
+    "AwakeningChallenge": {
+        "doc": "确认麒麟、层数和挑战按钮后开始战斗。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "AwakeningLayerSelected",
+                    "AwakeningChallengeButton"
+                ],
+                "box_index": 1
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_AwakeningChallenge"
+        ],
+        "pre_delay": 0,
+        "post_delay": 0,
+        "pre_wait_freezes": 0,
+        "on_error": []
+    },
+    "AwakeningWaitBattleStart": {
+        "doc": "等待过场、布阵载入、准备、正式战斗或结算；仅原挑战目标仍存在时允许有界重试。",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "AwakeningNoResource",
+            "AwakeningBattleStarted",
+            "SafeInput_AwakeningChallenge"
+        ],
+        "timeout": 60000
+    },
+    "AwakeningBattleStarted": {
+        "doc": "已进入准备、战斗或结算，转入战斗处理。",
+        "recognition": {
+            "type": "Or",
+            "param": {
+                "any_of": [
+                    "DailyPrepare",
+                    "PageBattle",
+                    "DailyBattleResult",
+                    "DailyBattleFailed",
+                    "MitamaTreasurePopup",
+                    "PageLoading",
+                    "PageBattleEntering"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "AwakeningBattle"
+        ]
+    },
+    "AwakeningBattle": {
+        "doc": "处理准备、自动战斗、结算与特殊奖励，不将等待画面计为胜利。",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "AwakeningNoResource",
+            "[JumpBack]MitamaTreasurePopup",
+            "AwakeningBattleFailure",
+            "AwakeningBattleResult",
+            "[JumpBack]CommonBattleEnteringWait",
+            "[JumpBack]DailyPrepare",
+            "[JumpBack]SafeInput_AwakeningEnableAuto",
+            "[JumpBack]AwakeningChallenging",
+            "[JumpBack]SafeInput_DailyRewardPopup",
+            "[JumpBack]SafeInput_CommonNetworkRetry"
+        ],
+        "timeout": 180000
+    },
+    "AwakeningEnableAuto": {
+        "doc": "将觉醒战斗的手动模式切换为自动。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageBattle",
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "expected": "^手动$",
+                                "roi": [
+                                    7,
+                                    522,
+                                    165,
+                                    190
+                                ]
+                            }
+                        }
+                    }
+                ],
+                "box_index": 1
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_AwakeningEnableAuto"
+        ],
+        "pre_delay": 0,
+        "post_delay": 0,
+        "pre_wait_freezes": 0,
+        "on_error": []
+    },
+    "AwakeningBattleResult": {
+        "doc": "关闭觉醒成功结算，等待返回所选麒麟和层数。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "DailyBattleResult"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "[JumpBack]MitamaTreasurePopup",
+            "SafeInput_AwakeningBattleResult"
+        ],
+        "pre_delay": 0,
+        "post_delay": 0,
+        "pre_wait_freezes": 0,
+        "on_error": []
+    },
+    "AwakeningAfterResult": {
+        "doc": "确认成功结算已返回正确麒麟和层数后，累计成功次数并决定继续或收尾；继续时仍重置每场挑战的点击预算。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageAwakeningStage",
+                    "AwakeningLayerSelected"
+                ],
+                "box_index": 0
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "TargetCountProgress",
+                "custom_action_param": {
+                    "count": 1,
+                    "continue_node": "AwakeningBattleEntry",
+                    "finish_node": "AwakeningFinish"
+                }
+            }
+        },
+        "next": [
+            "AwakeningBattleEntry"
+        ],
+        "pre_delay": 0,
+        "post_delay": 0
+    },
+    "AwakeningProgress": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "TargetCountProgress",
+                "custom_action_param": {
+                    "count": 1
+                }
+            }
+        },
+        "next": [
+            "AwakeningCountDetermine"
+        ]
+    },
+    "AwakeningCountDetermine": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "TargetCountDetermine",
+                "custom_action_param": {
+                    "decision_node": "AwakeningCountDetermine",
+                    "continue_node": "AwakeningBattleEntry",
+                    "finish_node": "AwakeningFinish"
+                }
+            }
+        },
+        "next": [
+            "AwakeningBattleEntry"
+        ]
+    },
+    "AwakeningFinish": {
+        "doc": "达到成功次数后结束，停留在觉醒层数页。",
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "TargetCountFinish"
+            }
+        },
+        "next": [
+            "AwakeningFinishCleanup"
+        ]
+    },
+    "AwakeningBattleFailure": {
+        "doc": "战斗失败进入独立退出路径，不增加成功次数。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "DailyBattleFailed"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_AwakeningFailedBattleResult"
+        ],
+        "timeout": 30000
+    },
+    "AwakeningFailedBattleResult": {
+        "doc": "关闭觉醒失败结算，返回后停止任务。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "DailyBattleResult"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_AwakeningFailedBattleResult"
+        ],
+        "pre_delay": 0,
+        "post_delay": 0,
+        "pre_wait_freezes": 0,
+        "on_error": []
+    },
+    "AwakeningOpenBuffMenu": {
+        "doc": "在觉醒层数页匹配竖排加成图标并打开菜单，忽略右上角状态标记。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageAwakeningStage",
+                    "CommonBuffMenuIcon"
+                ],
+                "box_index": 1
+            }
+        },
+        "action": "DoNothing",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "pre_wait_freezes": 0,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_AwakeningOpenBuffMenu"
+        ]
+    },
+    "AwakeningFailedReturn": {
+        "doc": "返回觉醒层数页后以失败结束。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageAwakeningStage"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "NativeFlowFailed"
+        ]
+    },
+    "AwakeningBuffPanel": {
+        "doc": "识别加成菜单中的觉醒材料专属说明。",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "^觉醒副本掉落额外的觉醒材料$",
+                "roi": [
+                    420,
+                    120,
+                    350,
+                    65
+                ]
+            }
+        }
+    },
+    "AwakeningBuffOn": {
+        "doc": "通过觉醒材料一行的计时条颜色确认加成状态。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageAwakeningStage",
+                    "AwakeningBuffPanel",
+                    {
+                        "recognition": {
+                            "type": "ColorMatch",
+                            "param": {
+                                "roi": [
+                                    773,
+                                    140,
+                                    80,
+                                    30
+                                ],
+                                "method": 4,
+                                "lower": [
+                                    170,
+                                    110,
+                                    0
+                                ],
+                                "upper": [
+                                    255,
+                                    220,
+                                    100
+                                ],
+                                "count": 30
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    },
+    "AwakeningBuffOff": {
+        "doc": "通过觉醒材料一行的计时条颜色确认加成状态。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageAwakeningStage",
+                    "AwakeningBuffPanel",
+                    {
+                        "recognition": {
+                            "type": "ColorMatch",
+                            "param": {
+                                "roi": [
+                                    773,
+                                    140,
+                                    80,
+                                    30
+                                ],
+                                "method": 4,
+                                "lower": [
+                                    130,
+                                    0,
+                                    0
+                                ],
+                                "upper": [
+                                    230,
+                                    80,
+                                    100
+                                ],
+                                "count": 30
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    },
+    "AwakeningEnableBuff": {
+        "doc": "确认觉醒加成已开启，仅操作觉醒材料一行。",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "AwakeningBuffEnabled",
+            "[JumpBack]SafeInput_AwakeningEnableBuffClick",
+            "[JumpBack]SafeInput_AwakeningOpenBuffMenu"
+        ],
+        "action": "DoNothing",
+        "enabled": false
+    },
+    "AwakeningBuffEnabled": {
+        "doc": "状态确认完成后结束当前加成准备步骤。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "AwakeningBuffOn"
+                ]
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "DisableNode",
+                "custom_action_param": {
+                    "node_name": "AwakeningEnableBuff"
+                }
+            }
+        },
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_AwakeningCloseBuffAfterEnable"
+        ]
+    },
+    "AwakeningEnableBuffClick": {
+        "doc": "切换觉醒材料加成至开启状态。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "AwakeningBuffOff"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "pre_wait_freezes": 0,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_AwakeningEnableBuffClick"
+        ]
+    },
+    "AwakeningCloseBuffAfterEnable": {
+        "doc": "点击加成面板旁的空白区域，返回觉醒层数页。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageAwakeningStage",
+                    "AwakeningBuffPanel"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "pre_wait_freezes": 0,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_AwakeningCloseBuffAfterEnable"
+        ]
+    },
+    "AwakeningWaitBuffClosedForPreparation": {
+        "doc": "确认加成面板已关闭，未关闭时最多重试三次。",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "AwakeningBuffClosedForPreparation",
+            "SafeInput_AwakeningCloseBuffAfterEnable"
+        ],
+        "timeout": 5000
+    },
+    "AwakeningBuffClosedForPreparation": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "AwakeningBuffPanel"
+                ]
+            }
+        },
+        "inverse": true,
+        "action": "DoNothing",
+        "next": [
+            "AwakeningPreparation"
+        ]
+    },
+    "AwakeningDisableBuff": {
+        "doc": "确认觉醒加成已关闭，仅操作觉醒材料一行。",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "AwakeningBuffDisabled",
+            "[JumpBack]SafeInput_AwakeningDisableBuffClick",
+            "[JumpBack]SafeInput_AwakeningOpenBuffMenu"
+        ],
+        "action": "DoNothing",
+        "enabled": false
+    },
+    "AwakeningBuffDisabled": {
+        "doc": "状态确认完成后结束当前加成准备步骤。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "AwakeningBuffOff"
+                ]
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "DisableNode",
+                "custom_action_param": {
+                    "node_name": "AwakeningDisableBuff"
+                }
+            }
+        },
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_AwakeningCloseBuffAfterDisable"
+        ]
+    },
+    "AwakeningDisableBuffClick": {
+        "doc": "切换觉醒材料加成至关闭状态。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "AwakeningBuffOn"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "pre_wait_freezes": 0,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_AwakeningDisableBuffClick"
+        ]
+    },
+    "AwakeningCloseBuffAfterDisable": {
+        "doc": "点击加成面板旁的空白区域，返回觉醒层数页。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageAwakeningStage",
+                    "AwakeningBuffPanel"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "pre_wait_freezes": 0,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_AwakeningCloseBuffAfterDisable"
+        ]
+    },
+    "AwakeningWaitBuffClosedForFinish": {
+        "doc": "确认加成面板已关闭，未关闭时最多重试三次。",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "AwakeningBuffClosedForFinish",
+            "SafeInput_AwakeningCloseBuffAfterDisable"
+        ],
+        "timeout": 5000
+    },
+    "AwakeningBuffClosedForFinish": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "AwakeningBuffPanel"
+                ]
+            }
+        },
+        "inverse": true,
+        "action": "DoNothing",
+        "next": [
+            "AwakeningFinishCleanup"
+        ]
+    },
+    "AwakeningDismissBuffPanel": {
+        "doc": "关闭开始任务前已打开的觉醒加成菜单。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageAwakeningStage",
+                    "AwakeningBuffPanel"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "pre_wait_freezes": 0,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_AwakeningDismissBuffPanel"
+        ]
+    },
+    "AwakeningFinishCleanup": {
+        "doc": "结束觉醒任务时关闭本任务启用的觉醒材料加成。",
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "SubTask",
+                "custom_action_param": {
+                    "sub": [
+                        "AwakeningDisableBuff"
+                    ],
+                    "completion_next": [
+                        "AwakeningFinishDone"
+                    ],
+                    "timeout": 60000
+                }
+            }
+        },
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "AwakeningFinishDone"
+        ],
+        "timeout": 60000
+    },
+    "AwakeningFinishDone": {
+        "doc": "觉醒任务完成，停留在当前觉醒层数页。",
+        "action": "DoNothing"
+    },
+    "AwakeningPreset": {
+        "doc": "配置本任务的预设页面与返回位置，完成换队后才继续准备。",
+        "enabled": false,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "NodeOverride",
+                "custom_action_param": {
+                    "TeamPresetContext": {
+                        "recognition": {
+                            "type": "And",
+                            "param": {
+                                "all_of": [
+                                    "PageAwakeningStage"
+                                ]
+                            }
+                        }
+                    },
+                    "TeamPresetEntryText": {
+                        "recognition": {
+                            "param": {
+                                "roi": [
+                                    728,
+                                    605,
+                                    103,
+                                    40
+                                ]
+                            }
+                        }
+                    },
+                    "SafeInput_TeamPresetOpen": {
+                        "action": {
+                            "param": {
+                                "target": [
+                                    750,
+                                    558,
+                                    52,
+                                    50
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "anchor": {
+            "TeamPresetReturn": "AwakeningPresetDone"
+        },
+        "next": [
+            "TeamPresetRun"
+        ]
+    },
+    "AwakeningPresetDone": {
+        "doc": "确认预设已应用并返回挑战页，禁用本次换队步骤。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageAwakeningStage"
+                ]
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "DisableNode",
+                "custom_action_param": {
+                    "node_name": "AwakeningPreset"
+                }
+            }
+        },
+        "next": [
+            "AwakeningPreparation"
+        ]
+    },
+    "AwakeningChallenging": {
+        "doc": "底部妖术或普攻确认正式战斗后等待结算，不点击、不增加成功次数。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageBattle"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "post_delay": 1000,
+        "next": []
+    }
+}

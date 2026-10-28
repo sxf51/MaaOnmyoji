@@ -17,7 +17,7 @@ logger = logging.getLogger("MaaOnmyoji.recognition")
 
 
 def _hit(detail: Any) -> bool:
-    return detail is not None and getattr(detail, "box", None) is not None
+    return detail is not None and bool(getattr(detail, "hit", False)) and getattr(detail, "box", None) is not None
 
 
 def _box(detail: Any) -> list[int] | None:
@@ -72,11 +72,17 @@ class MultiRecognition(CustomRecognition):
             logger.error("MultiRecognition: %s", exc)
             return None
 
-        details = [context.run_recognition(str(node), argv.image) for node in nodes]
-        hits = [_hit(detail) for detail in details]
-        if (logic == "AND" and not all(hits)) or (logic == "OR" and not any(hits)):
-            return None
-        boxes = [box for detail in details if (box := _box(detail)) is not None]
+        hits, boxes = [], []
+        for node in nodes:
+            detail = context.run_recognition(str(node), argv.image)
+            matched = _hit(detail)
+            hits.append(matched)
+            if logic == "AND" and not matched:
+                return None
+            if matched:
+                boxes.append(_box(detail))
+                if logic == "OR" and return_mode != "union":
+                    break
         if not boxes:
             return None
         if isinstance(return_mode, list) and len(return_mode) == 4:
@@ -87,6 +93,30 @@ class MultiRecognition(CustomRecognition):
             result = boxes[0]
         result = [result[i] + int(offset[i]) for i in range(4)]
         return CustomRecognition.AnalyzeResult(box=result, detail={"hits": hits})
+
+
+def _clip_roi(value, width, height, offset=None):
+    """Resolve a fixed rectangle against the supplied image, never a new screenshot."""
+    if value is None or value is True:
+        value = [0, 0, width, height]
+    if isinstance(value, (str, bool)):
+        raise ValueError("颜色 OCR 的裁剪区域必须是矩形，不能引用动态 ROI")
+    values = list(value)
+    if len(values) != 4 or not all(isinstance(v, (int, np.integer)) and not isinstance(v, bool) for v in values):
+        raise ValueError("roi 必须为四个整数 [x, y, width, height]")
+    if values == [0, 0, 0, 0]:
+        values = [0, 0, width, height]
+    if offset is not None:
+        if len(offset) != 4 or not all(isinstance(v, (int, np.integer)) and not isinstance(v, bool) for v in offset):
+            raise ValueError("roi_offset 必须为四个整数")
+        values = [v + delta for v, delta in zip(values, offset)]
+    x, y, w, h = map(int, values)
+    if w <= 0 or h <= 0:
+        raise ValueError("roi 宽高必须为正数")
+    left, top, right, bottom = max(x, 0), max(y, 0), min(x + w, width), min(y + h, height)
+    if right <= left or bottom <= top:
+        raise ValueError("roi 与当前截图没有交集")
+    return [left, top, right - left, bottom - top]
 
 
 class _ColorOCRBase(CustomRecognition):
@@ -103,26 +133,55 @@ class _ColorOCRBase(CustomRecognition):
             order = str(p.get("color_order", "RGB")).upper()
             if not isinstance(color, list) or len(color) != 3:
                 raise ValueError("target_color 必须包含三个通道")
+            if not all(isinstance(v, (int, np.integer)) and not isinstance(v, bool) and 0 <= v <= 255 for v in color):
+                raise ValueError("target_color 通道必须为 0..255 的整数")
             if not 0 <= tolerance <= 255:
                 raise ValueError("tolerance 必须在 0..255")
             if order not in {"RGB", "BGR"}:
                 raise ValueError("color_order 仅支持 RGB/BGR")
+            image = np.asarray(argv.image)
+            if image.ndim != 3 or image.shape[2] != 3 or image.size == 0:
+                raise ValueError("需要非空 BGR 三通道截图")
+            height, width = image.shape[:2]
+            x, y, w, h = _clip_roi(getattr(argv, "roi", None), width, height)
+            node_data = context.get_node_data(node)
+            if not isinstance(node_data, dict):
+                raise ValueError("被引用的 OCR 节点不存在")
+            reco = node_data.get("recognition", {})
+            if isinstance(reco, dict) and reco.get("type") == "OCR":
+                param = reco.get("param", {})
+                nx, ny, nw, nh = _clip_roi(param.get("roi"), width, height, param.get("roi_offset"))
+                right, bottom = min(x + w, nx + nw), min(y + h, ny + nh)
+                x, y = max(x, nx), max(y, ny)
+                w, h = right - x, bottom - y
+                if w <= 0 or h <= 0:
+                    raise ValueError("custom roi 与 OCR 节点区域没有交集")
+            else:
+                raise ValueError("颜色 OCR 必须引用原生 OCR 节点")
         except (KeyError, TypeError, ValueError) as exc:
             logger.error("ColorOCR: %s", exc)
             return None
 
         target = np.asarray(color if order == "BGR" else list(reversed(color)), dtype=np.int16)
-        image = np.asarray(argv.image)
-        delta = np.abs(image.astype(np.int16) - target)
+        cropped = np.ascontiguousarray(image[y:y+h, x:x+w])
+        delta = np.abs(cropped.astype(np.int16) - target)
         mask = np.all(delta <= tolerance, axis=-1)
-        processed = np.full_like(image, 255, dtype=np.uint8)
+        processed = np.full_like(cropped, 255, dtype=np.uint8)
         processed[mask] = 0
-        detail = context.run_recognition(node, processed)
+        # run_recognition's override belongs to a cloned context. Local crop
+        # coordinates must not replace the reusable node's global ROI.
+        override = {node: {"recognition": {"param": {"roi": [0, 0, w, h], "roi_offset": [0, 0, 0, 0]}}}}
+        detail = context.run_recognition(node, processed, override)
+        filtered = True
         if not _hit(detail) and self.fallback:
-            detail = context.run_recognition(node, image)
+            detail = context.run_recognition(node, cropped, override)
+            filtered = False
         if not _hit(detail):
             return None
-        return CustomRecognition.AnalyzeResult(box=_box(detail), detail={"filtered": True})
+        bx, by, bw, bh = _box(detail)
+        if bx < 0 or by < 0 or bw <= 0 or bh <= 0 or bx + bw > w or by + bh > h:
+            return None
+        return CustomRecognition.AnalyzeResult(box=[bx+x, by+y, bw, bh], detail={"filtered": filtered, "roi": [x, y, w, h]})
 
 
 @AgentServer.custom_recognition("ColorOCR")

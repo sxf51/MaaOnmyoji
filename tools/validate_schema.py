@@ -138,11 +138,51 @@ def find_line_number(file_path, json_path):
     return None
 
 
+def validate_route_uniqueness(data):
+    """A destination must occur only once across next and on_error."""
+    import re
+
+    errors = []
+    if not isinstance(data, dict):
+        return errors
+    for name, node in data.items():
+        if not isinstance(node, dict) or name.startswith("$"):
+            continue
+        seen = {}
+        for field in ("next", "on_error"):
+            routes = node.get(field, [])
+            routes = [routes] if isinstance(routes, (str, dict)) else routes
+            if not isinstance(routes, list):
+                continue  # The schema reports invalid field types.
+            for index, route in enumerate(routes):
+                if isinstance(route, str):
+                    attributes = re.findall(r"^((?:\[[^\]]+\])*)", route)[0]
+                    destination = route[len(attributes):]
+                    anchor = "[Anchor]" in attributes
+                elif isinstance(route, dict):
+                    destination = route.get("name")
+                    anchor = bool(route.get("anchor", False))
+                else:
+                    continue
+                if not isinstance(destination, str):
+                    continue
+                key = (anchor, destination)
+                if key in seen:
+                    errors.append(ValidationError(
+                        f"重复路由 {destination!r}：已出现在 {seen[key]}，next/on_error 不得重复目标",
+                        path=[name, field, index],
+                    ))
+                else:
+                    seen[key] = f"{field}[{index}]"
+    return errors
+
+
 def validate_file(file_path, validator):
     """验证单个文件"""
     try:
         data = load_jsonc(file_path)
         errors = list(validator.iter_errors(data))
+        errors.extend(validate_route_uniqueness(data))
 
         if errors:
             print(f"\n❌ Validation failed for {file_path}:")

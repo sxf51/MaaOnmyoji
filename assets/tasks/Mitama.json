@@ -142,7 +142,7 @@
                     "pipeline_type": "int",
                     "default": "30",
                     "pattern_msg": "请输入作战次数，如30",
-                    "verify": "^(0|[1-9]\\d*)$",
+                    "verify": "^[1-9]\\d*$",
                     "description": "请输入作战次数，如30"
                 }
             ],
@@ -348,9 +348,7 @@
                     "name": "No",
                     "pipeline_override": {
                         "MitamaBattleModeDestination": {
-                            "next": [
-                                "MitamaChallenge"
-                            ]
+                            "next": ["[JumpBack]CommonBountyInterrupt", "SafeInput_MitamaChallenge"]
                         }
                     }
                 },
@@ -373,9 +371,7 @@
                     "name": "队长",
                     "pipeline_override": {
                         "MitamaBattleModeDestination": {
-                            "next": [
-                                "MitamaTeamLeader"
-                            ]
+                            "next": ["[JumpBack]CommonBountyInterrupt", "SafeInput_MitamaTeamLeader"]
                         },
                         "MitamaCountDetermine": {
                             "action": {
@@ -392,9 +388,7 @@
                     "name": "队员",
                     "pipeline_override": {
                         "MitamaBattleModeDestination": {
-                            "next": [
-                                "MitamaTeamMember"
-                            ]
+                            "next": ["MitamaTeamMember"]
                         },
                         "MitamaCountDetermine": {
                             "action": {
@@ -444,6 +438,12 @@
                     "pipeline_override": {
                         "MitamaDropStatistics": {
                             "enabled": false
+                        },
+                        "MitamaSoloDropStatistics": {
+                            "enabled": false
+                        },
+                        "MitamaTeamDropStatistics": {
+                            "enabled": false
                         }
                     }
                 },
@@ -451,6 +451,12 @@
                     "name": "Yes",
                     "pipeline_override": {
                         "MitamaDropStatistics": {
+                            "enabled": true
+                        },
+                        "MitamaSoloDropStatistics": {
+                            "enabled": true
+                        },
+                        "MitamaTeamDropStatistics": {
                             "enabled": true
                         }
                     },

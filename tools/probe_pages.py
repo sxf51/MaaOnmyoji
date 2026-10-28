@@ -23,7 +23,19 @@ from maa.custom_action import CustomAction
 from maa.resource import Resource
 from maa.tasker import Tasker
 from maa.toolkit import Toolkit
-from custom.navigation import PAGES, detect_page, hit, navigate, screenshot
+from custom.page_state import detect_page, hit, screenshot
+
+NAVIGATION_ENTRIES = {
+    "Home": "NavigateHome",
+    "Explore": "NavigateExplore",
+    "MitamaStage": "NavigateMitamaStage",
+    "Awakening": "NavigateAwakening",
+    "Raid": "NavigateRaid",
+    "Mail": "NavigateMail",
+    "QuestTasks": "NavigateQuestTasks",
+    "Quests": "NavigateQuests",
+    "Chapter": "NavigateChapter",
+}
 
 
 class ScreenshotController(CustomController):
@@ -56,7 +68,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("images", nargs="*")
     parser.add_argument("--live", action="store_true")
-    parser.add_argument("--target", choices=PAGES)
+    parser.add_argument("--target", choices=NAVIGATION_ENTRIES)
     parser.add_argument("--nodes", nargs="*", default=[])
     args = parser.parse_args()
     if args.target and not args.live:
@@ -89,10 +101,15 @@ def main():
                     detail = context.run_recognition(name, image)
                     hits.append({"node": name, "hit": hit(detail), "box": list(detail.box) if hit(detail) else None})
                 print(json.dumps({"image": filename or "live", "page": page, "probes": hits}, ensure_ascii=False), flush=True)
-                success = navigate(context, [args.target]) if args.target else page != "Unknown"
+                if args.target:
+                    result = context.run_task(NAVIGATION_ENTRIES[args.target])
+                    success = result is not None and result.status.succeeded
+                else:
+                    success = page != "Unknown"
                 return CustomAction.RunResult(success=success)
 
-        resource.register_custom_action("PageProbe", Probe())
+        resource.clear_custom_action()
+        assert resource.register_custom_action("PageProbe", Probe())
         job = tasker.post_task("PageProbeEntry", {"PageProbeEntry": {"action": {"type": "Custom", "param": {"custom_action": "PageProbe"}}}}).wait()
         failed |= not job.succeeded
     return int(failed)

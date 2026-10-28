@@ -1,0 +1,483 @@
+{
+    "TeamPresetRun": {
+        "desc": "队伍预设：预设分支入口",
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "TeamPresetWindowReady",
+            "TeamPresetOpen"
+        ]
+    },
+    "TeamPresetOpen": {
+        "desc": "队伍预设：打开队伍预设",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "TeamPresetContext",
+                    "TeamPresetEntryText"
+                ],
+                "box_index": 1
+            }
+        },
+        "action": "DoNothing",
+        "post_delay": 0,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_TeamPresetOpen"
+        ],
+        "pre_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "on_error": [],
+        "doc": "队伍预设：打开队伍预设。",
+        "max_hit": 3
+    },
+    "TeamPresetSelectGroup": {
+        "desc": "队伍预设：选择 UI 配置的预设分组",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    411,
+                    161,
+                    112,
+                    372
+                ],
+                "expected": [
+                    "默认分组"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "post_delay": 0,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_TeamPresetSelectGroup"
+        ],
+        "pre_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "on_error": [],
+        "doc": "队伍预设：选择 UI 配置的预设分组。",
+        "max_hit": 3
+    },
+    "TeamPresetGroupSelected": {
+        "desc": "队伍预设：检查 UI 配置的预设分组已经显示为金色选中背景",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    {
+                        "sub_name": "TeamPresetSelectedGroupText",
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "roi": [
+                                    411,
+                                    161,
+                                    112,
+                                    372
+                                ],
+                                "expected": [
+                                    "默认分组"
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "recognition": {
+                            "type": "ColorMatch",
+                            "param": {
+                                "roi": "TeamPresetSelectedGroupText",
+                                "method": 4,
+                                "lower": [
+                                    235,
+                                    175,
+                                    80
+                                ],
+                                "upper": [
+                                    255,
+                                    230,
+                                    175
+                                ],
+                                "count": 50
+                            }
+                        }
+                    }
+                ],
+                "box_index": 0
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_TeamPresetSelectTeamConfigured"
+        ]
+    },
+    "TeamPresetSelectTeam": {
+        "desc": "队伍预设：从多个预设队伍节点中选择分支",
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_TeamPresetSelectTeamConfigured"
+        ]
+    },
+    "TeamPresetSelectTeamConfigured": {
+        "desc": "队伍预设：选择 UI 配置的预设队伍",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    544,
+                    160,
+                    376,
+                    320
+                ],
+                "expected": [
+                    "默认队伍"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "post_delay": 0,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_TeamPresetSelectTeamConfigured"
+        ],
+        "pre_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "on_error": [],
+        "doc": "队伍预设：选择 UI 配置的预设队伍。"
+    },
+    "TeamPresetApply": {
+        "desc": "队伍预设：反复点击预设队伍图标并处理确认框，直到全队开始使用",
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "TeamPresetInUse",
+            "[JumpBack]SafeInput_TeamPresetConfirm",
+            "[JumpBack]TeamPresetApplyIcon"
+        ]
+    },
+    "TeamPresetApplyIcon": {
+        "desc": "队伍预设：点击 UI 配置队伍栏右上角的应用图标",
+        "max_hit": 10,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    {
+                        "sub_name": "TeamPresetTeamText",
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "roi": [
+                                    544,
+                                    160,
+                                    376,
+                                    320
+                                ],
+                                "expected": [
+                                    "默认队伍"
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "recognition": {
+                            "type": "TemplateMatch",
+                            "param": {
+                                "roi": "TeamPresetTeamText",
+                                "roi_offset": [
+                                    0,
+                                    -5,
+                                    300,
+                                    15
+                                ],
+                                "template": [
+                                    "Mitama/MitamaPresetTeam.png",
+                                    "Mitama/PresetApplySelected.png"
+                                ],
+                                "threshold": [
+                                    0.8,
+                                    0.9
+                                ]
+                            }
+                        }
+                    }
+                ],
+                "box_index": 1
+            }
+        },
+        "action": "DoNothing",
+        "post_delay": 0,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_TeamPresetApplyIcon"
+        ],
+        "pre_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "on_error": [],
+        "doc": "队伍预设：点击 UI 配置队伍栏右上角的应用图标。"
+    },
+    "TeamPresetConfirm": {
+        "desc": "队伍预设：确认即将更换全队预设",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "roi": [
+                                    410,
+                                    237,
+                                    461,
+                                    155
+                                ],
+                                "expected": [
+                                    "即将更换",
+                                    "即将为全队"
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "roi": [
+                                    410,
+                                    397,
+                                    457,
+                                    74
+                                ],
+                                "expected": [
+                                    "^确定$"
+                                ]
+                            }
+                        }
+                    }
+                ],
+                "box_index": 1
+            }
+        },
+        "action": "DoNothing",
+        "post_delay": 0,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_TeamPresetConfirm"
+        ],
+        "pre_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "on_error": [],
+        "doc": "队伍预设：确认即将更换全队预设。"
+    },
+    "TeamPresetInUse": {
+        "desc": "队伍预设：识别到全队正在使用预设的提示",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    455,
+                    171,
+                    385,
+                    89
+                ],
+                "expected": [
+                    "全队正在使用"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "TeamPresetOut"
+        ]
+    },
+    "TeamPresetOut": {
+        "desc": "队伍预设：预设队伍出战",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    668,
+                    482,
+                    120,
+                    44
+                ],
+                "expected": [
+                    "出战"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "post_delay": 0,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_TeamPresetOut"
+        ],
+        "pre_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "on_error": [],
+        "doc": "队伍预设：预设队伍出战。",
+        "max_hit": 3
+    },
+    "TeamPresetDone": {
+        "desc": "队伍预设：应用完成后回到调用任务",
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "[Anchor]TeamPresetReturn"
+        ],
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "TeamPresetContext"
+                ]
+            }
+        },
+        "doc": "确认预设窗口已关闭并返回调用页面后，交还任务的准备流程。"
+    },
+    "TeamPresetEntryText": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "^队伍预设$",
+                "roi": [
+                    728,
+                    605,
+                    103,
+                    40
+                ]
+            }
+        }
+    },
+    "TeamPresetFrame": {
+        "doc": "识别预设窗口边框或配置分组文字；窗口判定还需调用页和出战按钮同时命中。",
+        "recognition": {
+            "type": "Or",
+            "param": {
+                "any_of": [
+                    "TeamPresetFrameTemplate",
+                    "TeamPresetSelectGroup"
+                ]
+            }
+        }
+    },
+    "TeamPresetWindow": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "TeamPresetContext",
+                    "TeamPresetFrame",
+                    "TeamPresetOut"
+                ]
+            }
+        }
+    },
+    "TeamPresetWindowReady": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "TeamPresetWindow"
+                ]
+            }
+        },
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "TeamPresetGroupSelected",
+            "TeamPresetSelectGroup"
+        ]
+    },
+    "TeamPresetWaitWindow": {
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "TeamPresetWindowReady"
+        ],
+        "timeout": 3000,
+        "on_error": [
+            "TeamPresetOpenRetry"
+        ]
+    },
+    "TeamPresetOpenRetry": {
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "TeamPresetWindowReady",
+            "TeamPresetOpen"
+        ]
+    },
+    "TeamPresetVerifyClosed": {
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "TeamPresetWindowClosed"
+        ],
+        "timeout": 3000,
+        "on_error": [
+            "TeamPresetCloseRetry"
+        ]
+    },
+    "TeamPresetWindowClosed": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "TeamPresetWindow"
+                ]
+            }
+        },
+        "inverse": true,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "TeamPresetDone"
+        ]
+    },
+    "TeamPresetCloseRetry": {
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "TeamPresetWindowClosed",
+            "TeamPresetOut"
+        ]
+    },
+    "TeamPresetContext": {
+        "doc": "由调用任务配置的挑战页面检查；未配置时禁止打开预设。",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "^__TEAM_PRESET_CONTEXT_NOT_CONFIGURED__$",
+                "roi": [
+                    0,
+                    0,
+                    1,
+                    1
+                ]
+            }
+        }
+    },
+    "TeamPresetFrameTemplate": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": "Mitama/PresetFrame.png",
+                "roi": [
+                    395,
+                    140,
+                    155,
+                    30
+                ],
+                "threshold": 0.85
+            }
+        }
+    }
+}

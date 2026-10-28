@@ -11,6 +11,9 @@
                 {
                     "name": "mitama"
                 },
+                {
+                    "name": "awakening"
+                },
                 // {
                 //     "name": "exploration"
                 // },
@@ -20,11 +23,9 @@
                 // {
                 //     "name": "daily_rewards"
                 // },
+                // 通用挑战依赖手动进入目标页面，单独运行，不加入自动日常。
                 {
                     "name": "shutdown"
-                },
-                {
-                    "name": "common_activity"
                 }
             ]
         }

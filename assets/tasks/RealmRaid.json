@@ -6,17 +6,17 @@
             "entry": "RealmRaidTask",
             "description": "$realm_raid_task_doc",
             "option": [
-                "realm_raid_count"
+                "结界突破成功次数"
             ]
         }
     ],
     "option": {
-        "realm_raid_count": {
+        "结界突破成功次数": {
             "type": "input",
             "label": "本轮成功次数（最多九次，不刷新）",
             "inputs": [
                 {
-                    "name": "count",
+                    "name": "次数",
                     "pipeline_type": "int",
                     "default": "9",
                     "verify": "^[1-9]$"
@@ -27,7 +27,7 @@
                     "action": {
                         "param": {
                             "custom_action_param": {
-                                "target_count": "{count}"
+                                "target_count": "{次数}"
                             }
                         }
                     }

@@ -1,12 +1,22 @@
 {
     "DailyRewardsTask": {
-        "doc": "$daily_rewards_task_doc",
-        "action": {
-            "type": "Custom",
-            "param": {
-                "custom_action": "ClaimDailyRewards"
-            }
-        }
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "NativeNavigationBlocked",
+            "NativeResultBlocked",
+            "[JumpBack]NativeDailyRewardPopup",
+            "[JumpBack]NativeNavCancelNoResource",
+            "[JumpBack]NativeNavConfirmExitExplore",
+            "[JumpBack]NativeNavConfirmExitTeam",
+            "[JumpBack]NativeNavDismissRaidTarget",
+            "[JumpBack]NativeNavCancelInvite",
+            "[JumpBack]NativeNavCancelCreate",
+            "[JumpBack]NativeLoading",
+            "[JumpBack]SafeInput_StartupCloseAnnouncement",
+            "[JumpBack]SafeInput_StartupCancelIllustration",
+            "DailyRewardsTaskReady",
+            "[JumpBack]NavigateMail"
+        ]
     },
     "DailyRewardsClaimAllMail": {
         "recognition": {
@@ -24,12 +34,17 @@
                 ]
             }
         },
-        "action": {
-            "type": "Click",
-            "param": {
-                "target": true
-            }
-        }
+        "action": "DoNothing",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_DailyRewardsClaimAllMail"
+        ],
+        "on_error": [],
+        "doc": "领取邮件中可一键领取的附件。"
     },
     "DailyRewardsClaim": {
         "recognition": {
@@ -47,12 +62,17 @@
                 ]
             }
         },
-        "action": {
-            "type": "Click",
-            "param": {
-                "target": true
-            }
-        }
+        "action": "DoNothing",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_DailyRewardsClaim"
+        ],
+        "on_error": [],
+        "doc": "领取花合战任务奖励。"
     },
     "DailyRewardsClaimReward": {
         "recognition": {
@@ -70,18 +90,23 @@
                 ]
             }
         },
-        "action": {
-            "type": "Click",
-            "param": {
-                "target": true
-            }
-        }
+        "action": "DoNothing",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_DailyRewardsClaimReward"
+        ],
+        "on_error": [],
+        "doc": "领取花合战奖励页中可领取的奖励。"
     },
     "DailyRewardPopup": {
         "recognition": {
             "type": "OCR",
             "param": {
-                "expected": "获得奖励",
+                "expected": "^获得奖励$",
                 "roi": [
                     391,
                     103,
@@ -90,17 +115,17 @@
                 ]
             }
         },
-        "action": {
-            "type": "Click",
-            "param": {
-                "target": [
-                    600,
-                    620,
-                    80,
-                    35
-                ]
-            }
-        }
+        "action": "DoNothing",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_DailyRewardPopup"
+        ],
+        "on_error": [],
+        "doc": "关闭奖励展示，返回领奖流程。"
     },
     "DailyNoResource": {
         "recognition": {
@@ -152,31 +177,584 @@
                 ]
             }
         },
-        "action": {
-            "type": "Click",
-            "param": {
-                "target": true
-            }
-        }
+        "action": "DoNothing",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "DailyPreparationPassed",
+            "[JumpBack]CommonBattleEnteringWait",
+            "SafeInput_DailyPrepare"
+        ],
+        "on_error": [],
+        "doc": "点击战斗准备按钮。"
     },
     "DailyBattleResult": {
         "recognition": {
             "type": "OCR",
             "param": {
-                "expected": "点击屏幕继续",
+                "expected": "^点击(屏幕|空白区域)继续$",
                 "roi": [
-                    495,
+                    440,
                     637,
-                    298,
+                    400,
                     82
                 ]
             }
         },
-        "action": {
-            "type": "Click",
+        "action": "DoNothing",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_DailyBattleResult"
+        ],
+        "on_error": [],
+        "doc": "点击结算页的继续提示。"
+    },
+    "NativeMailClaimLoop": {
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "[JumpBack]SafeInput_DailyMailClaimConfirm",
+            "[JumpBack]SafeInput_DailyMailIllustrationCancel",
+            "[JumpBack]SafeInput_DailyRewardPopup",
+            "NativeMailClaim",
+            "NativeMailLimitReached",
+            "NativeMailEmpty"
+        ],
+        "timeout": 20000
+    },
+    "NativeMailClaim": {
+        "recognition": {
+            "type": "And",
             "param": {
-                "target": true
+                "all_of": [
+                    "PageMail",
+                    "DailyRewardsClaimAllMail"
+                ],
+                "box_index": 1
+            }
+        },
+        "action": "DoNothing",
+        "post_delay": 0,
+        "max_hit": 40,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_NativeMailClaim"
+        ],
+        "pre_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "on_error": [],
+        "doc": "在邮件页领取附件，随后继续检查剩余邮件。"
+    },
+    "NativeMailEmpty": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageMail"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "[JumpBack]SafeInput_DailyMailClaimConfirm",
+            "[JumpBack]SafeInput_DailyMailIllustrationCancel",
+            "[JumpBack]SafeInput_DailyRewardPopup",
+            "NativeMailClaim",
+            "NativeMailLimitReached",
+            "NativeMailConfirmEmpty"
+        ],
+        "post_delay": 1200
+    },
+    "NativeMailConfirmEmpty": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageMail"
+                ]
+            }
+        },
+        "next": [
+            "NativeRewardsToTasks"
+        ]
+    },
+    "NativeTasksClaimLoop": {
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "[JumpBack]SafeInput_DailyRewardPopup",
+            "NativeTasksClaim",
+            "NativeTasksLimitReached",
+            "NativeTasksEmpty"
+        ],
+        "timeout": 20000
+    },
+    "NativeTasksClaim": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageQuestTasks",
+                    "DailyRewardsClaim"
+                ],
+                "box_index": 1
+            }
+        },
+        "action": "DoNothing",
+        "post_delay": 0,
+        "max_hit": 40,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_NativeTasksClaim"
+        ],
+        "pre_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "on_error": [],
+        "doc": "在花合战任务页领取奖励，随后继续检查待领取任务。"
+    },
+    "NativeTasksEmpty": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageQuestTasks"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "[JumpBack]SafeInput_DailyRewardPopup",
+            "NativeTasksClaim",
+            "NativeTasksLimitReached",
+            "NativeTasksConfirmEmpty"
+        ],
+        "post_delay": 1200
+    },
+    "NativeTasksConfirmEmpty": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageQuestTasks"
+                ]
+            }
+        },
+        "next": [
+            "NativeRewardsToRewards"
+        ]
+    },
+    "NativeRewardsClaimLoop": {
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "[JumpBack]SafeInput_DailyRewardPopup",
+            "NativeRewardsClaim",
+            "NativeRewardsLimitReached",
+            "NativeRewardsEmpty"
+        ],
+        "timeout": 20000
+    },
+    "NativeRewardsClaim": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageQuests",
+                    "DailyRewardsClaimReward"
+                ],
+                "box_index": 1
+            }
+        },
+        "action": "DoNothing",
+        "post_delay": 0,
+        "max_hit": 40,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_NativeRewardsClaim"
+        ],
+        "pre_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "on_error": [],
+        "doc": "在花合战奖励页领取奖励，随后继续检查待领取奖励。"
+    },
+    "NativeRewardsEmpty": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageQuests"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "[JumpBack]SafeInput_DailyRewardPopup",
+            "NativeRewardsClaim",
+            "NativeRewardsLimitReached",
+            "NativeRewardsConfirmEmpty"
+        ],
+        "post_delay": 1200
+    },
+    "NativeRewardsConfirmEmpty": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageQuests"
+                ]
+            }
+        },
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "NativeRewardsScroll",
+            "NativeRewardsDone"
+        ]
+    },
+    "NativeRewardsScroll": {
+        "max_hit": 5,
+        "action": "DoNothing",
+        "post_delay": 0,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_NativeRewardsScroll"
+        ],
+        "pre_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "on_error": [],
+        "doc": "滑动花合战奖励列表，查找尚未领取的奖励。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageQuests"
+                ]
             }
         }
+    },
+    "NativeRewardsToTasks": {
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "NativeNavigationBlocked",
+            "NativeResultBlocked",
+            "[JumpBack]NativeDailyRewardPopup",
+            "[JumpBack]NativeNavCancelNoResource",
+            "[JumpBack]NativeNavConfirmExitExplore",
+            "[JumpBack]NativeNavConfirmExitTeam",
+            "[JumpBack]NativeNavDismissRaidTarget",
+            "[JumpBack]NativeNavCancelInvite",
+            "[JumpBack]NativeNavCancelCreate",
+            "[JumpBack]NativeLoading",
+            "[JumpBack]SafeInput_StartupCloseAnnouncement",
+            "[JumpBack]SafeInput_StartupCancelIllustration",
+            "NativeRewardsToTasksReady",
+            "[JumpBack]NavigateQuestTasks"
+        ]
+    },
+    "NativeRewardsToRewards": {
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "NativeNavigationBlocked",
+            "NativeResultBlocked",
+            "[JumpBack]NativeDailyRewardPopup",
+            "[JumpBack]NativeNavCancelNoResource",
+            "[JumpBack]NativeNavConfirmExitExplore",
+            "[JumpBack]NativeNavConfirmExitTeam",
+            "[JumpBack]NativeNavDismissRaidTarget",
+            "[JumpBack]NativeNavCancelInvite",
+            "[JumpBack]NativeNavCancelCreate",
+            "[JumpBack]NativeLoading",
+            "[JumpBack]SafeInput_StartupCloseAnnouncement",
+            "[JumpBack]SafeInput_StartupCancelIllustration",
+            "SafeInput_NativeRewardsSwitchTab",
+            "NativeRewardsToRewardsReady",
+            "[JumpBack]NavigateQuests"
+        ]
+    },
+    "NativeRewardsDone": {
+        "action": "DoNothing"
+    },
+    "DailyRewardsTaskReady": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "NativeAtMail"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "[JumpBack]SafeInput_DailyMailClaimConfirm",
+            "[JumpBack]SafeInput_DailyMailIllustrationCancel",
+            "[JumpBack]SafeInput_DailyRewardPopup",
+            "NativeMailClaim",
+            "NativeMailLimitReached",
+            "NativeMailEmpty"
+        ],
+        "timeout": 20000
+    },
+    "NativeRewardsToTasksReady": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "NativeAtQuestTasks"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "[JumpBack]SafeInput_DailyRewardPopup",
+            "NativeTasksClaim",
+            "NativeTasksLimitReached",
+            "NativeTasksEmpty"
+        ],
+        "timeout": 20000
+    },
+    "NativeRewardsToRewardsReady": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "NativeAtQuests"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "[JumpBack]SafeInput_DailyRewardPopup",
+            "NativeRewardsClaim",
+            "NativeRewardsLimitReached",
+            "NativeRewardsEmpty"
+        ],
+        "timeout": 20000
+    },
+    "NativeMailLimitReached": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageMail",
+                    "DailyRewardsClaimAllMail"
+                ]
+            }
+        },
+        "next": [
+            "NativeFlowFailed"
+        ]
+    },
+    "NativeTasksLimitReached": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageQuestTasks",
+                    "DailyRewardsClaim"
+                ]
+            }
+        },
+        "next": [
+            "NativeFlowFailed"
+        ]
+    },
+    "NativeRewardsLimitReached": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageQuests",
+                    "DailyRewardsClaimReward"
+                ]
+            }
+        },
+        "next": [
+            "NativeFlowFailed"
+        ]
+    },
+    "NativeRewardsSwitchTab": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageQuestTasks",
+                    "NavQuestRewards"
+                ],
+                "box_index": 1
+            }
+        },
+        "action": "DoNothing",
+        "post_delay": 0,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_NativeRewardsSwitchTab"
+        ],
+        "pre_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "on_error": [],
+        "doc": "从花合战任务页切换到奖励页。"
+    },
+    "NativeRewardsTabReady": {
+        "doc": "等待花合战任务页消失，再确认已进入奖励页面。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageQuestTasks"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "NativeRewardsToRewardsReady"
+        ],
+        "inverse": true
+    },
+    "DailyPreparationPassed": {
+        "doc": "准备按钮复核期间已进入战斗或结算时，返回原战斗流程。",
+        "recognition": {
+            "type": "Or",
+            "param": {
+                "any_of": [
+                    "PageBattle",
+                    "DailyBattleResult",
+                    "DailyBattleFailed"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": []
+    },
+    "NativeRewardsTabReadyWait": {
+        "doc": "等待花合战页签切换，点击失败时重新点击，最多三次。",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "NativeRewardsTabReady"
+        ],
+        "timeout": 3000,
+        "on_error": [
+            "NativeRewardsTabRetry"
+        ]
+    },
+    "NativeRewardsTabRetry": {
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "NativeRewardsTabReady",
+            "SafeInput_NativeRewardsSwitchTab"
+        ]
+    },
+    "DailyMailClaimConfirm": {
+        "doc": "确认领取邮件附件，继续检查邮件奖励。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageMail",
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "expected": "(领取|收取).*(邮件|附件)|(邮件|附件).*(领取|收取)",
+                                "roi": [
+                                    280,
+                                    160,
+                                    720,
+                                    350
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "expected": "^确定$",
+                                "roi": [
+                                    650,
+                                    510,
+                                    240,
+                                    130
+                                ]
+                            }
+                        }
+                    }
+                ],
+                "box_index": 2
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_DailyMailClaimConfirm"
+        ],
+        "pre_delay": 0,
+        "post_delay": 0,
+        "pre_wait_freezes": 0,
+        "on_error": []
+    },
+    "DailyMailIllustrationCancel": {
+        "doc": "取消领取邮件后出现的启用插画提示。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageMail",
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "expected": "是否启用|启用插画",
+                                "roi": [
+                                    300,
+                                    170,
+                                    680,
+                                    260
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "expected": "^取消$",
+                                "roi": [
+                                    300,
+                                    300,
+                                    680,
+                                    240
+                                ]
+                            }
+                        }
+                    }
+                ],
+                "box_index": 2
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_DailyMailIllustrationCancel"
+        ],
+        "pre_delay": 0,
+        "post_delay": 0,
+        "pre_wait_freezes": 0,
+        "on_error": []
     }
 }

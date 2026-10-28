@@ -37,18 +37,12 @@ class BezierSwipeTest(unittest.TestCase):
         self.assertEqual((len(track), duration, contact, pressure), (17, 640, 0, 1))
 
     def test_endpoint_can_be_random_on_a_line(self) -> None:
-        track, _, _, _ = build_track(
-            {
-                "begin": {"line": [[100, 600], [300, 500]]},
-                "end": [900, 200],
-                "segments": 10,
-                "random_seed": 7,
-            }
-        )
+        track, _, _, _ = build_track({
+            "begin": {"line": [[100, 600], [300, 500]]},
+            "end": [900, 200], "random_seed": 7,
+        })
         x, y = track[0]
-        self.assertGreaterEqual(x, 100)
-        self.assertLessEqual(x, 300)
-        # 该线段满足 y = 650 - x / 2，允许整数取整带来的 1 px 误差。
+        self.assertTrue(100 <= x <= 300)
         self.assertLessEqual(abs(y - (650 - x / 2)), 1)
 
     def test_fixed_endpoint_format_remains_supported(self) -> None:
@@ -71,13 +65,13 @@ class BezierSwipeTest(unittest.TestCase):
 
     def test_region_rejects_negative_size(self) -> None:
         with self.assertRaises(ValueError):
-            build_track({"begin": [10, 20, -1, 30], "end": [300, 400]})
+            build_track({"begin": [10, 20, -1, 30], "end": [300, 400, 30, 30]})
 
     def test_duration_can_have_random_extension(self) -> None:
         _, duration, _, _ = build_track(
             {
-                "begin": [10, 20],
-                "end": [300, 400],
+                "begin": [10, 20, 30, 30],
+                "end": [300, 400, 30, 30],
                 "duration": 600,
                 "duration_random": 200,
                 "random_seed": 17,
@@ -88,7 +82,7 @@ class BezierSwipeTest(unittest.TestCase):
 
     def test_duration_random_defaults_to_zero(self) -> None:
         _, duration, _, _ = build_track(
-            {"begin": [10, 20], "end": [300, 400], "duration": 600}
+            {"begin": [10, 20, 30, 30], "end": [300, 400, 30, 30], "duration": 600}
         )
         self.assertEqual(duration, 600)
 
@@ -96,8 +90,8 @@ class BezierSwipeTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             build_track(
                 {
-                    "begin": [10, 20],
-                    "end": [300, 400],
+                    "begin": [10, 20, 30, 30],
+                    "end": [300, 400, 30, 30],
                     "duration_random": -1,
                 }
             )

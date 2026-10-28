@@ -10,6 +10,7 @@ from typing import Any
 from maa.agent.agent_server import AgentServer
 from maa.context import Context
 from maa.custom_action import CustomAction
+from custom.route_policy import with_purchase_stop
 
 logger = logging.getLogger("MaaOnmyoji.target_count")
 
@@ -30,21 +31,25 @@ def _parse_params(raw: Any) -> dict[str, Any]:
     raise ValueError("custom_action_param 必须是 JSON 对象")
 
 
-def _positive_int(value: Any, field: str) -> int:
+def _integer(value: Any, field: str) -> int:
+    # int() silently truncates floats and treats True as one successful battle.
+    if isinstance(value, bool) or not isinstance(value, (int, str)):
+        raise ValueError(f"{field} 必须是整数")
     try:
-        result = int(value)
+        return int(value)
     except (TypeError, ValueError) as exc:
-        raise ValueError(f"{field} 必须是正整数") from exc
+        raise ValueError(f"{field} 必须是整数") from exc
+
+
+def _positive_int(value: Any, field: str) -> int:
+    result = _integer(value, field)
     if result <= 0:
         raise ValueError(f"{field} 必须是正整数")
     return result
 
 
 def _target_count(value: Any) -> int:
-    try:
-        result = int(value)
-    except (TypeError, ValueError) as exc:
-        raise ValueError("target_count 必须是正整数或 -1") from exc
+    result = _integer(value, "target_count")
     if result != -1 and result <= 0:
         raise ValueError("target_count 必须是正整数或 -1")
     return result
@@ -120,16 +125,26 @@ class TargetCountInit(CustomAction):
 
 @AgentServer.custom_action("TargetCountProgress")
 class TargetCountProgress(CustomAction):
-    """战斗结算成功后累计进度。"""
+    """战斗结算成功后累计进度；可同时按次数选择继续或完成节点。"""
 
     def run(self, context: Context, argv: CustomAction.RunArg) -> CustomAction.RunResult:
-        del context
         try:
             params = _parse_params(argv.custom_action_param)
+            route = None
+            if "continue_node" in params or "finish_node" in params:
+                route = (params["continue_node"], params["finish_node"])
+                if not all(isinstance(node, str) and node.strip() for node in route):
+                    raise ValueError("路由节点名必须是非空字符串")
             _state.progress(params.get("count", 1))
-        except (ValueError, RuntimeError) as exc:
+        except (KeyError, ValueError, RuntimeError) as exc:
             logger.error("记录挑战进度失败：%s", exc)
             return CustomAction.RunResult(success=False)
+
+        if route is not None:
+            next_node = route[1] if _state.finished else route[0]
+            if not context.override_next(argv.node_name, with_purchase_stop([next_node], context)):
+                logger.error("更新计数后路由失败：%s -> %s", argv.node_name, next_node)
+                return CustomAction.RunResult(success=False)
 
         if _state.target_count == -1:
             logger.info("已完成副本次数：%d", _state.completed_count)
@@ -148,9 +163,12 @@ class TargetCountDetermine(CustomAction):
     def run(self, context: Context, argv: CustomAction.RunArg) -> CustomAction.RunResult:
         try:
             params = _parse_params(argv.custom_action_param)
-            decision_node = str(params["decision_node"])
-            continue_node = str(params["continue_node"])
-            finish_node = str(params["finish_node"])
+            decision_node = params["decision_node"]
+            continue_node = params["continue_node"]
+            finish_node = params["finish_node"]
+            if not all(isinstance(node, str) and node.strip()
+                       for node in (decision_node, continue_node, finish_node)):
+                raise ValueError("路由节点名必须是非空字符串")
             if not _state.initialized:
                 raise RuntimeError("目标次数尚未初始化")
         except (KeyError, ValueError, RuntimeError) as exc:
@@ -158,7 +176,9 @@ class TargetCountDetermine(CustomAction):
             return CustomAction.RunResult(success=False)
 
         next_node = finish_node if _state.finished else continue_node
-        context.override_next(decision_node, [next_node])
+        if not context.override_next(decision_node, with_purchase_stop([next_node], context)):
+            logger.error("更新次数路由失败：%s -> %s", decision_node, next_node)
+            return CustomAction.RunResult(success=False)
         logger.debug("次数判断节点 %s -> %s", decision_node, next_node)
         return CustomAction.RunResult(success=True)
 

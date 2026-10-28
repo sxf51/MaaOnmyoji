@@ -7,6 +7,8 @@
     "startup_task": "启动游戏",
     "shutdown_task": "关闭游戏",
     "mitama_task": "御魂",
+    "awakening_task": "觉醒副本",
+    "awakening_task_doc": "单人挑战配置的麒麟和层数，按成功结算次数停止；支持锁定阵容、任务前队伍预设、自动准备和可选觉醒材料加成，体力不足或购买提示出现时停止。",
     "mitama_task_doc": "从庭院进入御魂副本并循环挑战；体力不足或达到次数后停止",
     "common_activity_task": "通用重复挑战",
     "common_activity_task_doc": "从当前活动挑战界面开始，循环挑战直到达到配置次数，其它循环的挑战任务也能用",

@@ -230,5 +230,262 @@
                 ]
             }
         }
+    },
+
+    // Read-only page inspection and native Pipeline examples.
+    "ExampleDetectPage": {
+        "doc": "只读页面识别：依赖 Navigation.json 的 Page* 节点及 agent/main.py 的 page_detection 注册；无需参数。读取新截图并记录页名，Unknown 或截图失败返回失败，不点击也不改变 next。",
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "DetectPage"
+            }
+        }
+    },
+    "ExampleCurrentPage": {
+        "doc": "CurrentPage 自定义识别：依赖 agent/main.py 的 page 注册及全部 Page* 节点。pages 是允许命中的页名列表，省略时接受所有已知页。使用本次识别图像，不额外截图；结果 detail.page 为页名，Unknown 不命中。返回框固定 [0,0,1,1]，仅用于路由，不可直接配 Click。",
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "CurrentPage",
+                "custom_recognition_param": {
+                    "pages": [
+                        "Explore",
+                        "Raid",
+                        "MitamaStage"
+                    ]
+                }
+            }
+        },
+        "action": "DoNothing"
+    },
+    "ExampleNativeNavigateRaid": {
+        "doc": "推荐：目标页优先。已在突破页直接完成，否则调用原生导航；JumpBack 返回后必须先检查目标页，不能把无条件导航放在列表首位。",
+        "next": [
+            "NativeAtRaid",
+            "[JumpBack]NavigateRaid"
+        ]
+    },
+    "ExampleNativeReturnHome": {
+        "doc": "推荐：原生 Home/返回导航。调用 ReturnMain 即可；有 Home 时优先 Home，否则关闭弹窗或逐级返回。",
+        "next": [
+            "NativeAtHome",
+            "[JumpBack]NavigateHome"
+        ]
+    },
+    "ExampleNativePageRoute": {
+        "doc": "原生页面路由：直接复用 Page* 识别，不需要 CurrentPage。下一步只识别列表内页面，未知页面超时失败。",
+        "next": [
+            "ExampleNativeOnExplore",
+            "ExampleNativeOnRaid"
+        ],
+        "timeout": 5000
+    },
+    "ExampleNativeOnExplore": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageExplore"
+                ]
+            }
+        },
+        "action": "DoNothing"
+    },
+    "ExampleNativeOnRaid": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageRaid"
+                ]
+            }
+        },
+        "action": "DoNothing"
+    },
+    "ExampleNativeExplore": {
+        "doc": "推荐：调用生产入口完成初始化、找怪、战斗和成功计数。通过 ExplorationTask 的 target_count 配置次数，通过 ExplorationSelectChapter 的 expected 配置章节。",
+        "next": [
+            "ExplorationTask"
+        ]
+    },
+    "ExampleNativeRaid": {
+        "doc": "推荐：调用原生九宫格突破。RealmRaidTask 只用 TargetCountInit 初始化次数；每格本次任务最多尝试一次，成功后验证攻破标记再计数。",
+        "next": [
+            "RealmRaidTask"
+        ]
+    },
+    "ExampleNativeDailyRewards": {
+        "doc": "推荐：原生邮件→花合战任务→花合战奖励；只点击精确匹配的文字领取按钮，不点击宝箱。",
+        "next": [
+            "DailyRewardsTask"
+        ]
+    },
+    "ExampleConfigureTeamRecognition": {
+        "doc": "先通过 TargetCountInit 设置 teammate；本动作仅将完整昵称转义成精确匹配正则并覆盖三个 OCR 节点，不截图、不点击、不等待。实际组队流程使用 MitamaFindTeammate / MitamaTeamMember / MitamaLeaderFight / MitamaMemberFight。",
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ConfigureTeamRecognition"
+            }
+        }
+    },
+    "ExampleAwakeningTask": {
+        "doc": "完整单人觉醒入口，默认火麒麟拾层、成功10次、锁定阵容，加成默认关闭。UI 配置见 tasks/Awakening.json：麒麟配置同时覆盖标题识别与菜单/左侧入口区域；层数配置同时覆盖目标文字和选中背景复核。成功结算返回正确副本才计数；可选加成在达到次数后关闭，结束停在觉醒层数页。",
+        "next": [
+            "AwakeningTask"
+        ]
+    },
+    "ExampleNavigateAwakening": {
+        "doc": "仅导航到觉醒菜单或觉醒层数页，不挑战、不初始化次数。已在觉醒时直接返回；需要选择麒麟和层数并刷本时调用 AwakeningTask。",
+        "next": [
+            "NavigateAwakening"
+        ]
+    },
+    "ExampleEnsureExplorationMainline": {
+        "doc": "已在探索地图时，展开右侧章节面板并切换主线，再按 ExplorationSelectChapter 配置继续选章和探索。需先初始化目标次数；完整任务优先调用 ExplorationTask。",
+        "next": [
+            "ExplorationEnsureMainline"
+        ]
+    },
+    "ExampleMailClaimConfirmation": {
+        "doc": "只在已显示邮件附件领取确认时调用：同时验证邮箱页面、领取邮件/附件提示和确定按钮。完整邮件领取流程使用 DailyRewardsTask；不要用此节点确认其它弹窗。",
+        "next": [
+            "CommonPurchaseStop",
+            "DailyMailClaimConfirm"
+        ]
+    },
+    "ExampleAwakeningWithPreset": {
+        "doc": "觉醒换队示例：启用任务前预设，成功一次后结束。分组和队伍在 tasks/Awakening.json 的 觉醒预设分组与队伍 中配置，并同时更新共享节点的文字及选中识别；默认关闭觉醒加成，可通过 觉醒材料加成 单独开启。不要直接调用 TeamPresetRun 或 SafeInput 节点，正式任务会配置页面上下文和返回锚点。",
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "NodeOverride",
+                "custom_action_param": {
+                    "AwakeningPreset": {"enabled": true},
+                    "AwakeningTask": {"action": {"param": {"custom_action_param": {"target_count": 1}}}}
+                }
+            }
+        },
+        "next": ["CommonPurchaseStop", "AwakeningTask"]
+    },
+    "ExampleActivityWithPreset": {
+        "doc": "通用活动换队示例：仅从显示队伍预设入口的挑战页开始，启用预设并成功一次后结束。配置位于 tasks/CommonActivity.json 的 重复挑战预设分组与队伍。窗口、分组、应用或出战确认失败时停止，不能跳过换队直接开战。当前活动任务使用相同模块，选项名为 当期活动更换队伍预设。",
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "NodeOverride",
+                "custom_action_param": {
+                    "CommonActivityPreset": {"enabled": true},
+                    "CommonActivityTask": {
+                        "action": {"param": {"custom_action_param": {"target_count": 1}}},
+                        "next": ["CommonPurchaseStop", "CommonActivityBeforeChallenge"]
+                    }
+                }
+            }
+        },
+        "next": ["CommonPurchaseStop", "CommonActivityTask"]
+    },
+    "ExampleCountAndRouteAfterResult": {
+        "doc": "计数与路由合并示例：需先初始化目标次数，且只能在确认一次成功结算并返回挑战页后执行。count 累计本次成功，continue_node 和 finish_node 必须同时配置；动作会按累计次数改写当前节点的 next，并自动将购买停止分支放在首位。实际用法见 MitamaFinishOnce；省略这两个路由参数时仅计数，保持旧用法。",
+        "recognition": {
+            "type": "And",
+            "param": {"all_of": ["MitamaFinishOnce"]}
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "TargetCountProgress",
+                "custom_action_param": {
+                    "count": 1,
+                    "continue_node": "MitamaChallenge",
+                    "finish_node": "MitamaFinish"
+                }
+            }
+        },
+        "next": ["CommonPurchaseStop", "MitamaChallenge"]
+    },
+    "ExampleBountyAwareNavigation": {
+        "doc": "跨页面协作邀请示例：购买风险优先；邀请出现时先走 CommonBountyInterrupt，默认拒绝并确认关闭，再通过 JumpBack 返回当前导航。生产任务和动态次数/准备路由已统一加入此优先分支，无需为每个页面另写拒绝流程。只读 DetectPage/CurrentPage 会报告 Bounty 覆盖层，不将其误判为后台页面。",
+        "next": ["CommonPurchaseStop", "[JumpBack]CommonBountyInterrupt", "NavigateHome"]
+    },
+    "ExampleCroppedColorOCR": {
+        "doc": "局部颜色 OCR 的只读示例：仅处理右侧队伍列表，先与被引用 OCR 节点的 roi 求交，再裁剪、按 RGB 目标色二值化；过滤识别失败时只回退到同一裁剪区域的原图。结果框自动恢复到整张截图坐标。复用 custom 的 argv.image，不重新截屏；普通固定区域文字优先直接使用原生 OCR 的 roi，颜色过滤也可优先用原生 color_filter。",
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "roi": [544, 160, 376, 320],
+                "custom_recognition": "ColorOCRWithFallback",
+                "custom_recognition_param": {
+                    "recognition": "MitamaSelectPresetTeamConfigured",
+                    "target_color": [255, 235, 180],
+                    "tolerance": 55,
+                    "color_order": "RGB"
+                }
+            }
+        },
+        "action": "DoNothing"
+    },
+    "ExampleSameFrameGuardedMitama": {
+        "doc": "同帧候选队列示例：仅在已到达目标御魂挑战页且准备完成后使用，成功一次后结束。next 在同一张图上按购买风险、协作邀请、可读性及挑战目标依次判断，再执行点击。SafeInput 节点仅作为完整安全队列的候选，不能单独作为任务入口；完整导航和准备仍使用 MitamaTask。",
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "TargetCountInit",
+                "custom_action_param": {"target_count": 1}
+            }
+        },
+        "next": ["CommonPurchaseStop", "[JumpBack]CommonBountyInterrupt", "SafeInput_MitamaChallenge"]
+    },
+    "ExampleControlDispatch": {
+        "doc": "纯控制调度示例：已在御魂挑战页并完成准备时，初始化成功次数并重置重试预算；两步只改内存数据。最后在同一张截图中检查购买风险、协作邀请和挑战目标，成功一次后结束。完整任务仍使用 MitamaTask。",
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "TargetCountInit",
+                "custom_action_param": {"target_count": 1}
+            }
+        },
+        "next": ["ExampleControlReset"]
+    },
+    "ExampleControlReset": {
+        "doc": "重置挑战重试预算后进入完整的画面识别队列。只有已知的纯控制动作允许直连；视觉条件、点击、滑动和未知自定义动作均保留保护队列。",
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ResetCount",
+                "custom_action_param": {"nodes": ["SafeInput_MitamaChallenge"], "strict": true}
+            }
+        },
+        "next": ["CommonPurchaseStop", "[JumpBack]CommonBountyInterrupt", "SafeInput_MitamaChallenge"]
+    },
+    "ExampleLocalInputChallenge": {
+        "doc": "局部输入保护示例：已到达御魂挑战页并完成准备时，成功一次后结束。先处理协作邀请，再由 InputTarget 在同一张图上匹配 MitamaChallenge，按运行时 action.target 和 target_offset 得到完整随机点击范围，仅检查该范围及按钮边缘；不扫描整页购买词。确认操作必须另有对应业务提示。完整流程仍从 MitamaTask 开始。旧示例中关于全屏购买拦截的说明已由本策略替代。",
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "TargetCountInit",
+                "custom_action_param": {"target_count": 1}
+            }
+        },
+        "next": ["[JumpBack]CommonBountyInterrupt", "SafeInput_MitamaChallenge"]
+    },
+    "ExampleBattlePhaseRecognition": {
+        "doc": "战斗阶段只读识别示例，供 run_recognition 传入当前截图调用：BattleEntering 是灰暗准备鼓的布阵载入；Battle 由底部妖术或普攻正则命中确认；Loading 是官网文字过场。无需注册独立 UI Task。载入不点击准备、不记成功，正式流程仍由各玩法等待结算后计数。",
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "CurrentPage",
+                "custom_recognition_param": {"pages": ["BattleEntering", "Battle", "Loading"]}
+            }
+        },
+        "action": "DoNothing"
+    },
+    "ExamplePurchaseProtectedChallenge": {
+        "doc": "购买保护优先：即使背景仍能识别挑战按钮，购/限购/不足等全屏文字命中也必须停止，不点取消或确认。生产公共输入入口会再次检查风险、文字可读性及目标；不要直接调用私有 SafeInput_*，也不要用裸 run_action 跳过完整调度。旧示例中的资源正常收尾规则受此更严格的全局保护优先覆盖。",
+        "next": [
+            "CommonPurchaseStop",
+            "MitamaChallenge"
+        ]
     }
 }

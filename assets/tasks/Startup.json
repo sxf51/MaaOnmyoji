@@ -5,17 +5,17 @@
             "label": "$startup_task",
             "entry": "StartupTask",
             "option": [
-                "startup_server"
+                "启动区服"
             ]
         }
     ],
     "option": {
-        "startup_server": {
+        "启动区服": {
             "type": "input",
             "label": "区服",
             "inputs": [
                 {
-                    "name": "server",
+                    "name": "区服",
                     "label": "目标区服",
                     "pipeline_type": "string",
                     "default": "[一-龥]+",
@@ -28,7 +28,7 @@
                     "recognition": {
                         "param": {
                             "expected": [
-                                "{server}"
+                                "{区服}"
                             ]
                         }
                     }
@@ -37,7 +37,7 @@
                     "recognition": {
                         "param": {
                             "expected": [
-                                "{server}"
+                                "{区服}"
                             ]
                         }
                     }

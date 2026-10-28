@@ -12,6 +12,7 @@ from maa.context import Context
 from maa.custom_action import CustomAction
 
 from cBezier import bezier_points, swipe_control_points
+from custom.input_safety import ensure_input_safe
 from .target_count import _parse_params
 
 logger = logging.getLogger("MaaOnmyoji.bezier_swipe")
@@ -88,11 +89,19 @@ class BezierSwipe(CustomAction):
 
     def run(self, context: Context, argv: CustomAction.RunArg) -> CustomAction.RunResult:
         try:
-            track, duration, contact, pressure = build_track(_parse_params(argv.custom_action_param))
+            params = dict(_parse_params(argv.custom_action_param))
+            if "random_seed" in params:
+                logger.warning("random_seed 仅用于轨迹测试；实际输入使用独立随机采样")
+                params.pop("random_seed")
+            track, duration, contact, pressure = build_track(params)
         except (TypeError, ValueError) as exc:
             logger.error("BezierSwipe: %s", exc)
             return CustomAction.RunResult(success=False)
 
+        xs, ys = zip(*track)
+        touch_region = [min(xs), min(ys), max(xs) - min(xs) + 1, max(ys) - min(ys) + 1]
+        if not ensure_input_safe(context, target_node=getattr(argv, "node_name", None), regions=[touch_region]):
+            return CustomAction.RunResult(success=False)
         controller = context.tasker.controller
         interval = duration / (len(track) - 1) / 1000
         success = True

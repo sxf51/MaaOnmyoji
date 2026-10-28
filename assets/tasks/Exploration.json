@@ -5,19 +5,19 @@
             "label": "$exploration_task",
             "entry": "ExplorationTask",
             "option": [
-                "exploration_count",
-                "exploration_chapter"
+                "探索作战次数",
+                "探索章节"
             ],
             "description": "$exploration_task_doc"
         }
     ],
     "option": {
-        "exploration_count": {
+        "探索作战次数": {
             "type": "input",
             "label": "$battle_count",
             "inputs": [
                 {
-                    "name": "count",
+                    "name": "次数",
                     "pipeline_type": "int",
                     "default": "10",
                     "verify": "^[1-9]\\d*$"
@@ -28,19 +28,19 @@
                     "action": {
                         "param": {
                             "custom_action_param": {
-                                "target_count": "{count}"
+                                "target_count": "{次数}"
                             }
                         }
                     }
                 }
             }
         },
-        "exploration_chapter": {
+        "探索章节": {
             "type": "input",
             "label": "探索地图章节名称（已在章节内时继续当前章节）",
             "inputs": [
                 {
-                    "name": "chapter",
+                    "name": "章节",
                     "default": "第二十八章",
                     "verify": "^第[一二三四五六七八九十百]+章$"
                 }
@@ -49,7 +49,7 @@
                 "ExplorationSelectChapter": {
                     "recognition": {
                         "param": {
-                            "expected": "{chapter}"
+                            "expected": "{章节}"
                         }
                     }
                 }

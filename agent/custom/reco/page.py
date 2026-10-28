@@ -2,7 +2,7 @@ from maa.agent.agent_server import AgentServer
 from maa.custom_recognition import CustomRecognition
 
 from custom.action.target_count import _parse_params
-from custom.navigation import detect_page
+from custom.page_state import detect_page
 
 
 @AgentServer.custom_recognition("CurrentPage")

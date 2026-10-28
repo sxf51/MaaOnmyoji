@@ -1,4 +1,6 @@
 {
+    "awakening_task": "Awakening dungeon",
+    "awakening_task_doc": "Solo farming for the selected Kirin and floor, with optional team preset and awakening-material buff; count completed victories and stop on purchase or insufficient-stamina prompts.",
     "project_name": "Onmyoji Assistant",
     "project_title": "MaaOnmyoji · Onmyoji Assistant",
     "project_description": "Onmyoji Assistant. Image technology + simulation control, free your hands! Powered by MaaFramework!",

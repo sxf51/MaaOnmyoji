@@ -5,7 +5,8 @@
             "label": "$common_activity_task",
             "entry": "CommonActivityTask",
             "option": [
-                "重复挑战自定义作战次数"
+                "重复挑战自定义作战次数",
+                "重复挑战更换队伍预设"
             ],
             "description": "$common_activity_task_doc"
         }
@@ -50,6 +51,173 @@
                             "custom_action_param": {
                                 "target_count": "{作战次数}"
                             }
+                        }
+                    }
+                }
+            }
+        },
+        "重复挑战更换队伍预设": {
+            "type": "switch",
+            "label": "更换队伍预设",
+            "default_case": "No",
+            "cases": [
+                {
+                    "name": "No",
+                    "pipeline_override": {
+                        "CommonActivityPreset": {
+                            "enabled": false
+                        },
+                        "CommonActivityTask": {
+                            "next": ["[JumpBack]CommonBountyInterrupt", "CommonActivityInsufficientAP", "CommonActivityBattleFailure", "[JumpBack]CommonCutscene", "SafeInput_CommonActivityBattleResult", "[JumpBack]CommonActivityPrepare", "[JumpBack]CommonClickAuto", "[JumpBack]CommonActivityChallenging", "CommonActivityBeforeChallenge"]
+                        }
+                    }
+                },
+                {
+                    "name": "Yes",
+                    "pipeline_override": {
+                        "CommonActivityPreset": {
+                            "enabled": true
+                        },
+                        "CommonActivityTask": {
+                            "next": ["[JumpBack]CommonBountyInterrupt", "CommonActivityBeforeChallenge"]
+                        }
+                    },
+                    "option": [
+                        "重复挑战预设分组与队伍"
+                    ]
+                }
+            ],
+            "description": "适用于御魂/觉醒同布局、队伍预设位于底部标准区域的挑战页。必须完成分组、队伍、应用及出战确认；入口或窗口不匹配时停止，不跳过换队。"
+        },
+        "重复挑战预设分组与队伍": {
+            "type": "input",
+            "label": "预设分组与队伍",
+            "inputs": [
+                {
+                    "name": "分组",
+                    "pipeline_type": "string",
+                    "default": "默认分组",
+                    "pattern_msg": "分组名称",
+                    "description": "分组名称",
+                    "verify": "^.*\\S.*$"
+                },
+                {
+                    "name": "队伍",
+                    "pipeline_type": "string",
+                    "default": "默认队伍",
+                    "pattern_msg": "队伍名称",
+                    "description": "队伍名称",
+                    "verify": "^.*\\S.*$"
+                }
+            ],
+            "pipeline_override": {
+                "TeamPresetSelectGroup": {
+                    "recognition": {
+                        "param": {
+                            "expected": [
+                                "{分组}"
+                            ]
+                        }
+                    }
+                },
+                "TeamPresetGroupSelected": {
+                    "recognition": {
+                        "param": {
+                            "all_of": [
+                                {
+                                    "sub_name": "TeamPresetSelectedGroupText",
+                                    "recognition": {
+                                        "type": "OCR",
+                                        "param": {
+                                            "roi": [
+                                                411,
+                                                161,
+                                                112,
+                                                372
+                                            ],
+                                            "expected": [
+                                                "{分组}"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "recognition": {
+                                        "type": "ColorMatch",
+                                        "param": {
+                                            "roi": "TeamPresetSelectedGroupText",
+                                            "method": 4,
+                                            "lower": [
+                                                235,
+                                                175,
+                                                80
+                                            ],
+                                            "upper": [
+                                                255,
+                                                230,
+                                                175
+                                            ],
+                                            "count": 50
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                },
+                "TeamPresetSelectTeamConfigured": {
+                    "recognition": {
+                        "param": {
+                            "expected": [
+                                "{队伍}"
+                            ]
+                        }
+                    }
+                },
+                "TeamPresetApplyIcon": {
+                    "recognition": {
+                        "param": {
+                            "all_of": [
+                                {
+                                    "sub_name": "TeamPresetTeamText",
+                                    "recognition": {
+                                        "type": "OCR",
+                                        "param": {
+                                            "roi": [
+                                                544,
+                                                160,
+                                                376,
+                                                320
+                                            ],
+                                            "expected": [
+                                                "{队伍}"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "recognition": {
+                                        "type": "TemplateMatch",
+                                        "param": {
+                                            "roi": "TeamPresetTeamText",
+                                            "roi_offset": [
+                                                0,
+                                                -5,
+                                                300,
+                                                15
+                                            ],
+                                            "template": [
+                                                "Mitama/MitamaPresetTeam.png",
+                                                "Mitama/PresetApplySelected.png"
+                                            ],
+                                            "threshold": [
+                                                0.8,
+                                                0.9
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }

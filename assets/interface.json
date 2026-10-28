@@ -70,8 +70,8 @@
     "import": [
         "tasks/preset/Daily.json",
         "tasks/Startup.json",
-        "tasks/Navigation.json",
         "tasks/Mitama.json",
+        "tasks/Awakening.json",
         "tasks/Exploration.json",
         "tasks/RealmRaid.json",
         "tasks/DailyRewards.json",

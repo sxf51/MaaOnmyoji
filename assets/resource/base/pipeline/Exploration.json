@@ -15,14 +15,24 @@
         ]
     },
     "ExplorationRun": {
-        "action": {
-            "type": "Custom",
-            "param": {
-                "custom_action": "ExploreBattles"
-            }
-        },
         "next": [
-            "ExplorationFinish"
+            "[JumpBack]CommonBountyInterrupt",
+            "NativeNavigationBlocked",
+            "NativeResultBlocked",
+            "[JumpBack]NativeDailyRewardPopup",
+            "[JumpBack]NativeNavCancelNoResource",
+            "[JumpBack]NativeNavConfirmExitExplore",
+            "[JumpBack]NativeNavConfirmExitTeam",
+            "[JumpBack]NativeNavDismissRaidTarget",
+            "[JumpBack]NativeNavCancelInvite",
+            "[JumpBack]NativeNavCancelCreate",
+            "[JumpBack]NativeLoading",
+            "[JumpBack]SafeInput_StartupCloseAnnouncement",
+            "[JumpBack]SafeInput_StartupCancelIllustration",
+            "ExplorationFieldReady",
+            "ExplorationChapterReady",
+            "ExplorationMapReady",
+            "[JumpBack]NavigateExplore"
         ]
     },
     "ExplorationSelectChapter": {
@@ -38,12 +48,17 @@
                 ]
             }
         },
-        "action": {
-            "type": "Click",
-            "param": {
-                "target": true
-            }
-        }
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_ExplorationSelectChapter"
+        ],
+        "post_delay": 0,
+        "pre_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "on_error": [],
+        "doc": "选择配置指定的探索章节。"
     },
     "ExplorationEnterChapter": {
         "recognition": {
@@ -58,14 +73,427 @@
                 ]
             }
         },
-        "action": {
-            "type": "Click",
+        "action": "DoNothing",
+        "post_delay": 0,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_ExplorationEnterChapter"
+        ],
+        "pre_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "on_error": [],
+        "doc": "从章节入口进入探索场景。"
+    },
+    "ExplorationFindEnemy": {
+        "recognition": {
+            "type": "And",
             "param": {
-                "target": true
+                "all_of": [
+                    "PageChapterField",
+                    "ExplorationEnemyProbe"
+                ],
+                "box_index": 1
+            }
+        },
+        "action": "DoNothing",
+        "post_delay": 0,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_ExplorationFindEnemy"
+        ],
+        "pre_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "on_error": [],
+        "doc": "点击识别到的探索敌人并进入战斗。"
+    },
+    "ExplorationProgress": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "TargetCountProgress",
+                "custom_action_param": {
+                    "count": 1,
+                    "continue_node": "ExplorationRun",
+                    "finish_node": "ExplorationFinish"
+                }
+            }
+        },
+        "next": [
+            "ExplorationRun"
+        ],
+        "pre_delay": 0,
+        "post_delay": 0,
+        "doc": "结算返回章节且处理完奖励后，累计成功次数并决定继续探索或结束。"
+    },
+    "ExplorationFinish": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "TargetCountFinish"
             }
         }
     },
-    "ExplorationFindEnemy": {
+    "ExplorationFieldReady": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageChapterField"
+                ]
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ResetCount",
+                "custom_action_param": {
+                    "nodes": [
+                        "ExplorationEnemySwipe",
+                        "ExplorationReenter"
+                    ]
+                }
+            }
+        },
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "[JumpBack]SafeInput_DailyRewardPopup",
+            "[JumpBack]SafeInput_ExplorationCollectChest",
+            "SafeInput_ExplorationFindEnemy",
+            "ExplorationEnemySwipe",
+            "ExplorationReenter"
+        ],
+        "timeout": 20000,
+        "pre_delay": 0,
+        "post_delay": 0,
+        "doc": "确认章节场景后重置扫描和重进预算，直接优先处理奖励、宝箱，再寻找敌人。"
+    },
+    "ExplorationChapterReady": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageChapter"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_ExplorationEnterChapter"
+        ]
+    },
+    "ExplorationSearchChapter": {
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_ExplorationSelectChapter",
+            "ExplorationChapterScrollDown",
+            "ExplorationChapterScrollUp"
+        ],
+        "timeout": 20000
+    },
+    "ExplorationChapterScrollDown": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageExplore"
+                ]
+            }
+        },
+        "max_hit": 12,
+        "action": "DoNothing",
+        "post_delay": 0,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_ExplorationChapterScrollDown"
+        ],
+        "pre_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "on_error": [],
+        "doc": "向下查找章节列表中的目标章节。"
+    },
+    "ExplorationChapterScrollUp": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageExplore"
+                ]
+            }
+        },
+        "max_hit": 12,
+        "action": "DoNothing",
+        "post_delay": 0,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_ExplorationChapterScrollUp"
+        ],
+        "pre_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "on_error": [],
+        "doc": "反向查找章节列表中的目标章节。"
+    },
+    "ExplorationScanReset": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ResetCount",
+                "custom_action_param": {
+                    "nodes": [
+                        "ExplorationEnemySwipe",
+                        "ExplorationReenter"
+                    ]
+                }
+            }
+        },
+        "next": [
+            "ExplorationScan"
+        ]
+    },
+    "ExplorationScan": {
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "[JumpBack]SafeInput_DailyRewardPopup",
+            "[JumpBack]SafeInput_ExplorationCollectChest",
+            "SafeInput_ExplorationFindEnemy",
+            "ExplorationEnemySwipe",
+            "ExplorationReenter"
+        ],
+        "timeout": 20000
+    },
+    "ExplorationEnemySwipe": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageChapterField"
+                ]
+            }
+        },
+        "max_hit": 6,
+        "action": "DoNothing",
+        "post_delay": 0,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_ExplorationEnemySwipe"
+        ],
+        "pre_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "on_error": [],
+        "doc": "滑动探索场景，查找可挑战的敌人。"
+    },
+    "ExplorationReenter": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageChapterField"
+                ]
+            }
+        },
+        "max_hit": 1,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_ExplorationReenterClick",
+            "[JumpBack]NavigateChapter"
+        ]
+    },
+    "ExplorationReenterClick": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageChapter",
+                    "ExplorationEnterChapter"
+                ],
+                "box_index": 1
+            }
+        },
+        "action": "DoNothing",
+        "post_delay": 0,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_ExplorationReenterClick"
+        ],
+        "pre_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "on_error": [],
+        "doc": "重新进入章节，刷新可挑战的敌人。"
+    },
+    "ExplorationReentered": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageChapterField"
+                ]
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ResetCount",
+                "custom_action_param": {
+                    "nodes": [
+                        "ExplorationEnemySwipe"
+                    ]
+                }
+            }
+        },
+        "next": [
+            "ExplorationScan"
+        ]
+    },
+    "ExplorationBattle": {
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "ExplorationBattleNoResource",
+            "ExplorationBattleFailure",
+            "SafeInput_ExplorationBattleResult",
+            "[JumpBack]DailyPrepare",
+            "[JumpBack]SafeInput_DailyRewardPopup"
+        ],
+        "timeout": 180000
+    },
+    "ExplorationBattleNoResource": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "DailyNoResource"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "ExplorationFinish"
+        ]
+    },
+    "ExplorationBattleResult": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "DailyBattleResult"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "post_delay": 0,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_ExplorationBattleResult"
+        ],
+        "timeout": 30000,
+        "pre_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "on_error": [],
+        "doc": "关闭探索成功结算，返回场景后再记录成功次数。"
+    },
+    "ExplorationBattleAfterResult": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageChapterField"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "ExplorationPostBattleRewards"
+        ]
+    },
+    "ExplorationBattleFailure": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "DailyBattleFailed"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_ExplorationBattleFailedResult"
+        ],
+        "timeout": 30000
+    },
+    "ExplorationBattleFailedResult": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "DailyBattleResult"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "post_delay": 0,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_ExplorationBattleFailedResult"
+        ],
+        "pre_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "on_error": [],
+        "doc": "关闭探索失败结算，返回场景后停止任务。"
+    },
+    "ExplorationBattleFailedReturn": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageChapterField"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "NativeFlowFailed"
+        ]
+    },
+    "ExplorationCountDetermine": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "TargetCountDetermine",
+                "custom_action_param": {
+                    "decision_node": "ExplorationCountDetermine",
+                    "continue_node": "ExplorationRun",
+                    "finish_node": "ExplorationFinish"
+                }
+            }
+        },
+        "next": [
+            "ExplorationRun"
+        ]
+    },
+    "ExplorationMapReady": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageExplore"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "ExplorationEnsureMainline"
+        ]
+    },
+    "ExplorationEnemyProbe": {
         "recognition": {
             "type": "TemplateMatch",
             "param": {
@@ -78,26 +506,164 @@
                 ],
                 "threshold": 0.78
             }
+        }
+    },
+    "ExplorationEnsureMainline": {
+        "doc": "先确认右侧章节列表可见；停在玩法页时切回主线。",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "ExplorationMainlineReady",
+            "SafeInput_ExplorationOpenMainline",
+            "SafeInput_ExplorationExpandChapterPanel"
+        ],
+        "timeout": 10000
+    },
+    "ExplorationMainlineReady": {
+        "doc": "确认探索地图右侧已显示主线章节，再查找配置的章节。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageExplore",
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "expected": "^第[一二三四五六七八九十百]+章$",
+                                "roi": [
+                                    1050,
+                                    200,
+                                    230,
+                                    380
+                                ]
+                            }
+                        }
+                    }
+                ]
+            }
         },
-        "action": "Click"
+        "action": "DoNothing",
+        "next": [
+            "ExplorationSearchChapter"
+        ]
     },
-    "ExplorationProgress": {
-        "action": {
-            "type": "Custom",
+    "ExplorationOpenMainline": {
+        "doc": "点击探索地图右侧的主线标签，展开章节列表。",
+        "recognition": {
+            "type": "And",
             "param": {
-                "custom_action": "TargetCountProgress",
-                "custom_action_param": {
-                    "count": 1
-                }
+                "all_of": [
+                    "PageExplore",
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "expected": "^主线$",
+                                "roi": [
+                                    1050,
+                                    150,
+                                    115,
+                                    65
+                                ]
+                            }
+                        }
+                    }
+                ],
+                "box_index": 1
             }
-        }
+        },
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_ExplorationOpenMainline"
+        ],
+        "pre_delay": 0,
+        "post_delay": 0,
+        "pre_wait_freezes": 0,
+        "on_error": []
     },
-    "ExplorationFinish": {
-        "action": {
-            "type": "Custom",
+    "ExplorationExpandChapterPanel": {
+        "doc": "展开探索地图右侧收起的章节面板。",
+        "recognition": {
+            "type": "And",
             "param": {
-                "custom_action": "TargetCountFinish"
+                "all_of": [
+                    "PageExplore",
+                    {
+                        "recognition": {
+                            "type": "TemplateMatch",
+                            "param": {
+                                "template": "Exploration/ExpandChapterPanel.png",
+                                "roi": [
+                                    1206,
+                                    100,
+                                    74,
+                                    61
+                                ],
+                                "threshold": 0.9
+                            }
+                        }
+                    }
+                ],
+                "box_index": 1
             }
-        }
+        },
+        "action": "DoNothing",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "pre_wait_freezes": 0,
+        "on_error": [],
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_ExplorationExpandChapterPanel"
+        ]
+    },
+    "ExplorationCollectChest": {
+        "doc": "拾取章节场景左下角的通关宝箱。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageChapterField",
+                    {
+                        "recognition": {
+                            "type": "TemplateMatch",
+                            "param": {
+                                "template": [
+                                    "Exploration/ChapterChestGlowing.png",
+                                    "Exploration/ChapterChest.png"
+                                ],
+                                "roi": [
+                                    0,
+                                    550,
+                                    500,
+                                    170
+                                ],
+                                "threshold": 0.9
+                            }
+                        }
+                    }
+                ],
+                "box_index": 1
+            }
+        },
+        "action": "DoNothing",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "pre_wait_freezes": 0,
+        "on_error": [],
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_ExplorationCollectChest"
+        ]
+    },
+    "ExplorationPostBattleRewards": {
+        "doc": "处理通关宝箱及奖励展示后，再计数并判断是否结束探索。",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "[JumpBack]SafeInput_DailyRewardPopup",
+            "[JumpBack]SafeInput_ExplorationCollectChest",
+            "ExplorationProgress"
+        ]
     }
 }

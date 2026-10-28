@@ -11,15 +11,18 @@
             }
         },
         "next": [
+            "[JumpBack]CommonBountyInterrupt",
             "CommonActivityInsufficientAP",
-            "CommonActivityChallenge",
-            "[JumpBack]CommonRefuseBounty",
+            "CommonActivityBattleFailure",
+            "[JumpBack]CommonBattleEnteringWait",
             "[JumpBack]CommonCutscene",
+            "SafeInput_CommonActivityBattleResult",
             "[JumpBack]CommonActivityPrepare",
             "[JumpBack]CommonClickAuto",
             "[JumpBack]CommonActivityChallenging",
-            "CommonActivityBattleResult"
-        ]
+            "CommonActivityBeforeChallenge"
+        ],
+        "timeout": 180000
     },
     "CommonActivityChallenge": {
         "desc": "重复挑战：点击挑战",
@@ -34,24 +37,23 @@
                     154
                 ],
                 "expected": [
-                    "挑战",
-                    "搜寻",
-                    "开启"
+                    "^挑战$",
+                    "^搜寻$",
+                    "^开启$"
                 ]
             }
         },
-        "action": "Click",
-        "post_delay": 500,
+        "action": "DoNothing",
+        "post_delay": 0,
         "next": [
-            "CommonActivityInsufficientAP",
-            "CommonActivityChallenge",
-            "[JumpBack]CommonRefuseBounty",
-            "[JumpBack]CommonCutscene",
-            "[JumpBack]CommonActivityPrepare",
-            "[JumpBack]CommonClickAuto",
-            "[JumpBack]CommonActivityChallenging",
-            "CommonActivityBattleResult"
-        ]
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_CommonActivityChallenge"
+        ],
+        "pre_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "on_error": [],
+        "doc": "点击当前活动的挑战按钮，开始一轮重复挑战。"
     },
     "CommonActivityPrepare": {
         "desc": "重复挑战：准备",
@@ -59,33 +61,37 @@
             "type": "OCR",
             "param": {
                 "roi": [
-                    1127,
-                    564,
-                    101,
-                    50
+                    1083,
+                    526,
+                    180,
+                    131
                 ],
                 "expected": [
-                    "准备"
+                    "^准备$"
                 ]
             }
         },
-        "action": "Click",
-        "next": []
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonActivityPreparationPassed",
+            "[JumpBack]CommonBattleEnteringWait",
+            "SafeInput_CommonActivityPrepare"
+        ],
+        "pre_delay": 0,
+        "post_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "on_error": [],
+        "doc": "点击当前活动战斗中的准备按钮。"
     },
     "CommonActivityChallenging": {
         "desc": "重复挑战：挑战中",
         "recognition": {
-            "type": "OCR",
+            "type": "And",
             "param": {
-                "roi": [
-                    692,
-                    676,
-                    574,
-                    43
-                ],
-                "expected": [
-                    "妖术",
-                    "普攻"
+                "all_of": [
+                    "PageBattle"
                 ]
             }
         },
@@ -99,46 +105,56 @@
             "type": "OCR",
             "param": {
                 "roi": [
-                    545,
-                    669,
-                    189,
-                    44
+                    440,
+                    637,
+                    400,
+                    82
                 ],
                 "expected": [
-                    "点击屏幕继续"
-                ]
-            }
-        },
-        "action": "Click",
-        "next": [
-            "[JumpBack]CommonRefuseBounty",
-            "CommonActivityBattleResult",
-            "[JumpBack]CommonCutscene",
-            "CommonActivityFinishOnce"
-        ]
-    },
-    "CommonActivityFinishOnce": {
-        "desc": "重复挑战：完成一次挑战",
-        "timeout": 20000,
-        "recognition": {
-            "type": "OCR",
-            "param": {
-                "roi": [
-                    1067,
-                    564,
-                    212,
-                    154
-                ],
-                "expected": [
-                    "挑战",
-                    "搜寻"
+                    "^点击(屏幕|空白区域)继续$"
                 ]
             }
         },
         "action": "DoNothing",
         "next": [
-            "CommonActivityComplete"
-        ]
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_CommonActivityBattleResult"
+        ],
+        "pre_delay": 0,
+        "post_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "on_error": [],
+        "doc": "关闭成功结算，返回挑战页后再记录成功次数。"
+    },
+    "CommonActivityFinishOnce": {
+        "desc": "重复挑战：完成一次挑战",
+        "timeout": 20000,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "CommonActivityChallenge"
+                ]
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "TargetCountProgress",
+                "custom_action_param": {
+                    "count": 1,
+                    "continue_node": "CommonActivityPreparation",
+                    "finish_node": "CommonActivityFinish"
+                }
+            }
+        },
+        "next": [
+            "CommonActivityPreparation"
+        ],
+        "pre_delay": 0,
+        "post_delay": 0,
+        "doc": "确认成功结算已返回挑战页后，累计次数并决定继续准备或结束；后续仍检查未完成的队伍预设。"
     },
     "CommonActivityComplete": {
         "desc": "重复挑战：记录一次成功挑战",
@@ -163,36 +179,30 @@
                 "custom_action": "TargetCountDetermine",
                 "custom_action_param": {
                     "decision_node": "CommonActivityCountDetermine",
-                    "continue_node": "CommonActivityChallenge",
+                    "continue_node": "CommonActivityBeforeChallenge",
                     "finish_node": "CommonActivityFinish"
                 }
             }
         },
         "next": [
-            "[JumpBack]CommonActivityBattleResult",
-            "CommonActivityChallenge"
+            "[JumpBack]CommonBountyInterrupt",
+            "[JumpBack]SafeInput_CommonActivityBattleResult",
+            "CommonActivityBeforeChallenge"
         ]
     },
     "CommonActivityInsufficientAP": {
         "desc": "重复挑战：体力或代币不足时结束",
         "recognition": {
-            "type": "OCR",
+            "type": "And",
             "param": {
-                "roi": [
-                    163,
-                    109,
-                    939,
-                    440
-                ],
-                "expected": [
-                    "不足",
-                    "购买",
-                    "限购"
+                "all_of": [
+                    "CommonInsufficientAP"
                 ]
             }
         },
         "action": "DoNothing",
         "next": [
+            "[JumpBack]CommonBountyInterrupt",
             "CommonActivityFinish"
         ]
     },
@@ -204,5 +214,185 @@
                 "custom_action": "TargetCountFinish"
             }
         }
+    },
+    "CommonActivityBattleFailure": {
+        "desc": "识别战斗失败，进入独立收尾，不累计成功次数。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "DailyBattleFailed"
+                ]
+            }
+        },
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_CommonActivityFailedBattleResult"
+        ],
+        "timeout": 30000
+    },
+    "CommonActivityFailedBattleResult": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "CommonActivityBattleResult"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "post_delay": 0,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_CommonActivityFailedBattleResult"
+        ],
+        "timeout": 30000,
+        "pre_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "on_error": [],
+        "doc": "关闭失败结算，返回挑战页后停止重复挑战。"
+    },
+    "CommonActivityFailedReturn": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "CommonActivityFinishOnce"
+                ]
+            }
+        },
+        "next": [
+            "NativeFlowFailed"
+        ]
+    },
+    "CommonActivityPreparationPassed": {
+        "doc": "自动准备已进入战斗或结算时，返回重复挑战流程。",
+        "recognition": {
+            "type": "Or",
+            "param": {
+                "any_of": [
+                    "CommonActivityChallenging",
+                    "CommonActivityBattleResult",
+                    "DailyBattleFailed"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": []
+    },
+    "CommonActivityPreset": {
+        "doc": "配置本任务的预设页面与返回位置，完成换队后才继续准备。",
+        "enabled": false,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "NodeOverride",
+                "custom_action_param": {
+                    "TeamPresetContext": {
+                        "recognition": {
+                            "type": "And",
+                            "param": {
+                                "all_of": [
+                                    "CommonActivityChallenge"
+                                ]
+                            }
+                        }
+                    },
+                    "TeamPresetEntryText": {
+                        "recognition": {
+                            "param": {
+                                "roi": [
+                                    728,
+                                    605,
+                                    103,
+                                    40
+                                ]
+                            }
+                        }
+                    },
+                    "SafeInput_TeamPresetOpen": {
+                        "action": {
+                            "param": {
+                                "target": [
+                                    750,
+                                    558,
+                                    52,
+                                    50
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "anchor": {
+            "TeamPresetReturn": "CommonActivityPresetDone"
+        },
+        "next": [
+            "TeamPresetRun"
+        ]
+    },
+    "CommonActivityPresetDone": {
+        "doc": "确认预设已应用并返回挑战页，禁用本次换队步骤。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "CommonActivityChallenge"
+                ]
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "DisableNode",
+                "custom_action_param": {
+                    "node_name": "CommonActivityPreset"
+                }
+            }
+        },
+        "next": [
+            "CommonActivityPreparation"
+        ]
+    },
+    "CommonActivityPreparation": {
+        "doc": "只在开战前完成本次启用的队伍预设。",
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "SubTask",
+                "custom_action_param": {
+                    "sub": [
+                        "CommonActivityPreset"
+                    ],
+                    "completion_next": [
+                        "SafeInput_CommonActivityChallenge"
+                    ],
+                    "timeout": 180000
+                }
+            }
+        },
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_CommonActivityChallenge"
+        ],
+        "timeout": 180000,
+        "pre_delay": 0,
+        "post_delay": 0
+    },
+    "CommonActivityBeforeChallenge": {
+        "doc": "确认挑战页后执行未完成的队伍预设准备。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "CommonActivityChallenge"
+                ]
+            }
+        },
+        "next": [
+            "CommonActivityPreparation"
+        ]
     }
 }

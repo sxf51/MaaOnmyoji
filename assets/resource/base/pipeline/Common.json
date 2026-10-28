@@ -1,4 +1,21 @@
 {
+    "CommonBuffMenuIcon": {
+        "doc": "匹配副本顶部竖排加成图标，忽略右上角状态标记；调用方需组合对应副本页面条件。",
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": "Common/BuffMenu.png",
+                "threshold": 0.9,
+                "green_mask": true,
+                "roi": [
+                    400,
+                    0,
+                    210,
+                    90
+                ]
+            }
+        }
+    },
     "CommonCutscene": {
         "desc": "通用过场图",
         "recognition": {
@@ -23,62 +40,127 @@
             "type": "OCR",
             "param": {
                 "expected": [
-                    "取消"
+                    "^取消$"
+                ],
+                "roi": [
+                    240,
+                    220,
+                    800,
+                    420
                 ]
-                // TODO: 限定到弹窗右下区域
             }
         },
-        "action": "Click",
-        "post_delay": 800
+        "action": "DoNothing",
+        "post_delay": 0,
+        "pre_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_CommonConfirm"
+        ],
+        "on_error": [],
+        "doc": "关闭带有取消按钮的普通弹窗。"
     },
     "CommonClose": {
         "desc": "通用关闭按钮；坐标需按 1280x720 基准实测",
         "recognition": {
-            "type": "OCR",
+            "type": "Or",
             "param": {
-                "expected": [
-                    "关闭",
-                    "取消"
+                "any_of": [
+                    {
+                        "sub_name": "CommonCloseDialogText",
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "roi": [
+                                    240,
+                                    220,
+                                    800,
+                                    420
+                                ],
+                                "expected": [
+                                    "^关闭$",
+                                    "^取消$"
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "sub_name": "CommonCloseCornerText",
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "roi": [
+                                    1020,
+                                    0,
+                                    260,
+                                    180
+                                ],
+                                "expected": [
+                                    "^关闭$",
+                                    "^取消$"
+                                ]
+                            }
+                        }
+                    }
                 ]
             }
         },
-        "action": "Click",
-        "post_delay": 500
+        "action": "DoNothing",
+        "post_delay": 0,
+        "pre_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_CommonClose"
+        ],
+        "on_error": [],
+        "doc": "点击关闭图标，关闭当前面板。"
     },
     "CommonRewardPopup": {
         "desc": "奖励弹窗",
         "recognition": {
             "type": "OCR",
             "param": {
-                "expected": [
-                    "获得奖励",
-                    "奖励"
+                "expected": "^获得奖励$",
+                "roi": [
+                    391,
+                    103,
+                    511,
+                    230
                 ]
             }
         },
-        "action": {
-            "type": "Click",
-            "param": {
-                "target": [
-                    640,
-                    650,
-                    1,
-                    1
-                ]
-                // TODO: 调整为空白处安全点击坐标
-            }
-        },
-        "post_delay": 800
+        "action": "DoNothing",
+        "post_delay": 0,
+        "pre_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_CommonRewardPopup"
+        ],
+        "on_error": [],
+        "doc": "关闭奖励展示弹窗。"
     },
     "CommonInsufficientAP": {
-        "desc": "体力不足时正常结束当前玩法，不自动购买体力",
+        "desc": "识别中央资源不足提示。",
         "recognition": {
             "type": "OCR",
             "param": {
+                "roi": [
+                    289,
+                    206,
+                    709,
+                    277
+                ],
                 "expected": [
                     "体力不足",
-                    "勾玉购买",
-                    "购买体力"
+                    "突破券不足",
+                    "挑战券不足",
+                    "结界突破券不足"
                 ]
             }
         }
@@ -91,11 +173,26 @@
                 "expected": [
                     "战斗失败",
                     "失败"
+                ],
+                "roi": [
+                    294,
+                    92,
+                    694,
+                    444
                 ]
             }
         },
-        "action": "Click",
-        "post_delay": 1000
+        "action": "DoNothing",
+        "post_delay": 0,
+        "pre_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_CommonBattleFailed"
+        ],
+        "on_error": [],
+        "doc": "退出战斗失败结算，返回调用流程。"
     },
     "CommonNetworkRetry": {
         "desc": "网络异常重试",
@@ -105,11 +202,26 @@
                 "expected": [
                     "重新连接",
                     "重试"
+                ],
+                "roi": [
+                    280,
+                    160,
+                    720,
+                    420
                 ]
             }
         },
-        "action": "Click",
-        "post_delay": 2000
+        "action": "DoNothing",
+        "post_delay": 0,
+        "pre_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_CommonNetworkRetry"
+        ],
+        "on_error": [],
+        "doc": "点击网络异常提示中的重试按钮。"
     },
     "CommonRefuseBounty": {
         "desc": "拒绝悬赏封印",
@@ -127,18 +239,22 @@
                 ]
             }
         },
-        "action": "Click",
-        "target": [
-            829,
-            493,
-            47,
-            51
-        ], // 接受：[829,395,49,48]
-        "post_delay": 800
+        "action": "DoNothing",
+        "post_delay": 0,
+        "pre_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "next": [
+            "CommonBountyClosed",
+            "SafeInput_CommonRefuseBounty"
+        ],
+        "on_error": [],
+        "doc": "拒绝弹出的悬赏封印邀请。",
+        "timeout": 3000
     },
     "CommonClickAuto": {
         "desc": "点击自动战斗",
-        "enabled": false, // 进入战斗后会有短暂的“手动”ui显示
+        "enabled": false,
         "recognition": {
             "type": "OCR",
             "param": {
@@ -153,7 +269,105 @@
                 ]
             }
         },
-        "action": "Click",
-        "post_delay": 800
+        "action": "DoNothing",
+        "post_delay": 0,
+        "pre_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_CommonClickAuto"
+        ],
+        "on_error": [],
+        "doc": "将手动战斗切换为自动战斗。"
+    },
+    "CommonBountyInterrupt": {
+        "doc": "识别任意页面上弹出的协作悬赏邀请，重置本次拒绝重试预算；关闭后回到被打断的流程。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "CommonRefuseBounty"
+                ]
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ResetCount",
+                "custom_action_param": {
+                    "nodes": [
+                        "SafeInput_CommonRefuseBounty"
+                    ],
+                    "strict": true
+                }
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "CommonBountyClosed",
+            "CommonRefuseBounty"
+        ]
+    },
+    "CommonBountyClosed": {
+        "doc": "确认协作悬赏弹窗已消失后结束中断分支；邀请自行消失时不再点击。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "CommonRefuseBounty"
+                ]
+            }
+        },
+        "inverse": true,
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": []
+    },
+    "PageBounty": {
+        "doc": "优先识别遮挡当前页面的协作悬赏邀请。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "CommonRefuseBounty"
+                ]
+            }
+        }
+    },
+    "CommonBattleEnteringWait": {
+        "doc": "过场或灰暗布阵载入时只等待，最多60秒；期间处理协作邀请，不点击准备或重新挑战。",
+        "recognition": {
+            "type": "Or",
+            "param": {
+                "any_of": [
+                    "PageLoading",
+                    "PageBattleEntering"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonBattleEnteringGone"
+        ],
+        "timeout": 60000,
+        "rate_limit": 250
+    },
+    "CommonBattleEnteringGone": {
+        "doc": "确认过场和灰暗布阵载入已消失，返回调用任务重新判断准备、正式战斗或结算。",
+        "recognition": {
+            "type": "Or",
+            "param": {
+                "any_of": [
+                    "PageLoading",
+                    "PageBattleEntering"
+                ]
+            }
+        },
+        "inverse": true,
+        "action": "DoNothing",
+        "next": []
     }
 }

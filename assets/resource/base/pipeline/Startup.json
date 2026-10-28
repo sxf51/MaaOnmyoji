@@ -9,9 +9,18 @@
         },
         "post_delay": 3000,
         "next": [
+            "[JumpBack]CommonBountyInterrupt",
             "Startup"
         ],
         "on_error": [
+            "StartupLaunchError"
+        ]
+    },
+    "StartupLaunchError": {
+        "doc": "启动失败的独立错误入口；保留购买保护，不与正常 next 重复路由。",
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
             "SelectPackage"
         ]
     },
@@ -20,13 +29,16 @@
         "post_wait_freezes": 300,
         "timeout": 60000,
         "next": [
+            "[JumpBack]CommonBountyInterrupt",
             "StartupHome",
+            "[JumpBack]SafeInput_StartupCloseAnnouncement",
+            "[JumpBack]SafeInput_StartupCancelIllustration",
             "[JumpBack]StartupUpdateConfirm",
             "[JumpBack]StartupDownloading",
             "startupMain",
-            "[JumpBack]ReturnMainHomeButton",
-            "[JumpBack]ReturnMainBackButton",
-            "[JumpBack]CommonNetworkRetry",
+            "[JumpBack]SafeInput_ReturnMainHomeButton",
+            "[JumpBack]SafeInput_ReturnMainBackButton",
+            "[JumpBack]SafeInput_CommonNetworkRetry",
             "[JumpBack]StartupSkipAnimation"
         ]
     },
@@ -34,24 +46,26 @@
         "desc": "检查更新后出现的更新、下载或重试按钮",
         "max_hit": 10,
         "recognition": {
-            "type": "OCR",
+            "type": "And",
             "param": {
-                "roi": [
-                    400,
-                    360,
-                    480,
-                    260
+                "all_of": [
+                    "StartupUpdateText",
+                    "StartupUpdateButton"
                 ],
-                "expected": [
-                    "更新",
-                    "下载",
-                    "确认",
-                    "重试"
-                ]
+                "box_index": 1
             }
         },
-        "action": "Click",
-        "post_delay": 1500
+        "action": "DoNothing",
+        "post_delay": 0,
+        "pre_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_StartupUpdateConfirm"
+        ],
+        "on_error": [],
+        "doc": "在已确认更新提示的窗口中点击更新、下载或重试。"
     },
     "StartupDownloading": {
         "desc": "等待更新或资源下载完成",
@@ -86,18 +100,29 @@
     "StartupSkipAnimation": {
         "desc": "点击屏幕跳过启动动画",
         "max_hit": 5,
-        "action": {
-            "type": "Click",
+        "action": "DoNothing",
+        "post_delay": 0,
+        "pre_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_StartupSkipAnimation"
+        ],
+        "on_error": [],
+        "doc": "仅点击明确识别到的跳过按钮；没有跳过标记时等待，不再盲点屏幕。",
+        "recognition": {
+            "type": "OCR",
             "param": {
-                "target": [
-                    671,
-                    219,
-                    395,
-                    362
+                "expected": "^跳过$",
+                "roi": [
+                    800,
+                    0,
+                    480,
+                    180
                 ]
             }
-        },
-        "post_delay": 1500
+        }
     },
     "startupMain": {
         "desc": "登录界面",
@@ -125,12 +150,15 @@
             }
         },
         "next": [
+            "[JumpBack]CommonBountyInterrupt",
             "StartupHome",
+            "[JumpBack]SafeInput_StartupCloseAnnouncement",
+            "[JumpBack]SafeInput_StartupCancelIllustration",
             "[JumpBack]StartupCheckServer",
-            "[JumpBack]StartupOpenServerList",
-            "[JumpBack]StartupSelectServer",
+            "[JumpBack]SafeInput_StartupOpenServerList",
+            "[JumpBack]SafeInput_StartupSelectServer",
             "[JumpBack]StartupDownloading",
-            "[JumpBack]CommonNetworkRetry"
+            "[JumpBack]SafeInput_CommonNetworkRetry"
         ]
     },
     "StartupOpenServerList": {
@@ -149,8 +177,17 @@
                 ]
             }
         },
-        "action": "Click",
-        "post_delay": 8000
+        "action": "DoNothing",
+        "post_delay": 0,
+        "pre_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_StartupOpenServerList"
+        ],
+        "on_error": [],
+        "doc": "打开区服选择列表。"
     },
     "StartupSelectServer": {
         "desc": "选择区域",
@@ -168,8 +205,17 @@
                 ]
             }
         },
-        "action": "Click",
-        "post_delay": 2000
+        "action": "DoNothing",
+        "post_delay": 0,
+        "pre_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_StartupSelectServer"
+        ],
+        "on_error": [],
+        "doc": "选择配置指定的区服。"
     },
     "StartupCheckServer": {
         "desc": "检查是否已选择区服",
@@ -188,8 +234,9 @@
             }
         },
         "next": [
+            "[JumpBack]CommonBountyInterrupt",
             "StartupHome",
-            "StartupEnterGame",
+            "SafeInput_StartupEnterGame",
             "StartupDownloading"
         ]
     },
@@ -209,8 +256,17 @@
                 ]
             }
         },
-        "action": "Click",
-        "post_delay": 2000
+        "action": "DoNothing",
+        "post_delay": 0,
+        "pre_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_StartupEnterGame"
+        ],
+        "on_error": [],
+        "doc": "进入已选定的服务器，等待庭院加载。"
     },
     "StartupHome": {
         "desc": "通过颜色标志、设备时间和玩家身份共同判断主界面",
@@ -286,18 +342,23 @@
         }
     },
     "ReturnMain": {
-        "desc": "重新识别当前页面，优先 Home，否则逐级返回；限定步数及超时",
-        "action": {
-            "type": "Custom",
-            "param": {
-                "custom_action": "NavigateTo",
-                "custom_action_param": {
-                    "targets": [
-                        "Home"
-                    ]
-                }
-            }
-        }
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "NativeNavigationBlocked",
+            "NativeResultBlocked",
+            "[JumpBack]NativeDailyRewardPopup",
+            "[JumpBack]NativeNavCancelNoResource",
+            "[JumpBack]NativeNavConfirmExitExplore",
+            "[JumpBack]NativeNavConfirmExitTeam",
+            "[JumpBack]NativeNavDismissRaidTarget",
+            "[JumpBack]NativeNavCancelInvite",
+            "[JumpBack]NativeNavCancelCreate",
+            "[JumpBack]NativeLoading",
+            "[JumpBack]SafeInput_StartupCloseAnnouncement",
+            "[JumpBack]SafeInput_StartupCancelIllustration",
+            "NativeAtHome",
+            "[JumpBack]NavigateHome"
+        ]
     },
     "ReturnMainHomeButton": {
         "desc": "回到主界面",
@@ -314,8 +375,17 @@
                 "threshold": 0.8
             }
         },
-        "action": "Click",
-        "post_delay": 1000
+        "action": "DoNothing",
+        "post_delay": 0,
+        "pre_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_ReturnMainHomeButton"
+        ],
+        "on_error": [],
+        "doc": "点击首页图标，返回庭院。"
     },
     "ReturnMainBackButton": {
         "desc": "返回上一级",
@@ -332,8 +402,17 @@
                 "threshold": 0.8
             }
         },
-        "action": "Click",
-        "post_delay": 1000
+        "action": "DoNothing",
+        "post_delay": 0,
+        "pre_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_ReturnMainBackButton"
+        ],
+        "on_error": [],
+        "doc": "返回上一级页面，继续查找庭院入口。"
     },
     "ExitXianTing": {
         "desc": "退出闲庭",
@@ -350,8 +429,17 @@
                 "threshold": 0.8
             }
         },
-        "action": "Click",
-        "post_delay": 1000
+        "action": "DoNothing",
+        "post_delay": 0,
+        "pre_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_ExitXianTing"
+        ],
+        "on_error": [],
+        "doc": "退出闲庭，返回庭院。"
     },
     "SelectPackage": {
         "desc": "默认包名启动失败时列出可能的阴阳师包名",
@@ -361,5 +449,130 @@
                 "exec": "adb shell pm list packages | grep onmyoji"
             }
         }
+    },
+    "StartupUpdateText": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "资源更新",
+                    "版本更新",
+                    "更新资源",
+                    "下载资源",
+                    "资源下载",
+                    "更新提示",
+                    "检查更新",
+                    "补丁下载"
+                ],
+                "roi": [
+                    200,
+                    100,
+                    880,
+                    400
+                ]
+            }
+        }
+    },
+    "StartupUpdateButton": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "^更新$",
+                    "^下载$",
+                    "^确认$",
+                    "^重试$"
+                ],
+                "roi": [
+                    400,
+                    360,
+                    480,
+                    260
+                ]
+            }
+        }
+    },
+    "StartupCloseAnnouncement": {
+        "doc": "关闭启动时显示的游戏公告。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "expected": "^(游戏公告|更新公告|活动公告|公告)$",
+                                "roi": [
+                                    180,
+                                    20,
+                                    920,
+                                    260
+                                ]
+                            }
+                        }
+                    },
+                    "NavClose"
+                ],
+                "box_index": 1
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_StartupCloseAnnouncement"
+        ],
+        "pre_delay": 0,
+        "post_delay": 0,
+        "pre_wait_freezes": 0,
+        "on_error": []
+    },
+    "StartupCancelIllustration": {
+        "doc": "取消启动时可选的下载插画提示。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "expected": "下载插画|是否.*下载.*插画",
+                                "roi": [
+                                    250,
+                                    130,
+                                    780,
+                                    350
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "expected": "^取消$",
+                                "roi": [
+                                    280,
+                                    300,
+                                    720,
+                                    280
+                                ]
+                            }
+                        }
+                    }
+                ],
+                "box_index": 1
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_StartupCancelIllustration"
+        ],
+        "pre_delay": 0,
+        "post_delay": 0,
+        "pre_wait_freezes": 0,
+        "on_error": []
     }
 }

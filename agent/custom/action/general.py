@@ -13,7 +13,7 @@ from maa.agent.agent_server import AgentServer
 from maa.context import Context
 from maa.custom_action import CustomAction
 
-from .target_count import _parse_params
+from .target_count import _parse_params, with_purchase_stop
 
 logger = logging.getLogger("MaaOnmyoji.general")
 
@@ -62,8 +62,7 @@ class NodeOverride(CustomAction):
         if not override:
             logger.warning("NodeOverride 收到空覆盖")
             return CustomAction.RunResult(success=True)
-        context.override_pipeline(override)
-        return CustomAction.RunResult(success=True)
+        return CustomAction.RunResult(success=context.override_pipeline(override))
 
 
 @AgentServer.custom_action("ResetCount")
@@ -91,7 +90,7 @@ class ResetCount(CustomAction):
 
 @AgentServer.custom_action("SubTask")
 class SubTask(CustomAction):
-    """把 enabled 的 sub 节点作为有序 next；全部完成后走 completion_next。"""
+    """只调度首个 enabled 子任务；确认其完成后再处理后续依赖。"""
 
     def run(self, context: Context, argv: CustomAction.RunArg) -> CustomAction.RunResult:
         try:
@@ -126,7 +125,7 @@ class SubTask(CustomAction):
 
         if not enabled_tasks:
             _clear_subtask_state(key)
-            success = context.override_next(argv.node_name, completion_next)
+            success = context.override_next(argv.node_name, with_purchase_stop(completion_next, context))
             logger.debug("SubTask %s 完成 -> %s", argv.node_name, completion_next)
             return CustomAction.RunResult(success=success)
 
@@ -141,8 +140,9 @@ class SubTask(CustomAction):
                 logger.error("SubTask 超时：%s", argv.node_name)
                 return CustomAction.RunResult(success=False)
 
-        target_next = enabled_tasks
-        success = context.override_next(argv.node_name, target_next)
+        # Later steps depend on this step finishing, not merely matching later.
+        target_next = enabled_tasks[:1]
+        success = context.override_next(argv.node_name, with_purchase_stop(target_next, context))
         if not success:
             _clear_subtask_state(key)
         logger.debug("SubTask %s -> %s", argv.node_name, target_next)
@@ -200,7 +200,9 @@ class TimeWindowRoute(CustomAction):
             return CustomAction.RunResult(success=False)
 
         target = active if start <= now < end else inactive
-        context.override_next(decision, [target])
+        if not context.override_next(decision, with_purchase_stop([target], context)):
+            logger.error("更新时间窗口路由失败：%s -> %s", decision, target)
+            return CustomAction.RunResult(success=False)
         logger.debug("时间窗口路由 %s -> %s", decision, target)
         return CustomAction.RunResult(success=True)
 

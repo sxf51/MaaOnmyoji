@@ -7,10 +7,27 @@ from unittest.mock import Mock, patch
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "agent"))
 
 from custom.action.general import (  # noqa: E402
+    NodeOverride,
     SubTask,
+    TimeWindowRoute,
     clear_subtask_states,
     reset_subtask_states_for_test,
 )
+
+
+class OverrideFailureTest(unittest.TestCase):
+    def test_pipeline_override_failure_is_reported(self):
+        context = Mock()
+        context.override_pipeline.return_value = False
+        result = NodeOverride().run(context, Mock(custom_action_param={"Node": {"enabled": False}}))
+        self.assertFalse(result.success)
+
+    def test_time_window_override_failure_is_reported(self):
+        context = Mock()
+        context.override_next.return_value = False
+        params = {"decision_node": "Decision", "start": "2020-01-01", "end": "2100-01-01",
+                  "active_node": "Active", "inactive_node": "Inactive"}
+        self.assertFalse(TimeWindowRoute().run(context, Mock(custom_action_param=params)).success)
 
 
 def make_argv() -> Mock:
@@ -34,7 +51,7 @@ class SubTaskTest(unittest.TestCase):
     def setUp(self) -> None:
         reset_subtask_states_for_test()
 
-    def test_enabled_sub_nodes_become_ordered_next_candidates(self) -> None:
+    def test_only_first_enabled_subtask_can_run(self) -> None:
         context = Mock()
         enabled = {
             "MitamaEnableBuff": True,
@@ -49,7 +66,7 @@ class SubTaskTest(unittest.TestCase):
         self.assertTrue(result.success)
         context.override_next.assert_called_once_with(
             "MitamaPreparation",
-            ["MitamaEnableBuff", "MitamaOpenPreset"],
+            ["[JumpBack]CommonBountyInterrupt", "MitamaEnableBuff"],
         )
         context.run_task.assert_not_called()
 
@@ -62,8 +79,20 @@ class SubTaskTest(unittest.TestCase):
 
         self.assertTrue(result.success)
         context.override_next.assert_called_once_with(
-            "MitamaPreparation", ["MitamaPreparationDestination"]
+            "MitamaPreparation", ["[JumpBack]CommonBountyInterrupt", "MitamaPreparationDestination"]
         )
+
+    def test_later_dependency_is_only_available_after_first_is_disabled(self):
+        context = Mock()
+        enabled = {"MitamaEnableBuff": True, "MitamaCloseBuffPanel": False, "MitamaOpenPreset": True}
+        context.get_node_data.side_effect = lambda name: {"enabled": enabled[name]}
+        context.override_next.return_value = True
+        argv = make_argv()
+        self.assertTrue(SubTask().run(context, argv).success)
+        self.assertEqual(context.override_next.call_args.args[1], ["[JumpBack]CommonBountyInterrupt", "MitamaEnableBuff"])
+        enabled["MitamaEnableBuff"] = False
+        self.assertTrue(SubTask().run(context, argv).success)
+        self.assertEqual(context.override_next.call_args.args[1], ["[JumpBack]CommonBountyInterrupt", "MitamaOpenPreset"])
 
     def test_reentry_uses_explicit_completion_next(self) -> None:
         context = Mock()
@@ -82,7 +111,7 @@ class SubTaskTest(unittest.TestCase):
 
         self.assertEqual(
             context.override_next.call_args_list[-1].args,
-            ("MitamaPreparation", ["MitamaPreparationDestination"]),
+            ("MitamaPreparation", ["[JumpBack]CommonBountyInterrupt", "MitamaPreparationDestination"]),
         )
 
     @patch("custom.action.general.time.monotonic", side_effect=[10.0, 11.0])
@@ -149,7 +178,7 @@ class SubTaskTest(unittest.TestCase):
         self.assertTrue(SubTask().run(context, argv).success)
         self.assertEqual(
             context.override_next.call_args_list[-1].args,
-            ("MitamaPreparation", ["MitamaPreparationDestination"]),
+            ("MitamaPreparation", ["[JumpBack]CommonBountyInterrupt", "MitamaPreparationDestination"]),
         )
 
 
