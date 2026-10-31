@@ -7,9 +7,13 @@
             "option": [
                 "选择关卡",
                 "自定义作战次数",
-                "开启加成",
-                "更换队伍",
-                "是否组队"
+                "御魂掉落加成",
+                "御魂锁定阵容",
+                "御魂更换队伍预设",
+                "是否组队",
+                // "御魂奖励掉落统计",
+                // "御魂掉落统计上报",
+                "御魂友方绿标"
             ],
             "description": "$mitama_task_doc"
         }
@@ -33,12 +37,8 @@
                             }
                         },
                         "MitamaTask": {
-                            "action": {
-                                "param": {
-                                    "custom_action_param": {
-                                        "stage_name": "魂十(拾层)"
-                                    }
-                                }
+                            "attach": {
+                                "stage_name": "魂十(拾层)"
                             }
                         }
                     }
@@ -56,12 +56,8 @@
                             }
                         },
                         "MitamaTask": {
-                            "action": {
-                                "param": {
-                                    "custom_action_param": {
-                                        "stage_name": "魂土(悲鸣)"
-                                    }
-                                }
+                            "attach": {
+                                "stage_name": "魂土(悲鸣)"
                             }
                         }
                     }
@@ -79,12 +75,8 @@
                             }
                         },
                         "MitamaTask": {
-                            "action": {
-                                "param": {
-                                    "custom_action_param": {
-                                        "stage_name": "魂王(神罚)"
-                                    }
-                                }
+                            "attach": {
+                                "stage_name": "魂王(神罚)"
                             }
                         }
                     }
@@ -102,12 +94,8 @@
                             }
                         },
                         "MitamaTask": {
-                            "action": {
-                                "param": {
-                                    "custom_action_param": {
-                                        "stage_name": "魂B(虚无)"
-                                    }
-                                }
+                            "attach": {
+                                "stage_name": "魂B(虚无)"
                             }
                         }
                     }
@@ -135,7 +123,7 @@
         },
         "御魂作战次数": {
             "type": "input",
-            "label": "次数",
+            "label": "$battle_count",
             "inputs": [
                 {
                     "name": "作战次数",
@@ -148,19 +136,15 @@
             ],
             "pipeline_override": {
                 "MitamaTask": {
-                    "action": {
-                        "param": {
-                            "custom_action_param": {
-                                "target_count": "{作战次数}"
-                            }
-                        }
+                    "attach": {
+                        "target_count": "{作战次数}"
                     }
                 }
             }
         },
-        "开启加成": {
+        "御魂掉落加成": {
             "type": "switch",
-            "label": "开启加成",
+            "label": "御魂掉落加成（任务结束时关闭）",
             "default_case": "Yes",
             "cases": [
                 {
@@ -187,9 +171,33 @@
                 }
             ]
         },
-        "更换队伍": {
+        "御魂锁定阵容": {
             "type": "switch",
-            "label": "更换队伍",
+            "label": "锁定阵容（自动准备）",
+            "description": "单人挑战前确认左下角阵容锁已锁定，未锁定时点击锁图标；关闭时不检查也不改变锁定状态。组队房间不经过此步骤。",
+            "default_case": "Yes",
+            "cases": [
+                {
+                    "name": "No",
+                    "pipeline_override": {
+                        "MitamaLockTeam": {
+                            "enabled": false
+                        }
+                    }
+                },
+                {
+                    "name": "Yes",
+                    "pipeline_override": {
+                        "MitamaLockTeam": {
+                            "enabled": true
+                        }
+                    }
+                }
+            ]
+        },
+        "御魂更换队伍预设": {
+            "type": "switch",
+            "label": "更换队伍预设",
             "default_case": "No",
             "cases": [
                 {
@@ -208,32 +216,35 @@
                         }
                     },
                     "option": [
-                        "队伍选择"
+                        "御魂预设分组与队伍"
                     ]
                 }
-            ]
+            ],
+            "description": "开始挑战前完成分组、队伍、应用和出战确认；未找到入口或同款预设窗口时停止，不跳过换队。"
         },
-        "队伍选择": {
+        "御魂预设分组与队伍": {
             "type": "input",
-            "label": "队伍选择",
+            "label": "预设分组与队伍",
             "inputs": [
                 {
                     "name": "分组",
                     "pipeline_type": "string",
                     "default": "默认分组",
                     "pattern_msg": "分组名称",
-                    "description": "分组名称"
+                    "description": "分组名称",
+                    "verify": "^.*\\S.*$"
                 },
                 {
                     "name": "队伍",
                     "pipeline_type": "string",
                     "default": "默认队伍",
                     "pattern_msg": "队伍名称",
-                    "description": "队伍名称"
+                    "description": "队伍名称",
+                    "verify": "^.*\\S.*$"
                 }
             ],
             "pipeline_override": {
-                "MitamaSelectTeamGroupConfigured": {
+                "TeamPresetSelectGroup": {
                     "recognition": {
                         "param": {
                             "expected": [
@@ -242,12 +253,12 @@
                         }
                     }
                 },
-                "MitamaCheckTeamGroupSelected": {
+                "TeamPresetGroupSelected": {
                     "recognition": {
                         "param": {
                             "all_of": [
                                 {
-                                    "sub_name": "MitamaSelectedTeamGroupText",
+                                    "sub_name": "TeamPresetSelectedGroupText",
                                     "recognition": {
                                         "type": "OCR",
                                         "param": {
@@ -267,7 +278,7 @@
                                     "recognition": {
                                         "type": "ColorMatch",
                                         "param": {
-                                            "roi": "MitamaSelectedTeamGroupText",
+                                            "roi": "TeamPresetSelectedGroupText",
                                             "method": 4,
                                             "lower": [
                                                 235,
@@ -287,7 +298,7 @@
                         }
                     }
                 },
-                "MitamaSelectPresetTeamConfigured": {
+                "TeamPresetSelectTeamConfigured": {
                     "recognition": {
                         "param": {
                             "expected": [
@@ -296,20 +307,20 @@
                         }
                     }
                 },
-                "MitamaClickPresetTeamIcon": {
+                "TeamPresetApplyIcon": {
                     "recognition": {
                         "param": {
                             "all_of": [
                                 {
-                                    "sub_name": "MitamaPresetTeamText",
+                                    "sub_name": "TeamPresetTeamText",
                                     "recognition": {
                                         "type": "OCR",
                                         "param": {
                                             "roi": [
-                                                273,
-                                                59,
-                                                1007,
-                                                559
+                                                544,
+                                                160,
+                                                376,
+                                                320
                                             ],
                                             "expected": [
                                                 "{队伍}"
@@ -321,15 +332,21 @@
                                     "recognition": {
                                         "type": "TemplateMatch",
                                         "param": {
-                                            "roi": "MitamaPresetTeamText",
+                                            "roi": "TeamPresetTeamText",
                                             "roi_offset": [
                                                 0,
-                                                -25,
-                                                500,
-                                                50
+                                                -5,
+                                                300,
+                                                15
                                             ],
-                                            "template": "Mitama/MitamaPresetTeam.png",
-                                            "threshold": 0.8
+                                            "template": [
+                                                "TeamPreset/PresetApply.png",
+                                                "TeamPreset/PresetApplySelected.png"
+                                            ],
+                                            "threshold": [
+                                                0.8,
+                                                0.9
+                                            ]
                                         }
                                     }
                                 }
@@ -348,7 +365,10 @@
                     "name": "No",
                     "pipeline_override": {
                         "MitamaBattleModeDestination": {
-                            "next": ["[JumpBack]CommonBountyInterrupt", "SafeInput_MitamaChallenge"]
+                            "next": [
+                                "[JumpBack]CommonBountyInterrupt",
+                                "MitamaBattleEntry"
+                            ]
                         }
                     }
                 },
@@ -371,13 +391,16 @@
                     "name": "队长",
                     "pipeline_override": {
                         "MitamaBattleModeDestination": {
-                            "next": ["[JumpBack]CommonBountyInterrupt", "SafeInput_MitamaTeamLeader"]
+                            "next": [
+                                "[JumpBack]CommonBountyInterrupt",
+                                "SafeInput_MitamaTeamLeader"
+                            ]
                         },
                         "MitamaCountDetermine": {
                             "action": {
                                 "param": {
                                     "custom_action_param": {
-                                        "continue_node": "MitamaLeaderFight"
+                                        "continue_node": "MitamaLeaderBattleEntry"
                                     }
                                 }
                             }
@@ -388,13 +411,15 @@
                     "name": "队员",
                     "pipeline_override": {
                         "MitamaBattleModeDestination": {
-                            "next": ["MitamaTeamMember"]
+                            "next": [
+                                "MitamaTeamMember"
+                            ]
                         },
                         "MitamaCountDetermine": {
                             "action": {
                                 "param": {
                                     "custom_action_param": {
-                                        "continue_node": "MitamaMemberFight"
+                                        "continue_node": "MitamaMemberBattleEntry"
                                     }
                                 }
                             }
@@ -418,27 +443,70 @@
             ],
             "pipeline_override": {
                 "MitamaTask": {
-                    "action": {
-                        "param": {
-                            "custom_action_param": {
-                                "teammate": "{队友昵称}"
-                            }
-                        }
+                    "attach": {
+                        "teammate": "{队友昵称}"
                     }
                 }
             }
         },
-        "掉落统计上报": {
+        "御魂掉落统计上报": {
             "type": "switch",
-            "label": "掉落统计上报",
+            "label": "御魂掉落统计上报",
             "default_case": "No",
             "cases": [
                 {
                     "name": "No",
                     "pipeline_override": {
-                        "MitamaDropStatistics": {
-                            "enabled": false
-                        },
+                        "MitamaTask": {
+                            "attach": {
+                                "report_drops": false
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "Yes",
+                    "pipeline_override": {
+                        "MitamaTask": {
+                            "attach": {
+                                "report_drops": true
+                            }
+                        }
+                    },
+                    "option": [
+                        "御魂掉落上报地址"
+                    ]
+                }
+            ],
+            "description": "本地统计独立开关；仅开启并配置地址后发送物品统计，不上传截图。"
+        },
+        "御魂掉落上报地址": {
+            "type": "input",
+            "label": "御魂掉落上报地址",
+            "inputs": [
+                {
+                    "name": "御魂掉落上报地址",
+                    "pipeline_type": "string",
+                    "default": "",
+                    "verify": "^https?://.+$"
+                }
+            ],
+            "pipeline_override": {
+                "MitamaTask": {
+                    "attach": {
+                        "drop_report_url": "{御魂掉落上报地址}"
+                    }
+                }
+            }
+        },
+        "御魂奖励掉落统计": {
+            "type": "switch",
+            "label": "御魂奖励掉落统计（本地模板匹配）",
+            "default_case": "No",
+            "cases": [
+                {
+                    "name": "No",
+                    "pipeline_override": {
                         "MitamaSoloDropStatistics": {
                             "enabled": false
                         },
@@ -450,47 +518,152 @@
                 {
                     "name": "Yes",
                     "pipeline_override": {
-                        "MitamaDropStatistics": {
-                            "enabled": true
-                        },
                         "MitamaSoloDropStatistics": {
                             "enabled": true
                         },
                         "MitamaTeamDropStatistics": {
                             "enabled": true
                         }
+                    }
+                }
+            ],
+            "description": "匹配已有模板，返回副本页后累计；识别不到的奖励不会猜测物品名称。"
+        },
+        "御魂友方绿标": {
+            "type": "switch",
+            "label": "友方绿标",
+            "description": "按固定战斗镜头下的友方站位点击，每场正式战斗最多一次；默认关闭。镜头旋转或站位变化后落点可能不对应，请保持镜头固定。",
+            "default_case": "No",
+            "cases": [
+                {
+                    "name": "No",
+                    "pipeline_override": {
+                        "CommonBattleMark": {
+                            "enabled": false
+                        }
+                    }
+                },
+                {
+                    "name": "Yes",
+                    "pipeline_override": {
+                        "CommonBattleMark": {
+                            "enabled": true
+                        }
                     },
                     "option": [
-                        "掉落上报地址"
+                        "御魂绿标站位"
                     ]
                 }
-            ],
-            "description": "默认仅在本地日志统计。开启后向配置地址 POST 结构化掉落数据，不上传截图、设备信息或玩家标识。"
+            ]
         },
-        "掉落上报地址": {
-            "type": "input",
-            "label": "掉落上报地址",
-            "inputs": [
+        "御魂绿标站位": {
+            "type": "select",
+            "label": "绿标站位",
+            "default_case": "左一",
+            "cases": [
                 {
-                    "name": "掉落上报地址",
-                    "pipeline_type": "string",
-                    "default": "",
-                    "pattern_msg": "请输入 http:// 或 https:// 开头的上报接口地址",
-                    "verify": "^https?://.+$",
-                    "description": "接收 JSON POST 的接口地址"
-                }
-            ],
-            "pipeline_override": {
-                "MitamaTask": {
-                    "action": {
-                        "param": {
-                            "custom_action_param": {
-                                "drop_report_url": "{掉落上报地址}"
+                    "name": "左一",
+                    "pipeline_override": {
+                        "SafeInput_CommonBattleMark": {
+                            "action": {
+                                "param": {
+                                    "target": [
+                                        205,
+                                        530,
+                                        60,
+                                        50
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "左二",
+                    "pipeline_override": {
+                        "SafeInput_CommonBattleMark": {
+                            "action": {
+                                "param": {
+                                    "target": [
+                                        425,
+                                        495,
+                                        60,
+                                        50
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "左三",
+                    "pipeline_override": {
+                        "SafeInput_CommonBattleMark": {
+                            "action": {
+                                "param": {
+                                    "target": [
+                                        614,
+                                        450,
+                                        45,
+                                        35
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "左四",
+                    "pipeline_override": {
+                        "SafeInput_CommonBattleMark": {
+                            "action": {
+                                "param": {
+                                    "target": [
+                                        780,
+                                        495,
+                                        55,
+                                        50
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "左五",
+                    "pipeline_override": {
+                        "SafeInput_CommonBattleMark": {
+                            "action": {
+                                "param": {
+                                    "target": [
+                                        955,
+                                        495,
+                                        60,
+                                        50
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "阴阳师",
+                    "pipeline_override": {
+                        "SafeInput_CommonBattleMark": {
+                            "action": {
+                                "param": {
+                                    "target": [
+                                        585,
+                                        575,
+                                        60,
+                                        45
+                                    ]
+                                }
                             }
                         }
                     }
                 }
-            }
+            ]
         }
     }
 }

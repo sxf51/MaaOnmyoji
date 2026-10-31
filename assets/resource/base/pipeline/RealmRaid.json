@@ -29,16 +29,21 @@
         ]
     },
     "RealmRaidCard": {
+        "doc": "原生蒙版模板搜索五个圆圈外缘、卡片边框和右上角空白；屏蔽头像、昵称、勋章内部等变化部分。模板由本项目截图裁剪。",
         "recognition": {
-            "type": "OCR",
+            "type": "TemplateMatch",
             "param": {
-                "expected": "^\\d{1,2}$",
+                "template": "RealmRaid/UnchallengedCard.png",
+                "green_mask": true,
+                "method": 10001,
+                "threshold": 0.98,
                 "roi": [
                     148,
                     146,
-                    317,
-                    120
-                ]
+                    981,
+                    390
+                ],
+                "order_by": "Vertical"
             }
         }
     },
@@ -47,26 +52,17 @@
             "type": "TemplateMatch",
             "param": {
                 "template": "RealmRaid/Broken.png",
-                "roi": [
-                    148,
-                    146,
-                    317,
-                    120
-                ],
+                "roi": "RealmRaidChoose",
                 "threshold": 0.8
             }
         }
     },
     "RealmRaidChallenge": {
         "recognition": {
-            "type": "OCR",
+            "type": "And",
             "param": {
-                "expected": "^进攻$",
-                "roi": [
-                    643,
-                    347,
-                    153,
-                    85
+                "all_of": [
+                    "PageRaidTarget"
                 ]
             }
         },
@@ -83,6 +79,8 @@
         "doc": "挑战当前选中的结界突破目标。"
     },
     "RealmRaidFinish": {
+        "pre_delay": 0,
+        "post_delay": 0,
         "action": {
             "type": "Custom",
             "param": {
@@ -92,21 +90,27 @@
         }
     },
     "RealmRaidScan": {
+        "pre_delay": 0,
+        "post_delay": 0,
         "next": [
             "[JumpBack]CommonBountyInterrupt",
             "[JumpBack]SafeInput_DailyRewardPopup",
-            "RealmRaid0SkipBroken",
-            "RealmRaidSelect0",
-            "RealmRaid0SkipUnavailable"
+            "RealmRaidNoTicket",
+            "RealmRaidChoose",
+            "RealmRaidExhaustedPage"
         ],
-        "doc": "同一张截图按优先级判断当前格已攻破、可挑战或不可用；跳过后直接判断下一格，省去逐格 Check 中转。"
+        "doc": "原生模板寻找右上角无标识的卡片；选择框由框架保存，漏点和结算验证始终引用同一张卡片。"
     },
-    "RealmRaidExhausted": {
+    "RealmRaidNoTicket": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "doc": "个人突破页右上角突破券读数为0时直接结束本轮，不再选卡和点击进攻，也不增加成功次数。计数被聊天栏等遮挡而读不出时不命中，继续原选卡流程，由进攻后的资源不足提示兜底。参考 runhey/OnmyojiAutoScript@2d2f6d8962a5af17c95670c5d0fb2e384b247162 的 tasks/RealmRaid/script_task.py::check_ticket，仅采用开战前读券数的思路，不引入保留券数基准或刷新。",
         "recognition": {
             "type": "And",
             "param": {
                 "all_of": [
-                    "PageRaid"
+                    "PageRaid",
+                    "RealmRaidTicketEmpty"
                 ]
             }
         },
@@ -116,977 +120,40 @@
             "RealmRaidFinish"
         ]
     },
-    "RealmRaid0Card": {
+    "RealmRaidTicketEmpty": {
+        "doc": "只读右上角突破券计数区；本地个人突破截图读数为“30/30”。要求整段为0开头的分数，避免把30/30或其它数字当成无券。",
         "recognition": {
             "type": "OCR",
             "param": {
-                "expected": "^\\d{1,2}$",
+                "expected": "^0\\s*/\\s*\\d+$",
                 "roi": [
-                    148,
-                    146,
-                    317,
-                    120
+                    1130,
+                    10,
+                    120,
+                    45
                 ]
             }
         }
     },
-    "RealmRaid0Broken": {
-        "recognition": {
-            "type": "TemplateMatch",
-            "param": {
-                "template": "RealmRaid/Broken.png",
-                "roi": [
-                    148,
-                    146,
-                    317,
-                    120
-                ],
-                "threshold": 0.8
-            }
-        }
-    },
-    "RealmRaidSelect0": {
+    "RealmRaidExhausted": {
+        "pre_delay": 0,
+        "post_delay": 0,
         "recognition": {
             "type": "And",
             "param": {
                 "all_of": [
                     "PageRaid",
-                    "RealmRaid0Card"
-                ]
-            }
-        },
-        "max_hit": 1,
-        "action": "DoNothing",
-        "post_delay": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_RealmRaidSelect0"
-        ],
-        "pre_delay": 0,
-        "pre_wait_freezes": 0,
-        "post_wait_freezes": 0,
-        "on_error": [],
-        "doc": "选择结界突破九宫格第 1 格目标。"
-    },
-    "RealmRaid0Attack": {
-        "recognition": {
-            "type": "And",
-            "param": {
-                "all_of": [
-                    "RealmRaidChallenge"
+                    "RealmRaidCard"
                 ]
             }
         },
         "action": "DoNothing",
-        "post_delay": 0,
         "next": [
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_RealmRaid0Attack"
+            "RealmRaidExhaustedConfirmed"
         ],
-        "pre_delay": 0,
-        "pre_wait_freezes": 0,
-        "post_wait_freezes": 0,
-        "on_error": [],
-        "doc": "挑战九宫格第 1 格目标，结算后验证该格是否攻破。"
-    },
-    "RealmRaid0Verify": {
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "[JumpBack]SafeInput_DailyRewardPopup",
-            "RealmRaid0Success"
-        ],
-        "timeout": 5000
-    },
-    "RealmRaid0Success": {
-        "recognition": {
-            "type": "And",
-            "param": {
-                "all_of": [
-                    "PageRaid",
-                    "RealmRaid0Broken"
-                ]
-            }
-        },
-        "action": {
-            "type": "Custom",
-            "param": {
-                "custom_action": "TargetCountProgress",
-                "custom_action_param": {
-                    "count": 1,
-                    "continue_node": "RealmRaidScan",
-                    "finish_node": "RealmRaidFinish"
-                }
-            }
-        },
-        "next": [
-            "RealmRaidScan"
-        ],
-        "pre_delay": 0,
-        "post_delay": 0
-    },
-    "RealmRaid1Card": {
-        "recognition": {
-            "type": "OCR",
-            "param": {
-                "expected": "^\\d{1,2}$",
-                "roi": [
-                    480,
-                    146,
-                    317,
-                    120
-                ]
-            }
-        }
-    },
-    "RealmRaid1Broken": {
-        "recognition": {
-            "type": "TemplateMatch",
-            "param": {
-                "template": "RealmRaid/Broken.png",
-                "roi": [
-                    480,
-                    146,
-                    317,
-                    120
-                ],
-                "threshold": 0.8
-            }
-        }
-    },
-    "RealmRaidSelect1": {
-        "recognition": {
-            "type": "And",
-            "param": {
-                "all_of": [
-                    "PageRaid",
-                    "RealmRaid1Card"
-                ]
-            }
-        },
-        "max_hit": 1,
-        "action": "DoNothing",
-        "post_delay": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_RealmRaidSelect1"
-        ],
-        "pre_delay": 0,
-        "pre_wait_freezes": 0,
-        "post_wait_freezes": 0,
-        "on_error": [],
-        "doc": "选择结界突破九宫格第 2 格目标。"
-    },
-    "RealmRaid1Attack": {
-        "recognition": {
-            "type": "And",
-            "param": {
-                "all_of": [
-                    "RealmRaidChallenge"
-                ]
-            }
-        },
-        "action": "DoNothing",
-        "post_delay": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_RealmRaid1Attack"
-        ],
-        "pre_delay": 0,
-        "pre_wait_freezes": 0,
-        "post_wait_freezes": 0,
-        "on_error": [],
-        "doc": "挑战九宫格第 2 格目标，结算后验证该格是否攻破。"
-    },
-    "RealmRaid1Verify": {
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "[JumpBack]SafeInput_DailyRewardPopup",
-            "RealmRaid1Success"
-        ],
-        "timeout": 5000
-    },
-    "RealmRaid1Success": {
-        "recognition": {
-            "type": "And",
-            "param": {
-                "all_of": [
-                    "PageRaid",
-                    "RealmRaid1Broken"
-                ]
-            }
-        },
-        "action": {
-            "type": "Custom",
-            "param": {
-                "custom_action": "TargetCountProgress",
-                "custom_action_param": {
-                    "count": 1,
-                    "continue_node": "RealmRaidScan",
-                    "finish_node": "RealmRaidFinish"
-                }
-            }
-        },
-        "next": [
-            "RealmRaidScan"
-        ],
-        "pre_delay": 0,
-        "post_delay": 0
-    },
-    "RealmRaid2Card": {
-        "recognition": {
-            "type": "OCR",
-            "param": {
-                "expected": "^\\d{1,2}$",
-                "roi": [
-                    812,
-                    146,
-                    317,
-                    120
-                ]
-            }
-        }
-    },
-    "RealmRaid2Broken": {
-        "recognition": {
-            "type": "TemplateMatch",
-            "param": {
-                "template": "RealmRaid/Broken.png",
-                "roi": [
-                    812,
-                    146,
-                    317,
-                    120
-                ],
-                "threshold": 0.8
-            }
-        }
-    },
-    "RealmRaidSelect2": {
-        "recognition": {
-            "type": "And",
-            "param": {
-                "all_of": [
-                    "PageRaid",
-                    "RealmRaid2Card"
-                ]
-            }
-        },
-        "max_hit": 1,
-        "action": "DoNothing",
-        "post_delay": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_RealmRaidSelect2"
-        ],
-        "pre_delay": 0,
-        "pre_wait_freezes": 0,
-        "post_wait_freezes": 0,
-        "on_error": [],
-        "doc": "选择结界突破九宫格第 3 格目标。"
-    },
-    "RealmRaid2Attack": {
-        "recognition": {
-            "type": "And",
-            "param": {
-                "all_of": [
-                    "RealmRaidChallenge"
-                ]
-            }
-        },
-        "action": "DoNothing",
-        "post_delay": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_RealmRaid2Attack"
-        ],
-        "pre_delay": 0,
-        "pre_wait_freezes": 0,
-        "post_wait_freezes": 0,
-        "on_error": [],
-        "doc": "挑战九宫格第 3 格目标，结算后验证该格是否攻破。"
-    },
-    "RealmRaid2Verify": {
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "[JumpBack]SafeInput_DailyRewardPopup",
-            "RealmRaid2Success"
-        ],
-        "timeout": 5000
-    },
-    "RealmRaid2Success": {
-        "recognition": {
-            "type": "And",
-            "param": {
-                "all_of": [
-                    "PageRaid",
-                    "RealmRaid2Broken"
-                ]
-            }
-        },
-        "action": {
-            "type": "Custom",
-            "param": {
-                "custom_action": "TargetCountProgress",
-                "custom_action_param": {
-                    "count": 1,
-                    "continue_node": "RealmRaidScan",
-                    "finish_node": "RealmRaidFinish"
-                }
-            }
-        },
-        "next": [
-            "RealmRaidScan"
-        ],
-        "pre_delay": 0,
-        "post_delay": 0
-    },
-    "RealmRaid3Card": {
-        "recognition": {
-            "type": "OCR",
-            "param": {
-                "expected": "^\\d{1,2}$",
-                "roi": [
-                    148,
-                    281,
-                    317,
-                    120
-                ]
-            }
-        }
-    },
-    "RealmRaid3Broken": {
-        "recognition": {
-            "type": "TemplateMatch",
-            "param": {
-                "template": "RealmRaid/Broken.png",
-                "roi": [
-                    148,
-                    281,
-                    317,
-                    120
-                ],
-                "threshold": 0.8
-            }
-        }
-    },
-    "RealmRaidSelect3": {
-        "recognition": {
-            "type": "And",
-            "param": {
-                "all_of": [
-                    "PageRaid",
-                    "RealmRaid3Card"
-                ]
-            }
-        },
-        "max_hit": 1,
-        "action": "DoNothing",
-        "post_delay": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_RealmRaidSelect3"
-        ],
-        "pre_delay": 0,
-        "pre_wait_freezes": 0,
-        "post_wait_freezes": 0,
-        "on_error": [],
-        "doc": "选择结界突破九宫格第 4 格目标。"
-    },
-    "RealmRaid3Attack": {
-        "recognition": {
-            "type": "And",
-            "param": {
-                "all_of": [
-                    "RealmRaidChallenge"
-                ]
-            }
-        },
-        "action": "DoNothing",
-        "post_delay": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_RealmRaid3Attack"
-        ],
-        "pre_delay": 0,
-        "pre_wait_freezes": 0,
-        "post_wait_freezes": 0,
-        "on_error": [],
-        "doc": "挑战九宫格第 4 格目标，结算后验证该格是否攻破。"
-    },
-    "RealmRaid3Verify": {
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "[JumpBack]SafeInput_DailyRewardPopup",
-            "RealmRaid3Success"
-        ],
-        "timeout": 5000
-    },
-    "RealmRaid3Success": {
-        "recognition": {
-            "type": "And",
-            "param": {
-                "all_of": [
-                    "PageRaid",
-                    "RealmRaid3Broken"
-                ]
-            }
-        },
-        "action": {
-            "type": "Custom",
-            "param": {
-                "custom_action": "TargetCountProgress",
-                "custom_action_param": {
-                    "count": 1,
-                    "continue_node": "RealmRaidScan",
-                    "finish_node": "RealmRaidFinish"
-                }
-            }
-        },
-        "next": [
-            "RealmRaidScan"
-        ],
-        "pre_delay": 0,
-        "post_delay": 0
-    },
-    "RealmRaid4Card": {
-        "recognition": {
-            "type": "OCR",
-            "param": {
-                "expected": "^\\d{1,2}$",
-                "roi": [
-                    480,
-                    281,
-                    317,
-                    120
-                ]
-            }
-        }
-    },
-    "RealmRaid4Broken": {
-        "recognition": {
-            "type": "TemplateMatch",
-            "param": {
-                "template": "RealmRaid/Broken.png",
-                "roi": [
-                    480,
-                    281,
-                    317,
-                    120
-                ],
-                "threshold": 0.8
-            }
-        }
-    },
-    "RealmRaidSelect4": {
-        "recognition": {
-            "type": "And",
-            "param": {
-                "all_of": [
-                    "PageRaid",
-                    "RealmRaid4Card"
-                ]
-            }
-        },
-        "max_hit": 1,
-        "action": "DoNothing",
-        "post_delay": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_RealmRaidSelect4"
-        ],
-        "pre_delay": 0,
-        "pre_wait_freezes": 0,
-        "post_wait_freezes": 0,
-        "on_error": [],
-        "doc": "选择结界突破九宫格第 5 格目标。"
-    },
-    "RealmRaid4Attack": {
-        "recognition": {
-            "type": "And",
-            "param": {
-                "all_of": [
-                    "RealmRaidChallenge"
-                ]
-            }
-        },
-        "action": "DoNothing",
-        "post_delay": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_RealmRaid4Attack"
-        ],
-        "pre_delay": 0,
-        "pre_wait_freezes": 0,
-        "post_wait_freezes": 0,
-        "on_error": [],
-        "doc": "挑战九宫格第 5 格目标，结算后验证该格是否攻破。"
-    },
-    "RealmRaid4Verify": {
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "[JumpBack]SafeInput_DailyRewardPopup",
-            "RealmRaid4Success"
-        ],
-        "timeout": 5000
-    },
-    "RealmRaid4Success": {
-        "recognition": {
-            "type": "And",
-            "param": {
-                "all_of": [
-                    "PageRaid",
-                    "RealmRaid4Broken"
-                ]
-            }
-        },
-        "action": {
-            "type": "Custom",
-            "param": {
-                "custom_action": "TargetCountProgress",
-                "custom_action_param": {
-                    "count": 1,
-                    "continue_node": "RealmRaidScan",
-                    "finish_node": "RealmRaidFinish"
-                }
-            }
-        },
-        "next": [
-            "RealmRaidScan"
-        ],
-        "pre_delay": 0,
-        "post_delay": 0
-    },
-    "RealmRaid5Card": {
-        "recognition": {
-            "type": "OCR",
-            "param": {
-                "expected": "^\\d{1,2}$",
-                "roi": [
-                    812,
-                    281,
-                    317,
-                    120
-                ]
-            }
-        }
-    },
-    "RealmRaid5Broken": {
-        "recognition": {
-            "type": "TemplateMatch",
-            "param": {
-                "template": "RealmRaid/Broken.png",
-                "roi": [
-                    812,
-                    281,
-                    317,
-                    120
-                ],
-                "threshold": 0.8
-            }
-        }
-    },
-    "RealmRaidSelect5": {
-        "recognition": {
-            "type": "And",
-            "param": {
-                "all_of": [
-                    "PageRaid",
-                    "RealmRaid5Card"
-                ]
-            }
-        },
-        "max_hit": 1,
-        "action": "DoNothing",
-        "post_delay": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_RealmRaidSelect5"
-        ],
-        "pre_delay": 0,
-        "pre_wait_freezes": 0,
-        "post_wait_freezes": 0,
-        "on_error": [],
-        "doc": "选择结界突破九宫格第 6 格目标。"
-    },
-    "RealmRaid5Attack": {
-        "recognition": {
-            "type": "And",
-            "param": {
-                "all_of": [
-                    "RealmRaidChallenge"
-                ]
-            }
-        },
-        "action": "DoNothing",
-        "post_delay": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_RealmRaid5Attack"
-        ],
-        "pre_delay": 0,
-        "pre_wait_freezes": 0,
-        "post_wait_freezes": 0,
-        "on_error": [],
-        "doc": "挑战九宫格第 6 格目标，结算后验证该格是否攻破。"
-    },
-    "RealmRaid5Verify": {
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "[JumpBack]SafeInput_DailyRewardPopup",
-            "RealmRaid5Success"
-        ],
-        "timeout": 5000
-    },
-    "RealmRaid5Success": {
-        "recognition": {
-            "type": "And",
-            "param": {
-                "all_of": [
-                    "PageRaid",
-                    "RealmRaid5Broken"
-                ]
-            }
-        },
-        "action": {
-            "type": "Custom",
-            "param": {
-                "custom_action": "TargetCountProgress",
-                "custom_action_param": {
-                    "count": 1,
-                    "continue_node": "RealmRaidScan",
-                    "finish_node": "RealmRaidFinish"
-                }
-            }
-        },
-        "next": [
-            "RealmRaidScan"
-        ],
-        "pre_delay": 0,
-        "post_delay": 0
-    },
-    "RealmRaid6Card": {
-        "recognition": {
-            "type": "OCR",
-            "param": {
-                "expected": "^\\d{1,2}$",
-                "roi": [
-                    148,
-                    416,
-                    317,
-                    120
-                ]
-            }
-        }
-    },
-    "RealmRaid6Broken": {
-        "recognition": {
-            "type": "TemplateMatch",
-            "param": {
-                "template": "RealmRaid/Broken.png",
-                "roi": [
-                    148,
-                    416,
-                    317,
-                    120
-                ],
-                "threshold": 0.8
-            }
-        }
-    },
-    "RealmRaidSelect6": {
-        "recognition": {
-            "type": "And",
-            "param": {
-                "all_of": [
-                    "PageRaid",
-                    "RealmRaid6Card"
-                ]
-            }
-        },
-        "max_hit": 1,
-        "action": "DoNothing",
-        "post_delay": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_RealmRaidSelect6"
-        ],
-        "pre_delay": 0,
-        "pre_wait_freezes": 0,
-        "post_wait_freezes": 0,
-        "on_error": [],
-        "doc": "选择结界突破九宫格第 7 格目标。"
-    },
-    "RealmRaid6Attack": {
-        "recognition": {
-            "type": "And",
-            "param": {
-                "all_of": [
-                    "RealmRaidChallenge"
-                ]
-            }
-        },
-        "action": "DoNothing",
-        "post_delay": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_RealmRaid6Attack"
-        ],
-        "pre_delay": 0,
-        "pre_wait_freezes": 0,
-        "post_wait_freezes": 0,
-        "on_error": [],
-        "doc": "挑战九宫格第 7 格目标，结算后验证该格是否攻破。"
-    },
-    "RealmRaid6Verify": {
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "[JumpBack]SafeInput_DailyRewardPopup",
-            "RealmRaid6Success"
-        ],
-        "timeout": 5000
-    },
-    "RealmRaid6Success": {
-        "recognition": {
-            "type": "And",
-            "param": {
-                "all_of": [
-                    "PageRaid",
-                    "RealmRaid6Broken"
-                ]
-            }
-        },
-        "action": {
-            "type": "Custom",
-            "param": {
-                "custom_action": "TargetCountProgress",
-                "custom_action_param": {
-                    "count": 1,
-                    "continue_node": "RealmRaidScan",
-                    "finish_node": "RealmRaidFinish"
-                }
-            }
-        },
-        "next": [
-            "RealmRaidScan"
-        ],
-        "pre_delay": 0,
-        "post_delay": 0
-    },
-    "RealmRaid7Card": {
-        "recognition": {
-            "type": "OCR",
-            "param": {
-                "expected": "^\\d{1,2}$",
-                "roi": [
-                    480,
-                    416,
-                    317,
-                    120
-                ]
-            }
-        }
-    },
-    "RealmRaid7Broken": {
-        "recognition": {
-            "type": "TemplateMatch",
-            "param": {
-                "template": "RealmRaid/Broken.png",
-                "roi": [
-                    480,
-                    416,
-                    317,
-                    120
-                ],
-                "threshold": 0.8
-            }
-        }
-    },
-    "RealmRaidSelect7": {
-        "recognition": {
-            "type": "And",
-            "param": {
-                "all_of": [
-                    "PageRaid",
-                    "RealmRaid7Card"
-                ]
-            }
-        },
-        "max_hit": 1,
-        "action": "DoNothing",
-        "post_delay": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_RealmRaidSelect7"
-        ],
-        "pre_delay": 0,
-        "pre_wait_freezes": 0,
-        "post_wait_freezes": 0,
-        "on_error": [],
-        "doc": "选择结界突破九宫格第 8 格目标。"
-    },
-    "RealmRaid7Attack": {
-        "recognition": {
-            "type": "And",
-            "param": {
-                "all_of": [
-                    "RealmRaidChallenge"
-                ]
-            }
-        },
-        "action": "DoNothing",
-        "post_delay": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_RealmRaid7Attack"
-        ],
-        "pre_delay": 0,
-        "pre_wait_freezes": 0,
-        "post_wait_freezes": 0,
-        "on_error": [],
-        "doc": "挑战九宫格第 8 格目标，结算后验证该格是否攻破。"
-    },
-    "RealmRaid7Verify": {
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "[JumpBack]SafeInput_DailyRewardPopup",
-            "RealmRaid7Success"
-        ],
-        "timeout": 5000
-    },
-    "RealmRaid7Success": {
-        "recognition": {
-            "type": "And",
-            "param": {
-                "all_of": [
-                    "PageRaid",
-                    "RealmRaid7Broken"
-                ]
-            }
-        },
-        "action": {
-            "type": "Custom",
-            "param": {
-                "custom_action": "TargetCountProgress",
-                "custom_action_param": {
-                    "count": 1,
-                    "continue_node": "RealmRaidScan",
-                    "finish_node": "RealmRaidFinish"
-                }
-            }
-        },
-        "next": [
-            "RealmRaidScan"
-        ],
-        "pre_delay": 0,
-        "post_delay": 0
-    },
-    "RealmRaid8Card": {
-        "recognition": {
-            "type": "OCR",
-            "param": {
-                "expected": "^\\d{1,2}$",
-                "roi": [
-                    812,
-                    416,
-                    317,
-                    120
-                ]
-            }
-        }
-    },
-    "RealmRaid8Broken": {
-        "recognition": {
-            "type": "TemplateMatch",
-            "param": {
-                "template": "RealmRaid/Broken.png",
-                "roi": [
-                    812,
-                    416,
-                    317,
-                    120
-                ],
-                "threshold": 0.8
-            }
-        }
-    },
-    "RealmRaidSelect8": {
-        "recognition": {
-            "type": "And",
-            "param": {
-                "all_of": [
-                    "PageRaid",
-                    "RealmRaid8Card"
-                ]
-            }
-        },
-        "max_hit": 1,
-        "action": "DoNothing",
-        "post_delay": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_RealmRaidSelect8"
-        ],
-        "pre_delay": 0,
-        "pre_wait_freezes": 0,
-        "post_wait_freezes": 0,
-        "on_error": [],
-        "doc": "选择结界突破九宫格第 9 格目标。"
-    },
-    "RealmRaid8Attack": {
-        "recognition": {
-            "type": "And",
-            "param": {
-                "all_of": [
-                    "RealmRaidChallenge"
-                ]
-            }
-        },
-        "action": "DoNothing",
-        "post_delay": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_RealmRaid8Attack"
-        ],
-        "pre_delay": 0,
-        "pre_wait_freezes": 0,
-        "post_wait_freezes": 0,
-        "on_error": [],
-        "doc": "挑战九宫格第 9 格目标，结算后验证该格是否攻破。"
-    },
-    "RealmRaid8Verify": {
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "[JumpBack]SafeInput_DailyRewardPopup",
-            "RealmRaid8Success"
-        ],
-        "timeout": 5000
-    },
-    "RealmRaid8Success": {
-        "recognition": {
-            "type": "And",
-            "param": {
-                "all_of": [
-                    "PageRaid",
-                    "RealmRaid8Broken"
-                ]
-            }
-        },
-        "action": {
-            "type": "Custom",
-            "param": {
-                "custom_action": "TargetCountProgress",
-                "custom_action_param": {
-                    "count": 1,
-                    "continue_node": "RealmRaidScan",
-                    "finish_node": "RealmRaidFinish"
-                }
-            }
-        },
-        "next": [
-            "RealmRaidScan"
-        ],
-        "pre_delay": 0,
-        "post_delay": 0
+        "inverse": true,
+        "doc": "仅由已确认的个人突破页进入：没有未挑战卡片才结束。"
     },
     "RealmRaidCountDetermine": {
         "action": {
@@ -1105,6 +172,8 @@
         ]
     },
     "RealmRaidReady": {
+        "pre_delay": 0,
+        "post_delay": 0,
         "recognition": {
             "type": "And",
             "param": {
@@ -1116,49 +185,92 @@
         "action": "DoNothing",
         "next": [
             "[JumpBack]CommonBountyInterrupt",
-            "[JumpBack]SafeInput_DailyRewardPopup",
-            "RealmRaid0SkipBroken",
-            "RealmRaidSelect0",
-            "RealmRaid0SkipUnavailable"
+            "RealmRaidPreset",
+            "RealmRaidScan"
         ]
     },
-    "RealmRaidCheck0": {
-        "recognition": {
-            "type": "And",
+    "RealmRaidPreset": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "doc": "配置个人突破页的预设入口与返回位置，完成换队后才开始选卡。入口在突破页右侧“队伍预设”(图标约1228,553)；预设窗口与御魂页同款，本地截图整体右移226、下移21（出战按钮728,505→954,526），窗口内分组/队伍ROI由任务选项按同样偏移写入；“全队正在使用”提示仍在屏幕原位置。",
+        "enabled": false,
+        "action": {
+            "type": "Custom",
             "param": {
-                "all_of": [
-                    "PageRaid"
-                ]
+                "custom_action": "NodeOverride",
+                "custom_action_param": {
+                    "TeamPresetContext": {
+                        "recognition": {
+                            "type": "And",
+                            "param": {
+                                "all_of": [
+                                    "PageRaid"
+                                ]
+                            }
+                        }
+                    },
+                    "TeamPresetEntryText": {
+                        "recognition": {
+                            "param": {
+                                "roi": [
+                                    1170,
+                                    568,
+                                    110,
+                                    42
+                                ]
+                            }
+                        }
+                    },
+                    "SafeInput_TeamPresetOpen": {
+                        "action": {
+                            "param": {
+                                "target": [
+                                    1206,
+                                    532,
+                                    44,
+                                    42
+                                ]
+                            }
+                        }
+                    },
+                    "TeamPresetOut": {
+                        "recognition": {
+                            "param": {
+                                "roi": [
+                                    894,
+                                    503,
+                                    120,
+                                    44
+                                ]
+                            }
+                        }
+                    },
+                    "TeamPresetFrameTemplate": {
+                        "recognition": {
+                            "param": {
+                                "roi": [
+                                    621,
+                                    161,
+                                    155,
+                                    30
+                                ]
+                            }
+                        }
+                    }
+                }
             }
         },
+        "anchor": {
+            "TeamPresetReturn": "RealmRaidPresetDone"
+        },
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "RealmRaid0SkipBroken",
-            "RealmRaidSelect0",
-            "RealmRaid0SkipUnavailable"
+            "TeamPresetRun"
         ]
     },
-    "RealmRaid0SkipBroken": {
-        "recognition": {
-            "type": "And",
-            "param": {
-                "all_of": [
-                    "PageRaid",
-                    "RealmRaid0Broken"
-                ]
-            }
-        },
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "[JumpBack]SafeInput_DailyRewardPopup",
-            "RealmRaid1SkipBroken",
-            "RealmRaidSelect1",
-            "RealmRaid1SkipUnavailable"
-        ],
+    "RealmRaidPresetDone": {
         "pre_delay": 0,
-        "post_delay": 0
-    },
-    "RealmRaid0SkipUnavailable": {
+        "post_delay": 0,
+        "doc": "确认预设已应用并返回个人突破页，开始选卡。",
         "recognition": {
             "type": "And",
             "param": {
@@ -1167,464 +279,410 @@
                 ]
             }
         },
+        "action": "DoNothing",
         "next": [
             "[JumpBack]CommonBountyInterrupt",
-            "[JumpBack]SafeInput_DailyRewardPopup",
-            "RealmRaid1SkipBroken",
-            "RealmRaidSelect1",
-            "RealmRaid1SkipUnavailable"
-        ],
-        "pre_delay": 0,
-        "post_delay": 0
-    },
-    "RealmRaidCheck1": {
-        "recognition": {
-            "type": "And",
-            "param": {
-                "all_of": [
-                    "PageRaid"
-                ]
-            }
-        },
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "RealmRaid1SkipBroken",
-            "RealmRaidSelect1",
-            "RealmRaid1SkipUnavailable"
+            "RealmRaidScan"
         ]
-    },
-    "RealmRaid1SkipBroken": {
-        "recognition": {
-            "type": "And",
-            "param": {
-                "all_of": [
-                    "PageRaid",
-                    "RealmRaid1Broken"
-                ]
-            }
-        },
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "[JumpBack]SafeInput_DailyRewardPopup",
-            "RealmRaid2SkipBroken",
-            "RealmRaidSelect2",
-            "RealmRaid2SkipUnavailable"
-        ],
-        "pre_delay": 0,
-        "post_delay": 0
-    },
-    "RealmRaid1SkipUnavailable": {
-        "recognition": {
-            "type": "And",
-            "param": {
-                "all_of": [
-                    "PageRaid"
-                ]
-            }
-        },
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "[JumpBack]SafeInput_DailyRewardPopup",
-            "RealmRaid2SkipBroken",
-            "RealmRaidSelect2",
-            "RealmRaid2SkipUnavailable"
-        ],
-        "pre_delay": 0,
-        "post_delay": 0
-    },
-    "RealmRaidCheck2": {
-        "recognition": {
-            "type": "And",
-            "param": {
-                "all_of": [
-                    "PageRaid"
-                ]
-            }
-        },
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "RealmRaid2SkipBroken",
-            "RealmRaidSelect2",
-            "RealmRaid2SkipUnavailable"
-        ]
-    },
-    "RealmRaid2SkipBroken": {
-        "recognition": {
-            "type": "And",
-            "param": {
-                "all_of": [
-                    "PageRaid",
-                    "RealmRaid2Broken"
-                ]
-            }
-        },
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "[JumpBack]SafeInput_DailyRewardPopup",
-            "RealmRaid3SkipBroken",
-            "RealmRaidSelect3",
-            "RealmRaid3SkipUnavailable"
-        ],
-        "pre_delay": 0,
-        "post_delay": 0
-    },
-    "RealmRaid2SkipUnavailable": {
-        "recognition": {
-            "type": "And",
-            "param": {
-                "all_of": [
-                    "PageRaid"
-                ]
-            }
-        },
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "[JumpBack]SafeInput_DailyRewardPopup",
-            "RealmRaid3SkipBroken",
-            "RealmRaidSelect3",
-            "RealmRaid3SkipUnavailable"
-        ],
-        "pre_delay": 0,
-        "post_delay": 0
-    },
-    "RealmRaidCheck3": {
-        "recognition": {
-            "type": "And",
-            "param": {
-                "all_of": [
-                    "PageRaid"
-                ]
-            }
-        },
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "RealmRaid3SkipBroken",
-            "RealmRaidSelect3",
-            "RealmRaid3SkipUnavailable"
-        ]
-    },
-    "RealmRaid3SkipBroken": {
-        "recognition": {
-            "type": "And",
-            "param": {
-                "all_of": [
-                    "PageRaid",
-                    "RealmRaid3Broken"
-                ]
-            }
-        },
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "[JumpBack]SafeInput_DailyRewardPopup",
-            "RealmRaid4SkipBroken",
-            "RealmRaidSelect4",
-            "RealmRaid4SkipUnavailable"
-        ],
-        "pre_delay": 0,
-        "post_delay": 0
-    },
-    "RealmRaid3SkipUnavailable": {
-        "recognition": {
-            "type": "And",
-            "param": {
-                "all_of": [
-                    "PageRaid"
-                ]
-            }
-        },
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "[JumpBack]SafeInput_DailyRewardPopup",
-            "RealmRaid4SkipBroken",
-            "RealmRaidSelect4",
-            "RealmRaid4SkipUnavailable"
-        ],
-        "pre_delay": 0,
-        "post_delay": 0
-    },
-    "RealmRaidCheck4": {
-        "recognition": {
-            "type": "And",
-            "param": {
-                "all_of": [
-                    "PageRaid"
-                ]
-            }
-        },
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "RealmRaid4SkipBroken",
-            "RealmRaidSelect4",
-            "RealmRaid4SkipUnavailable"
-        ]
-    },
-    "RealmRaid4SkipBroken": {
-        "recognition": {
-            "type": "And",
-            "param": {
-                "all_of": [
-                    "PageRaid",
-                    "RealmRaid4Broken"
-                ]
-            }
-        },
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "[JumpBack]SafeInput_DailyRewardPopup",
-            "RealmRaid5SkipBroken",
-            "RealmRaidSelect5",
-            "RealmRaid5SkipUnavailable"
-        ],
-        "pre_delay": 0,
-        "post_delay": 0
-    },
-    "RealmRaid4SkipUnavailable": {
-        "recognition": {
-            "type": "And",
-            "param": {
-                "all_of": [
-                    "PageRaid"
-                ]
-            }
-        },
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "[JumpBack]SafeInput_DailyRewardPopup",
-            "RealmRaid5SkipBroken",
-            "RealmRaidSelect5",
-            "RealmRaid5SkipUnavailable"
-        ],
-        "pre_delay": 0,
-        "post_delay": 0
-    },
-    "RealmRaidCheck5": {
-        "recognition": {
-            "type": "And",
-            "param": {
-                "all_of": [
-                    "PageRaid"
-                ]
-            }
-        },
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "RealmRaid5SkipBroken",
-            "RealmRaidSelect5",
-            "RealmRaid5SkipUnavailable"
-        ]
-    },
-    "RealmRaid5SkipBroken": {
-        "recognition": {
-            "type": "And",
-            "param": {
-                "all_of": [
-                    "PageRaid",
-                    "RealmRaid5Broken"
-                ]
-            }
-        },
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "[JumpBack]SafeInput_DailyRewardPopup",
-            "RealmRaid6SkipBroken",
-            "RealmRaidSelect6",
-            "RealmRaid6SkipUnavailable"
-        ],
-        "pre_delay": 0,
-        "post_delay": 0
-    },
-    "RealmRaid5SkipUnavailable": {
-        "recognition": {
-            "type": "And",
-            "param": {
-                "all_of": [
-                    "PageRaid"
-                ]
-            }
-        },
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "[JumpBack]SafeInput_DailyRewardPopup",
-            "RealmRaid6SkipBroken",
-            "RealmRaidSelect6",
-            "RealmRaid6SkipUnavailable"
-        ],
-        "pre_delay": 0,
-        "post_delay": 0
-    },
-    "RealmRaidCheck6": {
-        "recognition": {
-            "type": "And",
-            "param": {
-                "all_of": [
-                    "PageRaid"
-                ]
-            }
-        },
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "RealmRaid6SkipBroken",
-            "RealmRaidSelect6",
-            "RealmRaid6SkipUnavailable"
-        ]
-    },
-    "RealmRaid6SkipBroken": {
-        "recognition": {
-            "type": "And",
-            "param": {
-                "all_of": [
-                    "PageRaid",
-                    "RealmRaid6Broken"
-                ]
-            }
-        },
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "[JumpBack]SafeInput_DailyRewardPopup",
-            "RealmRaid7SkipBroken",
-            "RealmRaidSelect7",
-            "RealmRaid7SkipUnavailable"
-        ],
-        "pre_delay": 0,
-        "post_delay": 0
-    },
-    "RealmRaid6SkipUnavailable": {
-        "recognition": {
-            "type": "And",
-            "param": {
-                "all_of": [
-                    "PageRaid"
-                ]
-            }
-        },
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "[JumpBack]SafeInput_DailyRewardPopup",
-            "RealmRaid7SkipBroken",
-            "RealmRaidSelect7",
-            "RealmRaid7SkipUnavailable"
-        ],
-        "pre_delay": 0,
-        "post_delay": 0
-    },
-    "RealmRaidCheck7": {
-        "recognition": {
-            "type": "And",
-            "param": {
-                "all_of": [
-                    "PageRaid"
-                ]
-            }
-        },
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "RealmRaid7SkipBroken",
-            "RealmRaidSelect7",
-            "RealmRaid7SkipUnavailable"
-        ]
-    },
-    "RealmRaid7SkipBroken": {
-        "recognition": {
-            "type": "And",
-            "param": {
-                "all_of": [
-                    "PageRaid",
-                    "RealmRaid7Broken"
-                ]
-            }
-        },
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "[JumpBack]SafeInput_DailyRewardPopup",
-            "RealmRaid8SkipBroken",
-            "RealmRaidSelect8",
-            "RealmRaid8SkipUnavailable"
-        ],
-        "pre_delay": 0,
-        "post_delay": 0
-    },
-    "RealmRaid7SkipUnavailable": {
-        "recognition": {
-            "type": "And",
-            "param": {
-                "all_of": [
-                    "PageRaid"
-                ]
-            }
-        },
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "[JumpBack]SafeInput_DailyRewardPopup",
-            "RealmRaid8SkipBroken",
-            "RealmRaidSelect8",
-            "RealmRaid8SkipUnavailable"
-        ],
-        "pre_delay": 0,
-        "post_delay": 0
-    },
-    "RealmRaidCheck8": {
-        "recognition": {
-            "type": "And",
-            "param": {
-                "all_of": [
-                    "PageRaid"
-                ]
-            }
-        },
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "RealmRaid8SkipBroken",
-            "RealmRaidSelect8",
-            "RealmRaid8SkipUnavailable"
-        ]
-    },
-    "RealmRaid8SkipBroken": {
-        "recognition": {
-            "type": "And",
-            "param": {
-                "all_of": [
-                    "PageRaid",
-                    "RealmRaid8Broken"
-                ]
-            }
-        },
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "[JumpBack]SafeInput_DailyRewardPopup",
-            "RealmRaidExhausted"
-        ],
-        "pre_delay": 0,
-        "post_delay": 0
-    },
-    "RealmRaid8SkipUnavailable": {
-        "recognition": {
-            "type": "And",
-            "param": {
-                "all_of": [
-                    "PageRaid"
-                ]
-            }
-        },
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "[JumpBack]SafeInput_DailyRewardPopup",
-            "RealmRaidExhausted"
-        ],
-        "pre_delay": 0,
-        "post_delay": 0
     },
     "RealmRaidBattle": {
         "next": [
             "[JumpBack]CommonBountyInterrupt",
+            "RealmRaidRetreatBegin",
+            "[JumpBack]RealmRaidBattleMark",
+            "RealmRaidBattleSettle"
+        ],
+        "timeout": 300000,
+        "doc": "突破战斗快速循环：只放模板类判断。MaaFW 5.14 会对同一 next 列表中的全部 OCR 先做一次合并识别，本地日志中完整战斗列表每轮约1.2秒，导致退出与绿标最多晚1.2秒才被看到。战斗返回按钮只在正式战斗出现，因此按钮可见时只检查主动退出与绿标（二者并列，退出在前，预算未用完的场次不点绿标），都不需要时本轮不匹配，按rate_limit重试；按钮消失（准备、载入、结算、失败页）才进入RealmRaidBattleSettle做OCR判断。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "rate_limit": 300
+    },
+    "RealmRaidBattleSettle": {
+        "doc": "战斗返回按钮不可见时进入：处理券不足、退出/战败后的再次挑战、失败与胜利结算、过场、准备和奖励弹窗；按钮重新出现时回到快速循环。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "RealmRaidBattleExitIcon"
+                ]
+            }
+        },
+        "inverse": true,
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
             "RealmRaidBattleNoResource",
+            "RealmRaidRetreatRetry",
+            "RealmRaidFailRetry",
             "RealmRaidBattleFailure",
             "SafeInput_RealmRaidBattleResult",
+            "[JumpBack]CommonBattleEnteringWait",
             "[JumpBack]DailyPrepare",
-            "[JumpBack]SafeInput_DailyRewardPopup"
+            "[JumpBack]SafeInput_DailyRewardPopup",
+            "RealmRaidBattleResume"
         ],
+        "rate_limit": 300,
         "timeout": 180000
     },
+    "RealmRaidBattleResume": {
+        "doc": "战斗返回按钮已出现，回到只做模板判断的快速循环。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "RealmRaidBattleExitIcon"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "RealmRaidBattle"
+        ]
+    },
+    "RealmRaidRetreatBegin": {
+        "doc": "打m退n中的退出：本轮第一场开打后点左上角返回并确认退出，主动判负；最多n次，n由任务选项写入max_hit，默认0即关闭。本地实测当前版本准备阶段没有返回按钮，开打后才出现，且确认框弹出期间战斗继续，因此整条退出链去掉默认延迟。每次先重置本次退出的点击预算，不点准备、不计数。参考 runhey/OnmyojiAutoScript@2d2f6d8962a5af17c95670c5d0fb2e384b247162 tasks/RealmRaid/script_task.py::run_2 的 exit_four 与 tasks/Component/GeneralBattle/general_battle.py::run_general_battle_back（先退四再打九、在同一张卡上退出），以及 TanyaShue/MaaYYs@3f9a969 resource_pack/base/pipeline/战斗/自动结界.json 的 突破_开始重新挑战（max_hit计次、失败页再次挑战）。",
+        "max_hit": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "RealmRaidBattleExitIcon"
+                ]
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ResetCount",
+                "custom_action_param": {
+                    "nodes": [
+                        "SafeInput_RealmRaidRetreatExit",
+                        "SafeInput_RealmRaidRetreatConfirm"
+                    ],
+                    "strict": true
+                }
+            }
+        },
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_RealmRaidRetreatExit"
+        ],
+        "pre_delay": 0,
+        "post_delay": 0
+    },
+    "RealmRaidBattleMark": {
+        "doc": "按用户配置站位点击友方绿标，每场最多一次；与RealmRaidRetreatBegin并列且排在其后，并同样只要求战斗返回按钮（该按钮只在正式战斗出现，不再OCR底部技能栏，避免点击前多一次约0.8秒的合并OCR），因此退出预算未用完的场次总是先退出，不会点绿标。站位沿用御魂/觉醒的固定战斗镜头坐标，本地突破实战截图中友方五个式神与阴阳师位置一致。参考 runhey/OnmyojiAutoScript@2d2f6d8962a5af17c95670c5d0fb2e384b247162 tasks/Component/GeneralBattle/battle_wait.py::_bw_green_default 的每场一次思路。",
+        "enabled": false,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "RealmRaidBattleExitIcon"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "max_hit": 1,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_RealmRaidBattleMark"
+        ]
+    },
+    "RealmRaidRetreatExit": {
+        "doc": "战斗中左上角的返回按钮；输出按钮框供区域点击。该按钮只在正式战斗出现，不再额外OCR战斗阶段，缩短首帧到点击的耗时。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "RealmRaidBattleExitIcon"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_RealmRaidRetreatExit"
+        ]
+    },
+    "RealmRaidBattleExitIcon": {
+        "doc": "BattleExit_6.png 由本项目1280x720个人突破实战截图裁剪按钮内圈，不含背景，实测战斗帧1.0、准备页与突破页均低于0.41；BattleExit_1~5 与ROI取自 TanyaShue/MaaYYs@3f9a969 战斗/自动结界.json 突破_重新挑战-模板匹配（MIT，许可见同目录MaaYYs-LICENSE.txt），在当前版本普通战斗背景下仅约0.80，按皮肤样式保留；与OAS I_EXIT (14,12,43,41) 为同一按钮。",
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": [
+                    "RealmRaid/BattleExit_1.png",
+                    "RealmRaid/BattleExit_2.png",
+                    "RealmRaid/BattleExit_3.png",
+                    "RealmRaid/BattleExit_4.png",
+                    "RealmRaid/BattleExit_5.png",
+                    "RealmRaid/BattleExit_6.png"
+                ],
+                "roi": [
+                    0,
+                    4,
+                    77,
+                    75
+                ],
+                "threshold": 0.8
+            }
+        }
+    },
+    "RealmRaidRetreatExitWait": {
+        "doc": "点返回后约1.3秒才弹出退出确认框，期间不重点返回；确认框出现立即确认。游戏直接进入失败页时交给再次挑战分支。2.5秒内未弹框才转入有界重点。",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_RealmRaidRetreatConfirm",
+            "RealmRaidRetreatRetry"
+        ],
+        "timeout": 2500,
+        "pre_delay": 0,
+        "post_delay": 0,
+        "rate_limit": 100,
+        "on_error": [
+            "RealmRaidRetreatExitRetry"
+        ]
+    },
+    "RealmRaidRetreatExitRetry": {
+        "doc": "返回点击后未见确认框：确认框或失败页优先，返回按钮仍在时再点，点击预算3次用完后超时停止。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "rate_limit": 100,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_RealmRaidRetreatConfirm",
+            "RealmRaidRetreatRetry",
+            "SafeInput_RealmRaidRetreatExit"
+        ],
+        "timeout": 10000
+    },
+    "RealmRaidRetreatConfirm": {
+        "doc": "退出战斗确认：提示须含退出类字样，按钮须为确定/确认。本地实测提示为“确认退出战斗吗?”，确定按钮中心约(752,436)，在 TanyaShue/MaaYYs@3f9a969 退出战斗_确认 ROI [643,359,194,113] 内。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "expected": "退出|离开|放弃",
+                                "roi": [
+                                    300,
+                                    200,
+                                    680,
+                                    160
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "expected": "^(确定|确认)$",
+                                "roi": [
+                                    643,
+                                    359,
+                                    194,
+                                    113
+                                ]
+                            }
+                        }
+                    }
+                ],
+                "box_index": 1
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_RealmRaidRetreatConfirm"
+        ]
+    },
+    "RealmRaidRetreatConfirmWait": {
+        "doc": "确认退出后等待失败页的再次挑战；确认框仍在时有界重点。",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "RealmRaidRetreatRetry",
+            "SafeInput_RealmRaidRetreatConfirm"
+        ],
+        "timeout": 15000
+    },
+    "RealmRaidRetreatRetry": {
+        "doc": "主动退出后的失败页点再次挑战，回到同一张卡；第n次退出后的这一下就是正式开打。最多n次，由任务选项写入max_hit。不回九宫格、不计数，失败卡片的角标不影响重开。",
+        "max_hit": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "RealmRaidRetreatAgain"
+                ]
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ResetCount",
+                "custom_action_param": {
+                    "nodes": [
+                        "SafeInput_RealmRaidRetreatAgain",
+                        "SafeInput_RealmRaidRetreatAgainConfirm"
+                    ],
+                    "strict": true
+                }
+            }
+        },
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_RealmRaidRetreatAgain"
+        ]
+    },
+    "RealmRaidFailRetry": {
+        "doc": "真实战败后在失败页点再次挑战，重打同一张卡；每张卡最多N次，N由任务选项写入max_hit，默认0即关闭，选新卡时清零。排在RealmRaidRetreatRetry之后：主动退出预算未用完时失败页总是退出造成的，由退出分支处理；用完后的失败页才是真实战败。重试次数用完后交给RealmRaidBattleFailure按失败处理选项走。复用再次挑战的点击、确认与等待节点，并为新一场重置绿标。参考 TanyaShue/MaaYYs@3f9a969 resource_pack/base/pipeline/战斗/自动结界.json 的 突破_再次挑战。",
+        "max_hit": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "RealmRaidRetreatAgain"
+                ]
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ResetCount",
+                "custom_action_param": {
+                    "nodes": [
+                        "SafeInput_RealmRaidRetreatAgain",
+                        "SafeInput_RealmRaidRetreatAgainConfirm",
+                        "RealmRaidBattleMark",
+                        "SafeInput_RealmRaidBattleMark"
+                    ],
+                    "strict": true
+                }
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_RealmRaidRetreatAgain"
+        ]
+    },
+    "RealmRaidRetreatAgain": {
+        "doc": "失败页的再次挑战文字。ROI取自 TanyaShue/MaaYYs@3f9a969 突破_再次挑战-ocr [811,546,101,36]；点击其上方图标 [832,491,54,31]。",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "^再次挑战$",
+                "roi": [
+                    811,
+                    546,
+                    101,
+                    36
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_RealmRaidRetreatAgain"
+        ]
+    },
+    "RealmRaidRetreatAgainWait": {
+        "doc": "点再次挑战后：有确认框先确认；进入载入/准备/战斗或券不足提示后回到突破战斗流程；仍在失败页时有界重点。",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_RealmRaidRetreatAgainConfirm",
+            "RealmRaidRetreatRestarted",
+            "SafeInput_RealmRaidRetreatAgain"
+        ],
+        "timeout": 15000
+    },
+    "RealmRaidRetreatAgainConfirm": {
+        "doc": "再次挑战的确认：提示须提到再次挑战或突破券，按钮须为确定/确认。按钮ROI取自 TanyaShue/MaaYYs@3f9a969 确认再次挑战 [633,366,252,155]；含购买类文字时由输入保护停止。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "expected": "再次挑战|突破券",
+                                "roi": [
+                                    300,
+                                    200,
+                                    680,
+                                    160
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "expected": "^(确定|确认)$",
+                                "roi": [
+                                    633,
+                                    366,
+                                    252,
+                                    155
+                                ]
+                            }
+                        }
+                    }
+                ],
+                "box_index": 1
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_RealmRaidRetreatAgainConfirm"
+        ]
+    },
+    "RealmRaidRetreatConfirmedWait": {
+        "doc": "确认再次挑战后只等新一场开始，不再点失败页按钮。",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "RealmRaidRetreatRestarted",
+            "SafeInput_RealmRaidRetreatAgainConfirm"
+        ],
+        "timeout": 15000
+    },
+    "RealmRaidRetreatRestarted": {
+        "doc": "新一场已开始或券不足提示出现；不含失败页，避免同一失败页重复计入退出次数。",
+        "recognition": {
+            "type": "Or",
+            "param": {
+                "any_of": [
+                    "PageLoading",
+                    "PageBattleEntering",
+                    "PageBattle",
+                    "DailyPrepare",
+                    "DailyNoResource"
+                ]
+            }
+        },
+        "next": [
+            "RealmRaidBattle"
+        ],
+        "pre_delay": 0,
+        "post_delay": 0
+    },
     "RealmRaidBattleNoResource": {
+        "pre_delay": 0,
+        "post_delay": 0,
         "recognition": {
             "type": "And",
             "param": {
@@ -1678,6 +736,8 @@
         "doc": "关闭突破成功结算，返回九宫格验证攻破标记。"
     },
     "RealmRaidBattleAfterResult": {
+        "pre_delay": 0,
+        "post_delay": 0,
         "recognition": {
             "type": "And",
             "param": {
@@ -1689,7 +749,7 @@
         "action": "DoNothing",
         "next": [
             "[JumpBack]CommonBountyInterrupt",
-            "[Anchor]RealmRaidVerify"
+            "RealmRaidVerify"
         ]
     },
     "RealmRaidBattleFailedResult": {
@@ -1714,6 +774,8 @@
         "doc": "关闭突破失败结算，返回九宫格处理后续目标。"
     },
     "RealmRaidBattleFailedReturn": {
+        "pre_delay": 0,
+        "post_delay": 0,
         "recognition": {
             "type": "And",
             "param": {
@@ -1724,241 +786,538 @@
         },
         "action": "DoNothing",
         "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "RealmRaidFailStop",
+            "RealmRaidFailRefresh",
+            "RealmRaidFailRefreshUnavailable",
+            "RealmRaidScan"
+        ],
+        "doc": "真实战败后回到个人突破页，按任务选项处理：默认跳过失败卡片继续（失败卡片右上角有失败角标，选卡时由RealmRaidUnmarkedCorner排除），或刷新后继续、或结束本轮。对应 runhey/OnmyojiAutoScript@2d2f6d8962a5af17c95670c5d0fb2e384b247162 tasks/RealmRaid/script_task.py::run_2 的 WhenAttackFail.CONTINUE / REFRESH / EXIT。"
+    },
+    "RealmRaidFailStop": {
+        "doc": "战败后结束本轮（OAS WhenAttackFail.EXIT），不计入成功次数。",
+        "enabled": false,
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageRaid"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "RealmRaidFinish"
+        ]
+    },
+    "RealmRaidFailRefresh": {
+        "doc": "战败后刷新九宫格再继续（OAS WhenAttackFail.REFRESH）；刷新会重置攻破记录进度。先重置刷新与确认的点击预算。",
+        "enabled": false,
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "RealmRaidRefresh"
+                ]
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ResetCount",
+                "custom_action_param": {
+                    "nodes": [
+                        "SafeInput_RealmRaidRefresh",
+                        "SafeInput_RealmRaidRefreshConfirm"
+                    ],
+                    "strict": true
+                }
+            }
+        },
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_RealmRaidRefresh"
+        ]
+    },
+    "RealmRaidFailRefreshUnavailable": {
+        "doc": "刷新模式下读不到可用的刷新按钮（如冷却中）时结束本轮，与OAS check_refresh 返回False后退出一致。",
+        "enabled": false,
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageRaid"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "RealmRaidFinish"
+        ]
+    },
+    "RealmRaidExhaustedRefresh": {
+        "doc": "刷新模式下九宫格已无可挑战卡片（剩余均已攻破或带失败角标，包括任务开始前就失败的卡）时先刷新再继续，对应 runhey/OnmyojiAutoScript@2d2f6d8962a5af17c95670c5d0fb2e384b247162 tasks/RealmRaid/script_task.py::run_2 中 find_one 无结果时 check_refresh 的处理；刷新冷却读不到按钮时由后续RealmRaidFinish结束本轮。",
+        "enabled": false,
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "RealmRaidRefresh"
+                ]
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ResetCount",
+                "custom_action_param": {
+                    "nodes": [
+                        "SafeInput_RealmRaidRefresh",
+                        "SafeInput_RealmRaidRefreshConfirm"
+                    ],
+                    "strict": true
+                }
+            }
+        },
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_RealmRaidRefresh"
+        ]
+    },
+    "RealmRaidRefreshButton": {
+        "doc": "个人突破页右下角刷新按钮文字；本地截图按钮中心约(1048,598)。冷却中文字不为“刷新”时不命中。",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "^刷新$",
+                "roi": [
+                    985,
+                    575,
+                    130,
+                    46
+                ]
+            }
+        }
+    },
+    "RealmRaidRefresh": {
+        "doc": "在个人突破页点击刷新按钮。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageRaid",
+                    "RealmRaidRefreshButton"
+                ],
+                "box_index": 1
+            }
+        },
+        "action": "DoNothing",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_RealmRaidRefresh"
+        ]
+    },
+    "RealmRaidRefreshWait": {
+        "doc": "点刷新后等待确认框；按钮仍在时有界重点。",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_RealmRaidRefreshConfirm",
+            "SafeInput_RealmRaidRefresh"
+        ],
+        "timeout": 5000
+    },
+    "RealmRaidRefreshConfirm": {
+        "doc": "刷新确认：本地实测提示为“刷新后攻破记录进度将重置，确定吗?”，取消(525,438)/确定(752,438)。提示须提到刷新或攻破记录，按钮须为确定。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "expected": "刷新后|攻破记录",
+                                "roi": [
+                                    420,
+                                    270,
+                                    440,
+                                    90
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "expected": "^(确定|确认)$",
+                                "roi": [
+                                    664,
+                                    408,
+                                    180,
+                                    62
+                                ]
+                            }
+                        }
+                    }
+                ],
+                "box_index": 1
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_RealmRaidRefreshConfirm"
+        ]
+    },
+    "RealmRaidRefreshConfirmWait": {
+        "doc": "确认刷新后等待确认框消失；仍在时有界重点。",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "RealmRaidRefreshClosed",
+            "SafeInput_RealmRaidRefreshConfirm"
+        ],
+        "timeout": 5000
+    },
+    "RealmRaidRefreshClosed": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "RealmRaidRefreshConfirm"
+                ]
+            }
+        },
+        "inverse": true,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "RealmRaidRefreshed"
+        ]
+    },
+    "RealmRaidRefreshed": {
+        "doc": "确认框已关闭且回到个人突破页后重新选卡。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageRaid"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
             "RealmRaidScan"
         ]
     },
-    "RealmRaid0WaitTarget": {
-        "doc": "等待第 1 格详情打开，未打开时重试本格点击。",
+    "RealmRaidNickname": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": ".+",
+                "roi": "RealmRaidChoose",
+                "roi_offset": [
+                    90,
+                    15,
+                    -137,
+                    -80
+                ]
+            }
+        }
+    },
+    "RealmRaidWaitTarget": {
         "next": [
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_RealmRaid0Attack",
-            "RealmRaid0SelectionRetry"
+            "SafeInput_RealmRaidAttack",
+            "SafeInput_RealmRaidSelect"
         ],
         "timeout": 5000
     },
-    "RealmRaid0SelectionRetry": {
-        "doc": "第 1 格详情未打开时重新选择该目标。",
+    "RealmRaidWaitBattleStart": {
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "RealmRaidBattleStarted",
+            "SafeInput_RealmRaidAttack"
+        ],
+        "timeout": 15000
+    },
+    "RealmRaidBattleStarted": {
+        "recognition": {
+            "type": "Or",
+            "param": {
+                "any_of": [
+                    "PageLoading",
+                    "PageBattleEntering",
+                    "PageBattle",
+                    "DailyPrepare",
+                    "DailyBattleResult",
+                    "DailyBattleFailed",
+                    "DailyNoResource"
+                ]
+            }
+        },
+        "next": [
+            "RealmRaidBattle"
+        ],
+        "pre_delay": 0,
+        "post_delay": 0
+    },
+    "RealmRaidVerify": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "[JumpBack]SafeInput_DailyRewardPopup",
+            "RealmRaidSuccess",
+            "RealmRaidSuccessBoardReset"
+        ],
+        "timeout": 5000
+    },
+    "RealmRaidSuccess": {
+        "pre_delay": 0,
+        "post_delay": 0,
         "recognition": {
             "type": "And",
             "param": {
                 "all_of": [
                     "PageRaid",
-                    "RealmRaid0Card"
+                    "RealmRaidBroken"
+                ]
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "TargetCountProgress",
+                "custom_action_param": {
+                    "count": 1,
+                    "continue_node": "RealmRaidScan",
+                    "finish_node": "RealmRaidFinish"
+                }
+            }
+        },
+        "next": [
+            "RealmRaidScan"
+        ],
+        "doc": "只核对本次所选卡片的攻破印记；返回九宫格后才计数。"
+    },
+    "RealmRaidSuccessBoardReset": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "doc": "九张全部攻破后游戏自动刷新九宫格，所选位置变成新的未挑战卡片，攻破印记无从核对。仅在胜利结算后进入：攻破记录读数为0且所选位置为未挑战卡片时，说明刚才这一胜清空了九宫格，计入成功。实测2026-11-01第9胜后攻破记录0、九张均为新对手。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageRaid",
+                    "RealmRaidBreakRecordZero",
+                    "RealmRaidSelectedCard",
+                    "RealmRaidUnmarkedCorner"
+                ]
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "TargetCountProgress",
+                "custom_action_param": {
+                    "count": 1,
+                    "continue_node": "RealmRaidScan",
+                    "finish_node": "RealmRaidFinish"
+                }
+            }
+        },
+        "next": [
+            "RealmRaidScan"
+        ]
+    },
+    "RealmRaidBreakRecordZero": {
+        "doc": "左下“攻破记录”下方的数字；本地截图读数0/1/2/3均正确，只接受0。",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "^[0Oo]$",
+                "roi": [
+                    185,
+                    596,
+                    75,
+                    40
+                ]
+            }
+        }
+    },
+    "RealmRaidChoose": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageRaid",
+                    "RealmRaidCard"
+                ],
+                "box_index": 1
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "RealmRaidValidateChoice"
+        ]
+    },
+    "RealmRaidSelect": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageRaid",
+                    "RealmRaidSelectedCard",
+                    "RealmRaidUnmarkedCorner"
+                ],
+                "box_index": 1
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_RealmRaidSelect"
+        ]
+    },
+    "RealmRaidAttack": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageRaidTarget"
                 ]
             }
         },
         "action": "DoNothing",
         "next": [
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_RealmRaidSelect0"
+            "SafeInput_RealmRaidAttack"
         ]
     },
-    "RealmRaid1WaitTarget": {
-        "doc": "等待第 2 格详情打开，未打开时重试本格点击。",
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_RealmRaid1Attack",
-            "RealmRaid1SelectionRetry"
-        ],
-        "timeout": 5000
-    },
-    "RealmRaid1SelectionRetry": {
-        "doc": "第 2 格详情未打开时重新选择该目标。",
+    "RealmRaidValidateChoice": {
         "recognition": {
             "type": "And",
             "param": {
                 "all_of": [
                     "PageRaid",
-                    "RealmRaid1Card"
+                    "RealmRaidNickname",
+                    "RealmRaidUnmarkedCorner"
                 ]
             }
         },
-        "action": "DoNothing",
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ResetCount",
+                "custom_action_param": {
+                    "nodes": [
+                        "SafeInput_RealmRaidSelect",
+                        "SafeInput_RealmRaidAttack",
+                        "RealmRaidBattleMark",
+                        "SafeInput_RealmRaidBattleMark",
+                        "RealmRaidFailRetry"
+                    ],
+                    "strict": true
+                }
+            }
+        },
         "next": [
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_RealmRaidSelect1"
-        ]
-    },
-    "RealmRaid2WaitTarget": {
-        "doc": "等待第 3 格详情打开，未打开时重试本格点击。",
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_RealmRaid2Attack",
-            "RealmRaid2SelectionRetry"
+            "SafeInput_RealmRaidSelect"
         ],
-        "timeout": 5000
+        "doc": "确认选中卡片的昵称，再重置本卡点击预算、每场一次的绿标与战败重试次数；不改变成功次数。"
     },
-    "RealmRaid2SelectionRetry": {
-        "doc": "第 3 格详情未打开时重新选择该目标。",
+    "RealmRaidSelectedCard": {
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": "RealmRaid/UnchallengedCard.png",
+                "green_mask": true,
+                "method": 10001,
+                "threshold": 0.98,
+                "roi": "RealmRaidChoose",
+                "order_by": "Vertical"
+            }
+        }
+    },
+    "RealmRaidExhaustedPage": {
+        "pre_delay": 0,
+        "post_delay": 0,
         "recognition": {
             "type": "And",
             "param": {
                 "all_of": [
-                    "PageRaid",
-                    "RealmRaid2Card"
+                    "PageRaid"
                 ]
             }
         },
-        "action": "DoNothing",
         "next": [
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_RealmRaidSelect2"
-        ]
-    },
-    "RealmRaid3WaitTarget": {
-        "doc": "等待第 4 格详情打开，未打开时重试本格点击。",
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_RealmRaid3Attack",
-            "RealmRaid3SelectionRetry"
+            "RealmRaidExhausted"
         ],
-        "timeout": 5000
+        "timeout": 3000
     },
-    "RealmRaid3SelectionRetry": {
-        "doc": "第 4 格详情未打开时重新选择该目标。",
+    "RealmRaidExhaustedConfirmed": {
+        "pre_delay": 0,
+        "post_delay": 0,
         "recognition": {
             "type": "And",
             "param": {
                 "all_of": [
-                    "PageRaid",
-                    "RealmRaid3Card"
+                    "PageRaid"
                 ]
             }
         },
-        "action": "DoNothing",
         "next": [
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_RealmRaidSelect3"
-        ]
-    },
-    "RealmRaid4WaitTarget": {
-        "doc": "等待第 5 格详情打开，未打开时重试本格点击。",
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_RealmRaid4Attack",
-            "RealmRaid4SelectionRetry"
+            "RealmRaidExhaustedRefresh",
+            "RealmRaidFinish"
         ],
-        "timeout": 5000
+        "doc": "无候选后再确认仍在个人突破页，避免过场或未知画面被当成本轮结束；刷新模式下先尝试刷新。"
     },
-    "RealmRaid4SelectionRetry": {
-        "doc": "第 5 格详情未打开时重新选择该目标。",
+    "RealmRaidUnmarkedCorner": {
         "recognition": {
-            "type": "And",
+            "type": "ColorMatch",
             "param": {
-                "all_of": [
-                    "PageRaid",
-                    "RealmRaid4Card"
-                ]
+                "roi": "RealmRaidChoose",
+                "roi_offset": [
+                    275,
+                    12,
+                    -290,
+                    -92
+                ],
+                "method": 4,
+                "lower": [
+                    195,
+                    185,
+                    165
+                ],
+                "upper": [
+                    240,
+                    225,
+                    210
+                ],
+                "count": 700
             }
         },
-        "action": "DoNothing",
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_RealmRaidSelect4"
-        ]
-    },
-    "RealmRaid5WaitTarget": {
-        "doc": "等待第 6 格详情打开，未打开时重试本格点击。",
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_RealmRaid5Attack",
-            "RealmRaid5SelectionRetry"
-        ],
-        "timeout": 5000
-    },
-    "RealmRaid5SelectionRetry": {
-        "doc": "第 6 格详情未打开时重新选择该目标。",
-        "recognition": {
-            "type": "And",
-            "param": {
-                "all_of": [
-                    "PageRaid",
-                    "RealmRaid5Card"
-                ]
-            }
-        },
-        "action": "DoNothing",
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_RealmRaidSelect5"
-        ]
-    },
-    "RealmRaid6WaitTarget": {
-        "doc": "等待第 7 格详情打开，未打开时重试本格点击。",
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_RealmRaid6Attack",
-            "RealmRaid6SelectionRetry"
-        ],
-        "timeout": 5000
-    },
-    "RealmRaid6SelectionRetry": {
-        "doc": "第 7 格详情未打开时重新选择该目标。",
-        "recognition": {
-            "type": "And",
-            "param": {
-                "all_of": [
-                    "PageRaid",
-                    "RealmRaid6Card"
-                ]
-            }
-        },
-        "action": "DoNothing",
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_RealmRaidSelect6"
-        ]
-    },
-    "RealmRaid7WaitTarget": {
-        "doc": "等待第 8 格详情打开，未打开时重试本格点击。",
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_RealmRaid7Attack",
-            "RealmRaid7SelectionRetry"
-        ],
-        "timeout": 5000
-    },
-    "RealmRaid7SelectionRetry": {
-        "doc": "第 8 格详情未打开时重新选择该目标。",
-        "recognition": {
-            "type": "And",
-            "param": {
-                "all_of": [
-                    "PageRaid",
-                    "RealmRaid7Card"
-                ]
-            }
-        },
-        "action": "DoNothing",
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_RealmRaidSelect7"
-        ]
-    },
-    "RealmRaid8WaitTarget": {
-        "doc": "等待第 9 格详情打开，未打开时重试本格点击。",
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_RealmRaid8Attack",
-            "RealmRaid8SelectionRetry"
-        ],
-        "timeout": 5000
-    },
-    "RealmRaid8SelectionRetry": {
-        "doc": "第 9 格详情未打开时重新选择该目标。",
-        "recognition": {
-            "type": "And",
-            "param": {
-                "all_of": [
-                    "PageRaid",
-                    "RealmRaid8Card"
-                ]
-            }
-        },
-        "action": "DoNothing",
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_RealmRaidSelect8"
-        ]
+        "doc": "只检查所选卡片右上角27×28空白区；颜色条件拒绝亮色遮挡，避免仅靠整体模板分数放行。"
     }
 }

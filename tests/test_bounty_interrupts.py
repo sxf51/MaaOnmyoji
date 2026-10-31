@@ -11,7 +11,6 @@ from tools.validate_schema import load_jsonc
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'agent'))
 from custom.input_safety import ensure_input_safe
-from custom.action.target_count import with_purchase_stop
 from custom.route_policy import is_control_route
 
 
@@ -27,7 +26,7 @@ class BountyRoutingTest(unittest.TestCase):
             self.assertTrue(is_control_route(routes,self.nodes.get),routes)
 
     def test_all_production_continuations_put_bounty_before_background(self):
-        exempt = {'CommonPurchaseStop', 'CommonBountyInterrupt', 'CommonRefuseBounty', 'SafeInput_CommonRefuseBounty'}
+        exempt = {'CommonBountyInterrupt', 'CommonRefuseBounty', 'SafeInput_CommonRefuseBounty'}
         for path in (ROOT / 'assets/resource/base/pipeline').glob('*.json'):
             if path.name == 'Example.json':
                 continue
@@ -49,12 +48,6 @@ class BountyRoutingTest(unittest.TestCase):
         for path in (ROOT / 'assets/tasks').rglob('*.json'):
             with self.subTest(file=path):
                 visit(load_jsonc(path))
-
-    def test_runtime_routes_have_one_interrupt_even_if_old_branch_supplied(self):
-        self.assertEqual(with_purchase_stop(['CommonPurchaseStop', '[JumpBack]CommonRefuseBounty',
-            '[JumpBack]CommonBountyInterrupt', 'Target']),
-            ['[JumpBack]CommonBountyInterrupt', 'Target'])
-
 
 class FreshTouchBountyTest(unittest.TestCase):
     def context(self, *, target=True, risk_after=False, remains=False, closes=True):

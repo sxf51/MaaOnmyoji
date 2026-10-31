@@ -32,10 +32,10 @@ class CommonActivityPipelineTest(unittest.TestCase):
         self.assertEqual(challenge["recognition"]["param"]["expected"], ["^挑战$", "^搜寻$", "^开启$"])
 
         challenging = pipeline["CommonActivityChallenging"]
-        self.assertEqual(challenging["recognition"]["param"]["expected"], ["妖术", "普攻"])
+        self.assertEqual(challenging["recognition"]["param"]["all_of"], ["PageBattle"])
 
         result = pipeline["CommonActivityBattleResult"]
-        self.assertEqual(result["recognition"]["param"]["roi"], [440, 637, 400, 82])
+        self.assertEqual(result["recognition"]["param"]["roi"], [440, 665, 400, 55])
         patterns = result["recognition"]["param"]["expected"]
         for text in ("点击屏幕继续", "点击空白区域继续"):
             self.assertTrue(any(re.fullmatch(pattern, text) for pattern in patterns))

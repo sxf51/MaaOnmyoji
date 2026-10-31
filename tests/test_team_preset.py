@@ -16,26 +16,49 @@ class TeamPresetTest(unittest.TestCase):
             if path.name!='Example.json':cls.nodes.update(load_jsonc(path))
 
     def test_each_task_configures_context_and_own_return(self):
-        for prefix,context in [('Awakening','PageAwakeningStage'),('CommonActivity','CommonActivityChallenge'),('CurrentActivity','CurrentActivityChallenge')]:
+        for prefix,context in [('Mitama','PageMitamaStage'),('Awakening','PageAwakeningStage'),('CommonActivity','CommonActivityChallenge'),('CurrentActivity','CurrentActivityChallenge')]:
             node=self.nodes[prefix+'Preset']
             self.assertFalse(node['enabled'])
             self.assertEqual(node['anchor'],{'TeamPresetReturn':prefix+'PresetDone'})
             override=node['action']['param']['custom_action_param']
             self.assertEqual(override['TeamPresetContext']['recognition']['param']['all_of'],[context])
-            self.assertEqual(self.nodes[prefix+'PresetDone']['action']['param']['custom_action_param']['node_name'],prefix+'Preset')
+            self.assertEqual(self.nodes[prefix+'PresetDone']['action'],'DoNothing')
 
     def test_awakening_order_and_buff_options(self):
-        params=self.nodes['AwakeningPreparation']['action']['param']['custom_action_param']
-        self.assertEqual(params['sub'],['AwakeningLockTeam','AwakeningPreset','AwakeningEnableBuff'])
+        # Native chain: each finished step lists the remaining steps; disabled ones are skipped.
+        bounty='[JumpBack]CommonBountyInterrupt'
+        self.assertEqual(self.nodes['AwakeningPreparation']['next'],
+                         [bounty,'AwakeningLockTeam','AwakeningPreset','AwakeningEnableBuff','AwakeningBattleEntry'])
+        self.assertEqual(self.nodes['AwakeningLockedTeam']['next'],[bounty,'AwakeningPreset','AwakeningEnableBuff','AwakeningBattleEntry'])
+        self.assertEqual(self.nodes['AwakeningPresetDone']['next'],[bounty,'AwakeningEnableBuff','AwakeningBattleEntry'])
+        self.assertEqual(self.nodes['AwakeningBuffClosedForPreparation']['next'],[bounty,'AwakeningBattleEntry'])
         task=load_jsonc(ROOT/'assets/tasks/Awakening.json')
         self.assertIn('觉醒材料加成',task['task'][0]['option'])
         self.assertIn('觉醒更换队伍预设',task['task'][0]['option'])
-        self.assertEqual(task['option']['觉醒材料加成']['default_case'],'No')
+        self.assertEqual(task['option']['觉醒材料加成']['default_case'],'Yes')
+
+    def test_mitama_and_awakening_lock_options_match(self):
+        bounty='[JumpBack]CommonBountyInterrupt'
+        self.assertEqual(self.nodes['MitamaPreparation']['next'],
+                         [bounty,'MitamaLockTeam','MitamaPreset','MitamaEnableBuff','MitamaPreparationDestination'])
+        for prefix,label in (('Mitama','御魂'),('Awakening','觉醒')):
+            task=load_jsonc(ROOT/f'assets/tasks/{prefix}.json')
+            options=task['task'][0]['option']
+            # Lock comes before preset, matching the native preparation order.
+            self.assertLess(options.index(label+'锁定阵容'),options.index(label+'更换队伍预设'))
+            option=task['option'][label+'锁定阵容']
+            self.assertEqual(option['default_case'],'Yes')
+            self.assertEqual({c['name']:c['pipeline_override'] for c in option['cases']},
+                             {'No':{prefix+'LockTeam':{'enabled':False}},'Yes':{prefix+'LockTeam':{'enabled':True}}})
+            self.assertEqual(self.nodes[prefix+'LockedTeam']['recognition']['param']['template'] if prefix=='Awakening'
+                             else self.nodes[prefix+'LockedTeam']['recognition']['param']['template'][0],'Common/FormationLocked.png')
+            click=self.nodes['SafeInput_'+prefix+'UnlockTeam']
+            self.assertEqual((click['max_hit'],click['post_delay'],click['next']),(3,1000,[]))
 
     def test_options_update_all_group_and_team_recognitions(self):
-        for prefix in ('Awakening','CommonActivity','CurrentActivity'):
+        for prefix in ('Mitama','Awakening','CommonActivity','CurrentActivity'):
             options=load_jsonc(ROOT/f'assets/tasks/{prefix}.json')['option']
-            task_name={'Awakening':'觉醒','CommonActivity':'重复挑战','CurrentActivity':'当期活动'}[prefix]
+            task_name={'Mitama':'御魂','Awakening':'觉醒','CommonActivity':'重复挑战','CurrentActivity':'当期活动'}[prefix]
             switch=options[task_name+'更换队伍预设']
             self.assertEqual(switch['default_case'],'No')
             selected=options[switch['cases'][1]['option'][0]]['pipeline_override']
@@ -56,6 +79,8 @@ class TeamPresetTest(unittest.TestCase):
         for prefix in ('CommonActivity','CurrentActivity'):
             params=self.nodes[prefix+'FinishOnce']['action']['param']['custom_action_param']
             self.assertEqual(params['continue_node'],prefix+'Preparation')
-            self.assertEqual(self.nodes[prefix+'Preparation']['action']['param']['custom_action_param']['sub'],[prefix+'Preset'])
-            self.assertEqual(self.nodes[prefix+'Preparation']['action']['param']['custom_action_param']['completion_next'],['SafeInput_'+prefix+'Challenge'])
+            self.assertEqual(self.nodes[prefix+'Preparation']['next'],
+                             ['[JumpBack]CommonBountyInterrupt',prefix+'Preset','SafeInput_'+prefix+'Challenge'])
+            # Every battle passes Preparation again; max_hit runs the preset once per task.
+            self.assertEqual(self.nodes[prefix+'Preset']['max_hit'],1)
 

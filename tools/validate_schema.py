@@ -247,6 +247,25 @@ def create_validator(schema, schema_store):
         return ValidatorClass(schema, resolver=resolver)
 
 
+def is_reward_catalog(file_path):
+    """image/Rewards 的物品清单按专用Schema验证，不当作Pipeline节点。"""
+    parts = [part.casefold() for part in Path(file_path).parts]
+    return Path(file_path).name == "catalog.json" and any(
+        parts[i:i+2] == ["image", "rewards"] for i in range(len(parts)-1))
+
+
+def duplicate_task_options(paths):
+    """所有任务导入同一个选项表，不允许不同文件重复定义选项键。"""
+    owners, duplicates = {}, []
+    for path in sorted({Path(p).resolve() for p in paths}):
+        for name in load_jsonc(path).get("option", {}):
+            if name in owners:
+                duplicates.append((path, name, owners[name]))
+            else:
+                owners[name] = path
+    return duplicates
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Validate JSON/JSONC files against JSON Schema"
@@ -316,6 +335,8 @@ def main():
     schema_store[pipeline_schema_uri] = pipeline_schema
 
     pipeline_validator = create_validator(pipeline_schema, schema_store)
+    reward_catalog_validator = create_validator(
+        load_jsonc(Path(__file__).with_name("reward_catalog.schema.json")), schema_store)
 
     # 准备排除目录列表
     exclude_paths = [Path(d).resolve() for d in args.exclude_dirs]
@@ -344,13 +365,13 @@ def main():
         for file_path in resource_path.rglob("*.json"):
             if is_excluded(file_path):
                 continue
-            if not validate_file(file_path, pipeline_validator):
+            if not validate_file(file_path, reward_catalog_validator if is_reward_catalog(file_path) else pipeline_validator):
                 all_valid = False
 
         for file_path in resource_path.rglob("*.jsonc"):
             if is_excluded(file_path):
                 continue
-            if not validate_file(file_path, pipeline_validator):
+            if not validate_file(file_path, reward_catalog_validator if is_reward_catalog(file_path) else pipeline_validator):
                 all_valid = False
 
     print("\nValidating interface files...")
@@ -376,6 +397,11 @@ def main():
     # 验证 task 文件
     if args.task_dirs:
         print("\nValidating task files...")
+        task_files = [p for directory in args.task_dirs for p in Path(directory).rglob("*")
+                      if p.suffix in {".json", ".jsonc"}]
+        for path, name, owner in duplicate_task_options(task_files):
+            print(f"::error file={path},title=Duplicate Task Option::{name!r} 已定义于 {owner}")
+            all_valid = False
         task_schema_path = schema_dir / "interface_import.schema.json"
         if task_schema_path.exists():
             task_schema = load_jsonc(task_schema_path)

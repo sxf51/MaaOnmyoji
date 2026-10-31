@@ -58,12 +58,14 @@ class PurchasePipelineTest(unittest.TestCase):
                     self.assertEqual(public["next"], ["[JumpBack]CommonBountyInterrupt", "[JumpBack]MitamaTreasurePopup", stats, name])
                     self.assertEqual(self.nodes[stats]["next"], ["[JumpBack]CommonBountyInterrupt", name])
                 elif name == "SafeInput_AwakeningBattleResult":
-                    self.assertEqual(public["next"], ["[JumpBack]CommonBountyInterrupt", "[JumpBack]MitamaTreasurePopup", name])
+                    self.assertEqual(public["next"], ["[JumpBack]CommonBountyInterrupt", "[JumpBack]MitamaTreasurePopup", "AwakeningDropStatistics", name])
+                    self.assertEqual(self.nodes["AwakeningDropStatistics"]["next"], ["[JumpBack]CommonBountyInterrupt", name])
                 else:
                     self.assertEqual(public["next"], ["[JumpBack]CommonBountyInterrupt", name])
-                self.assertEqual(node["recognition"]["param"]["custom_recognition"], "InputTarget")
-                self.assertEqual(node["recognition"]["param"]["custom_recognition_param"],
-                                 {"target_node": name.removeprefix("SafeInput_")})
+                target, guard = node["recognition"]["param"]["all_of"]
+                self.assertEqual(target, name.removeprefix("SafeInput_"))
+                self.assertEqual(guard["recognition"]["param"]["custom_recognition"], "InputTarget")
+                self.assertEqual(guard["recognition"]["param"]["custom_recognition_param"], {"target_node": target})
                 self.assertEqual(node["pre_delay"], 0)
                 self.assertEqual(node["pre_wait_freezes"], 0)
                 self.assertEqual(node.get("repeat", 1), 1)
@@ -72,13 +74,6 @@ class PurchasePipelineTest(unittest.TestCase):
                 if isinstance(recognition, dict):
                     self.assertNotEqual(recognition.get("type"), "DirectHit")
         self.assertGreater(count, 0)
-
-    def test_stop_branch_cannot_cancel_or_cleanup(self):
-        stop = self.nodes["CommonPurchaseStop"]
-        self.assertEqual(stop["action"], "DoNothing")
-        self.assertEqual(stop["next"], ["CommonPurchaseNever"])
-        self.assertFalse(stop["on_error"])
-        self.assertTrue(self.nodes["CommonPurchaseNever"]["inverse"])
 
     def test_confirmation_requires_update_context_and_an_exact_button(self):
         self.assertEqual(self.nodes["StartupUpdateConfirm"]["recognition"]["param"]["all_of"],

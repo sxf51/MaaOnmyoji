@@ -86,6 +86,8 @@
         "doc": "点击当前活动战斗中的准备按钮。"
     },
     "CurrentActivityChallenging": {
+        "pre_delay": 0,
+        "post_delay": 0,
         "desc": "重复挑战：挑战中",
         "recognition": {
             "type": "And",
@@ -106,9 +108,9 @@
             "param": {
                 "roi": [
                     440,
-                    637,
+                    665,
                     400,
-                    82
+                    55
                 ],
                 "expected": [
                     "^点击(屏幕|空白区域)继续$"
@@ -191,6 +193,8 @@
         ]
     },
     "CurrentActivityInsufficientAP": {
+        "pre_delay": 0,
+        "post_delay": 0,
         "desc": "重复挑战：体力或代币不足时结束",
         "recognition": {
             "type": "And",
@@ -207,6 +211,8 @@
         ]
     },
     "CurrentActivityFinish": {
+        "pre_delay": 0,
+        "post_delay": 0,
         "desc": "重复挑战：达到目标次数后结束",
         "action": {
             "type": "Custom",
@@ -254,6 +260,8 @@
         "doc": "关闭失败结算，返回挑战页后停止重复挑战。"
     },
     "CurrentActivityFailedReturn": {
+        "pre_delay": 0,
+        "post_delay": 0,
         "recognition": {
             "type": "And",
             "param": {
@@ -267,6 +275,8 @@
         ]
     },
     "CurrentActivityPreparationPassed": {
+        "pre_delay": 0,
+        "post_delay": 0,
         "doc": "自动准备已进入战斗或结算时，返回重复挑战流程。",
         "recognition": {
             "type": "Or",
@@ -282,6 +292,8 @@
         "next": []
     },
     "CurrentActivityPreset": {
+        "pre_delay": 0,
+        "post_delay": 0,
         "doc": "配置本任务的预设页面与返回位置，完成换队后才继续准备。",
         "enabled": false,
         "action": {
@@ -331,10 +343,11 @@
         },
         "next": [
             "TeamPresetRun"
-        ]
+        ],
+        "max_hit": 1
     },
     "CurrentActivityPresetDone": {
-        "doc": "确认预设已应用并返回挑战页，禁用本次换队步骤。",
+        "doc": "确认预设已应用并返回挑战页；换队步骤由 max_hit 限定每个任务只执行一次。",
         "recognition": {
             "type": "And",
             "param": {
@@ -343,38 +356,17 @@
                 ]
             }
         },
-        "action": {
-            "type": "Custom",
-            "param": {
-                "custom_action": "DisableNode",
-                "custom_action_param": {
-                    "node_name": "CurrentActivityPreset"
-                }
-            }
-        },
+        "action": "DoNothing",
         "next": [
             "CurrentActivityPreparation"
         ]
     },
     "CurrentActivityPreparation": {
-        "doc": "只在开战前完成本次启用的队伍预设。",
-        "action": {
-            "type": "Custom",
-            "param": {
-                "custom_action": "SubTask",
-                "custom_action_param": {
-                    "sub": [
-                        "CurrentActivityPreset"
-                    ],
-                    "completion_next": [
-                        "SafeInput_CurrentActivityChallenge"
-                    ],
-                    "timeout": 180000
-                }
-            }
-        },
+        "doc": "每场挑战前经过此处；队伍预设启用时只在本任务首次进入时执行一次（max_hit），之后直接挑战。",
+        "action": "DoNothing",
         "next": [
             "[JumpBack]CommonBountyInterrupt",
+            "CurrentActivityPreset",
             "SafeInput_CurrentActivityChallenge"
         ],
         "timeout": 180000,

@@ -1,5 +1,7 @@
 {
     "ExplorationTask": {
+        "pre_delay": 0,
+        "post_delay": 0,
         "doc": "$exploration_task_doc",
         "action": {
             "type": "Custom",
@@ -29,11 +31,114 @@
             "[JumpBack]NativeLoading",
             "[JumpBack]SafeInput_StartupCloseAnnouncement",
             "[JumpBack]SafeInput_StartupCancelIllustration",
+            "ExplorationTicketThreshold",
             "ExplorationFieldReady",
             "ExplorationChapterReady",
             "ExplorationMapReady",
             "[JumpBack]NavigateExplore"
         ]
+    },
+    "ExplorationTicketThreshold": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "doc": "可选：在探索地图、章节入口或章节内战场读到突破券达到所选数量时结束探索，避免券满后继续掉落被浪费；默认关闭。战场内在每场结算并计数后、找下一只怪前判断，正在进行的战斗不打断；结束本身不增加成功次数。各页面的读数区域取自 runhey/OnmyojiAutoScript@2d2f6d8962a5af17c95670c5d0fb2e384b247162 tasks/Exploration/assets.py 与 TanyaShue/MaaYYs@3f9a969 resource_pack/base/pipeline/战斗/kun28.json，两者相互印证。只结束探索，不自动切换任务、不关闭加成。",
+        "enabled": false,
+        "recognition": {
+            "type": "Or",
+            "param": {
+                "any_of": [
+                    "ExplorationTicketMap",
+                    "ExplorationTicketEntrance",
+                    "ExplorationTicketField"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "ExplorationFinish"
+        ]
+    },
+    "ExplorationTicketMap": {
+        "doc": "页面与券数在同一截图成立。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageExplore",
+                    "ExplorationTicketCountMap"
+                ]
+            }
+        }
+    },
+    "ExplorationTicketEntrance": {
+        "doc": "页面与券数在同一截图成立。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageChapter",
+                    "ExplorationTicketCountEntrance"
+                ]
+            }
+        }
+    },
+    "ExplorationTicketField": {
+        "doc": "页面与券数在同一截图成立。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageChapterField",
+                    "ExplorationTicketCountField"
+                ]
+            }
+        }
+    },
+    "ExplorationTicketCountMap": {
+        "doc": "探索地图：OAS O_REALM_RAID_NUMBER (739,11,78,37)，MaaYYs 肝绘卷-识别突破卷是否大于20 [694,3,169,58]；本地截图读数框[745,17,71,27]。阈值由任务选项改写 expected。",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "^30\\s*/\\s*30$",
+                "roi": [
+                    730,
+                    8,
+                    96,
+                    44
+                ]
+            }
+        }
+    },
+    "ExplorationTicketCountEntrance": {
+        "doc": "章节入口：OAS O_REALM_RAID_NUMBER1 (920,12,78,30)，入口弹窗下顶栏右移。阈值由任务选项改写 expected。",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "^30\\s*/\\s*30$",
+                "roi": [
+                    910,
+                    8,
+                    98,
+                    40
+                ]
+            }
+        }
+    },
+    "ExplorationTicketCountField": {
+        "doc": "章节内战场：MaaYYs 肝绘卷-识别突破卷数量是否达标 [678,0,378,61]，与左上角章节名同屏识别。阈值由任务选项改写 expected。",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "^30\\s*/\\s*30$",
+                "roi": [
+                    678,
+                    0,
+                    378,
+                    61
+                ]
+            }
+        }
     },
     "ExplorationSelectChapter": {
         "recognition": {
@@ -128,6 +233,8 @@
         "doc": "结算返回章节且处理完奖励后，累计成功次数并决定继续探索或结束。"
     },
     "ExplorationFinish": {
+        "pre_delay": 0,
+        "post_delay": 0,
         "action": {
             "type": "Custom",
             "param": {
@@ -362,6 +469,8 @@
         "timeout": 180000
     },
     "ExplorationBattleNoResource": {
+        "pre_delay": 0,
+        "post_delay": 0,
         "recognition": {
             "type": "And",
             "param": {
@@ -450,6 +559,8 @@
         "doc": "关闭探索失败结算，返回场景后停止任务。"
     },
     "ExplorationBattleFailedReturn": {
+        "pre_delay": 0,
+        "post_delay": 0,
         "recognition": {
             "type": "And",
             "param": {

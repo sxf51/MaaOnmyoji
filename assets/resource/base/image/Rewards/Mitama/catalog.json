@@ -1,0 +1,59 @@
+{
+  "结界突破券": {
+    "templates": [
+      "结界突破券.png"
+    ],
+    "roi": [
+      210,
+      145,
+      890,
+      240
+    ],
+    "threshold": 0.88,
+    "quantity_mode": "optional",
+    "quantity_roi": [
+      50,
+      68,
+      42,
+      24
+    ]
+  },
+  "鳞片": {
+    "templates": [
+      "鳞片.png"
+    ],
+    "roi": [
+      210,
+      145,
+      890,
+      240
+    ],
+    "threshold": 0.88,
+    "quantity_mode": "optional",
+    "quantity_roi": [
+      45,
+      63,
+      42,
+      24
+    ]
+  },
+  "御魂花札": {
+    "templates": [
+      "御魂花札.png"
+    ],
+    "roi": [
+      210,
+      145,
+      890,
+      240
+    ],
+    "threshold": 0.88,
+    "quantity_mode": "optional",
+    "quantity_roi": [
+      50,
+      69,
+      42,
+      24
+    ]
+  }
+}

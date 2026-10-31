@@ -16,9 +16,9 @@
     "current_activity_task_doc": "Repeat the battle from the current screen until the configured count is reached",
     "battle_count": "Battle count",
     "exploration_task": "Exploration",
-    "exploration_task_doc": "Navigate to the configured chapter or continue the current chapter; find sword icons and count completed settlements.",
+    "exploration_task_doc": "Navigate to the configured chapter or continue the current chapter; find sword icons and count completed settlements. Optionally stop on the map or chapter entrance once raid tickets reach a threshold.",
     "realm_raid_task": "Realm Raid",
-    "realm_raid_task_doc": "Navigate to personal Realm Raid, skip cleared cards and attempt each at most once. No refresh or ticket purchase.",
+    "realm_raid_task_doc": "Navigate to personal Realm Raid, skip cleared cards and attempt each at most once. Stops when the ticket counter reads 0. Optionally retreats n times on the first card before fighting it, marks a friendly unit, switches team preset, and on a real defeat skips the card, refreshes or stops. Never buys tickets.",
     "daily_rewards_task": "Daily Rewards",
     "daily_rewards_task_doc": "Claim mail and Flower Battle rewards with claim buttons. Excludes chests, paid rewards and limited events."
 }

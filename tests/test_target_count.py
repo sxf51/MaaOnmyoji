@@ -8,10 +8,9 @@ from unittest.mock import Mock
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "agent"))
 
 from custom.action.target_count import (  # noqa: E402
-    TargetCountDetermine, TargetCountProgress, TargetCountState, _parse_params, reset_state_for_test,
+    TargetCountDetermine, TargetCountInit, TargetCountProgress, TargetCountState, _parse_params, reset_state_for_test,
 )
 from custom.action import target_count  # noqa: E402
-from custom.reco.general import _union  # noqa: E402
 from custom.sink.aspect_ratio import is_16_by_9  # noqa: E402
 
 
@@ -65,8 +64,17 @@ class TargetCountStateTest(unittest.TestCase):
         self.assertEqual(_parse_params({"target_count": 3}), {"target_count": 3})
         self.assertEqual(_parse_params('{"target_count": 4}'), {"target_count": 4})
 
-    def test_roi_union(self) -> None:
-        self.assertEqual(_union([[10, 20, 30, 40], [30, 10, 50, 20]]), [10, 10, 70, 50])
+    def test_init_merges_option_attach_over_pipeline_defaults(self) -> None:
+        context = Mock()
+        context.get_node_data.return_value = {"attach": {"target_count": 2, "report_drops": False}}
+        argv = SimpleNamespace(node_name="AwakeningTask", custom_action_param='{"target_count": 10, "stage_name": "s"}')
+        try:
+            self.assertTrue(TargetCountInit().run(context, argv).success)
+            self.assertEqual(target_count._state.target_count, 2)
+            self.assertEqual(target_count.get_runtime_params(),
+                             {"target_count": 2, "stage_name": "s", "report_drops": False})
+        finally:
+            reset_state_for_test()
 
     def test_aspect_ratio(self) -> None:
         self.assertTrue(is_16_by_9(1280, 720))

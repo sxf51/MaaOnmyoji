@@ -16,15 +16,6 @@ class NativePipelineTests(unittest.TestCase):
             if filename.name != "Example.json":
                 self.nodes.update(load_jsonc(filename))
 
-    def test_production_and_examples_do_not_call_legacy_flow_actions(self):
-        legacy = {"NavigateTo", "ExploreBattles", "RaidBattles", "ClaimDailyRewards",
-                  "SelectTeammate", "WaitLeaderInvitation", "TeamBattle"}
-        nodes = {**self.nodes, **load_jsonc(ROOT / "Example.json")}
-        for name, node in nodes.items():
-            action = node.get("action", {})
-            if isinstance(action, dict):
-                self.assertNotIn(action.get("param", {}).get("custom_action"), legacy, name)
-
     def test_navigation_callers_check_destination_before_jumpback(self):
         for name in ("ReturnMain", "MitamaNavigate", "MitamaDisableBuff", "RealmRaidTask",
                      "DailyRewardsTask", "NativeRewardsToTasks", "NativeRewardsToRewards"):
@@ -33,16 +24,28 @@ class NativePipelineTests(unittest.TestCase):
             self.assertIn("recognition", self.nodes[choices[1]], name)
 
     def test_battle_never_counts_waiting_room_without_settlement(self):
-        for prefix in ("ExplorationBattle", "MitamaNativeBattle", "RealmRaidBattle"):
+        # The raid loop checks settlement only once the battle exit button is gone.
+        loops = {"ExplorationBattle": "ExplorationBattle", "MitamaNativeBattle": "MitamaNativeBattle",
+                 "RealmRaidBattle": "RealmRaidBattleSettle"}
+        for prefix, loop in loops.items():
             after = prefix + "AfterResult"
-            self.assertNotIn(after, self.nodes[prefix]["next"])
+            self.assertNotIn(after, self.nodes[loop]["next"])
             self.assertIn(after, self.nodes["SafeInput_" + prefix + "Result"]["next"])
-            self.assertIn(prefix + "Failure", self.nodes[prefix]["next"])
+            self.assertIn(prefix + "Failure", self.nodes[loop]["next"])
 
     def test_raid_verifies_stamp_and_limits_each_card(self):
-        for i in range(9):
-            self.assertEqual(self.nodes[f"RealmRaidSelect{i}"]["max_hit"], 1)
-            self.assertIn(f"RealmRaid{i}Broken", self.nodes[f"RealmRaid{i}Success"]["recognition"]["param"]["all_of"])
+        self.assertEqual(self.nodes['SafeInput_RealmRaidSelect']['max_hit'], 3)
+        self.assertIn('RealmRaidBroken', self.nodes['RealmRaidSuccess']['recognition']['param']['all_of'])
+
+    def test_raid_attack_uses_detected_button_and_dismiss_stays_above_popup_buttons(self):
+        param=self.nodes['PageRaidTarget']['recognition']['param']
+        self.assertEqual(param['all_of'][0],'RealmRaidPersonalTab')
+        button_roi=param['all_of'][param['box_index']]['recognition']['param']['roi']
+        self.assertIs(self.nodes['SafeInput_RealmRaidAttack']['action']['param']['target'], True)
+        self.assertIs(self.nodes['SafeInput_RealmRaidSelect']['action']['param']['target'], True)
+        for name in ('SafeInput_NavDismissRaidTarget','SafeInput_NativeNavDismissRaidTarget'):
+            target=self.nodes[name]['action']['param']['target']
+            self.assertLess(target[1]+target[3],button_roi[1])
 
     def test_invitation_click_targets_accept_button(self):
         param = self.nodes["MitamaAcceptNamedInvitation"]["recognition"]["param"]
@@ -104,11 +107,10 @@ class NativePipelineTests(unittest.TestCase):
             check(node.get("recognition", {}))
 
     def test_broken_card_skip_precedes_selection(self):
-        for i in range(9):
-            self.assertEqual(self.nodes[f"RealmRaidCheck{i}"]["next"][1:3],
-                             [f"RealmRaid{i}SkipBroken", f"RealmRaidSelect{i}"])
-            self.assertEqual(self.nodes[f"SafeInput_RealmRaidSelect{i}"]["anchor"],
-                             {"RealmRaidVerify": f"RealmRaid{i}Verify"})
+        self.assertEqual(self.nodes['RealmRaidCard']['recognition']['type'], 'TemplateMatch')
+        self.assertEqual(self.nodes['RealmRaidBroken']['recognition']['param']['roi'], 'RealmRaidChoose')
+
+
 
 
 if __name__ == "__main__":

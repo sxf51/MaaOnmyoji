@@ -197,8 +197,8 @@
                                     15
                                 ],
                                 "template": [
-                                    "Mitama/MitamaPresetTeam.png",
-                                    "Mitama/PresetApplySelected.png"
+                                    "TeamPreset/PresetApply.png",
+                                    "TeamPreset/PresetApplySelected.png"
                                 ],
                                 "threshold": [
                                     0.8,
@@ -284,10 +284,10 @@
             "type": "OCR",
             "param": {
                 "roi": [
-                    455,
-                    171,
-                    385,
-                    89
+                    440,
+                    160,
+                    400,
+                    55
                 ],
                 "expected": [
                     "全队正在使用"
@@ -330,6 +330,8 @@
         "max_hit": 3
     },
     "TeamPresetDone": {
+        "pre_delay": 0,
+        "post_delay": 0,
         "desc": "队伍预设：应用完成后回到调用任务",
         "action": "DoNothing",
         "next": [
@@ -400,6 +402,8 @@
         ]
     },
     "TeamPresetWaitWindow": {
+        "pre_delay": 0,
+        "post_delay": 0,
         "next": [
             "[JumpBack]CommonBountyInterrupt",
             "TeamPresetWindowReady"
@@ -418,6 +422,8 @@
         ]
     },
     "TeamPresetVerifyClosed": {
+        "pre_delay": 0,
+        "post_delay": 0,
         "next": [
             "[JumpBack]CommonBountyInterrupt",
             "TeamPresetWindowClosed"
@@ -428,6 +434,8 @@
         ]
     },
     "TeamPresetWindowClosed": {
+        "pre_delay": 0,
+        "post_delay": 0,
         "recognition": {
             "type": "And",
             "param": {
@@ -469,7 +477,7 @@
         "recognition": {
             "type": "TemplateMatch",
             "param": {
-                "template": "Mitama/PresetFrame.png",
+                "template": "TeamPreset/PresetFrame.png",
                 "roi": [
                     395,
                     140,

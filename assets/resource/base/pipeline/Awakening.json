@@ -1,5 +1,7 @@
 {
     "AwakeningTask": {
+        "pre_delay": 0,
+        "post_delay": 0,
         "doc": "导航到配置的觉醒麒麟和层数，按成功结算次数重复挑战。",
         "action": {
             "type": "Custom",
@@ -11,7 +13,8 @@
             }
         },
         "next": [
-            "AwakeningNavigate"
+            "[JumpBack]CommonBountyInterrupt",
+            "AwakeningSession"
         ]
     },
     "AwakeningNavigate": {
@@ -214,6 +217,8 @@
         "timeout": 20000
     },
     "AwakeningLayerReady": {
+        "pre_delay": 0,
+        "post_delay": 0,
         "doc": "已确认目标层数选中，开始战前准备。",
         "recognition": {
             "type": "And",
@@ -296,28 +301,15 @@
         "max_hit": 4
     },
     "AwakeningPreparation": {
-        "doc": "按顺序完成锁定阵容、更换预设及开启觉醒加成，再进入挑战。",
-        "action": {
-            "type": "Custom",
-            "param": {
-                "custom_action": "SubTask",
-                "custom_action_param": {
-                    "sub": [
-                        "AwakeningLockTeam",
-                        "AwakeningPreset",
-                        "AwakeningEnableBuff"
-                    ],
-                    "completion_next": [
-                        "AwakeningBattleEntry"
-                    ],
-                    "timeout": 180000
-                }
-            }
-        },
+        "doc": "按顺序进入首个启用的准备步骤；每步完成后直接接后续步骤，选项关闭的步骤由 enabled 原生跳过。",
+        "action": "DoNothing",
         "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "AwakeningLockTeam",
+            "AwakeningPreset",
+            "AwakeningEnableBuff",
             "AwakeningBattleEntry"
-        ],
-        "timeout": 180000
+        ]
     },
     "AwakeningLockTeam": {
         "doc": "确认阵容锁定；未锁定时点击锁图标。",
@@ -329,10 +321,12 @@
         "action": "DoNothing"
     },
     "AwakeningLockedTeam": {
+        "pre_delay": 0,
+        "post_delay": 0,
         "recognition": {
             "type": "TemplateMatch",
             "param": {
-                "template": "Mitama/FormationLocked.png",
+                "template": "Common/FormationLocked.png",
                 "roi": [
                     680,
                     645,
@@ -342,17 +336,12 @@
                 "threshold": 0.9
             }
         },
-        "action": {
-            "type": "Custom",
-            "param": {
-                "custom_action": "DisableNode",
-                "custom_action_param": {
-                    "node_name": "AwakeningLockTeam"
-                }
-            }
-        },
+        "action": "DoNothing",
         "next": [
-            "AwakeningPreparation"
+            "[JumpBack]CommonBountyInterrupt",
+            "AwakeningPreset",
+            "AwakeningEnableBuff",
+            "AwakeningBattleEntry"
         ]
     },
     "AwakeningUnlockTeam": {
@@ -366,7 +355,7 @@
                         "recognition": {
                             "type": "TemplateMatch",
                             "param": {
-                                "template": "Mitama/FormationUnlocked.png",
+                                "template": "Common/FormationUnlocked.png",
                                 "roi": [
                                     680,
                                     645,
@@ -399,7 +388,13 @@
                 "custom_action": "ResetCount",
                 "custom_action_param": {
                     "nodes": [
-                        "SafeInput_AwakeningChallenge"
+                        "SafeInput_AwakeningChallenge",
+                        "SafeInput_CommonBattleEnableAuto",
+                        "SafeInput_CommonNetworkRetry",
+                        "SafeInput_CommonRewardOverflow",
+                        "SafeInput_MitamaTreasurePopup",
+                        "CommonBattleMark",
+                        "SafeInput_CommonBattleMark"
                     ]
                 }
             }
@@ -411,6 +406,8 @@
         ]
     },
     "AwakeningNoResource": {
+        "pre_delay": 0,
+        "post_delay": 0,
         "doc": "识别明确的体力或挑战券不足提示，停止觉醒挑战。",
         "recognition": {
             "type": "And",
@@ -473,6 +470,8 @@
         "timeout": 60000
     },
     "AwakeningBattleStarted": {
+        "pre_delay": 0,
+        "post_delay": 0,
         "doc": "已进入准备、战斗或结算，转入战斗处理。",
         "recognition": {
             "type": "Or",
@@ -500,50 +499,17 @@
             "AwakeningNoResource",
             "[JumpBack]MitamaTreasurePopup",
             "AwakeningBattleFailure",
+            "[JumpBack]CommonRewardOverflow",
             "AwakeningBattleResult",
             "[JumpBack]CommonBattleEnteringWait",
             "[JumpBack]DailyPrepare",
-            "[JumpBack]SafeInput_AwakeningEnableAuto",
-            "[JumpBack]AwakeningChallenging",
+            "[JumpBack]CommonBattleEnableAuto",
+            "[JumpBack]CommonBattleMark",
+            "[JumpBack]CommonBattleWait",
             "[JumpBack]SafeInput_DailyRewardPopup",
-            "[JumpBack]SafeInput_CommonNetworkRetry"
+            "[JumpBack]CommonNetworkRetry"
         ],
         "timeout": 180000
-    },
-    "AwakeningEnableAuto": {
-        "doc": "将觉醒战斗的手动模式切换为自动。",
-        "recognition": {
-            "type": "And",
-            "param": {
-                "all_of": [
-                    "PageBattle",
-                    {
-                        "recognition": {
-                            "type": "OCR",
-                            "param": {
-                                "expected": "^手动$",
-                                "roi": [
-                                    7,
-                                    522,
-                                    165,
-                                    190
-                                ]
-                            }
-                        }
-                    }
-                ],
-                "box_index": 1
-            }
-        },
-        "action": "DoNothing",
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_AwakeningEnableAuto"
-        ],
-        "pre_delay": 0,
-        "post_delay": 0,
-        "pre_wait_freezes": 0,
-        "on_error": []
     },
     "AwakeningBattleResult": {
         "doc": "关闭觉醒成功结算，等待返回所选麒麟和层数。",
@@ -559,12 +525,14 @@
         "next": [
             "[JumpBack]CommonBountyInterrupt",
             "[JumpBack]MitamaTreasurePopup",
+            "AwakeningDropStatistics",
             "SafeInput_AwakeningBattleResult"
         ],
         "pre_delay": 0,
         "post_delay": 0,
         "pre_wait_freezes": 0,
-        "on_error": []
+        "on_error": [],
+        "post_wait_freezes": 0
     },
     "AwakeningAfterResult": {
         "doc": "确认成功结算已返回正确麒麟和层数后，累计成功次数并决定继续或收尾；继续时仍重置每场挑战的点击预算。",
@@ -626,6 +594,8 @@
         ]
     },
     "AwakeningFinish": {
+        "pre_delay": 0,
+        "post_delay": 0,
         "doc": "达到成功次数后结束，停留在觉醒层数页。",
         "action": {
             "type": "Custom",
@@ -696,6 +666,8 @@
         ]
     },
     "AwakeningFailedReturn": {
+        "pre_delay": 0,
+        "post_delay": 0,
         "doc": "返回觉醒层数页后以失败结束。",
         "recognition": {
             "type": "And",
@@ -820,15 +792,7 @@
                 ]
             }
         },
-        "action": {
-            "type": "Custom",
-            "param": {
-                "custom_action": "DisableNode",
-                "custom_action_param": {
-                    "node_name": "AwakeningEnableBuff"
-                }
-            }
-        },
+        "action": "DoNothing",
         "next": [
             "[JumpBack]CommonBountyInterrupt",
             "SafeInput_AwakeningCloseBuffAfterEnable"
@@ -883,6 +847,8 @@
         "timeout": 5000
     },
     "AwakeningBuffClosedForPreparation": {
+        "pre_delay": 0,
+        "post_delay": 0,
         "recognition": {
             "type": "And",
             "param": {
@@ -894,7 +860,8 @@
         "inverse": true,
         "action": "DoNothing",
         "next": [
-            "AwakeningPreparation"
+            "[JumpBack]CommonBountyInterrupt",
+            "AwakeningBattleEntry"
         ]
     },
     "AwakeningDisableBuff": {
@@ -918,15 +885,7 @@
                 ]
             }
         },
-        "action": {
-            "type": "Custom",
-            "param": {
-                "custom_action": "DisableNode",
-                "custom_action_param": {
-                    "node_name": "AwakeningDisableBuff"
-                }
-            }
-        },
+        "action": "DoNothing",
         "next": [
             "[JumpBack]CommonBountyInterrupt",
             "SafeInput_AwakeningCloseBuffAfterDisable"
@@ -981,6 +940,8 @@
         "timeout": 5000
     },
     "AwakeningBuffClosedForFinish": {
+        "pre_delay": 0,
+        "post_delay": 0,
         "recognition": {
             "type": "And",
             "param": {
@@ -992,7 +953,8 @@
         "inverse": true,
         "action": "DoNothing",
         "next": [
-            "AwakeningFinishCleanup"
+            "[JumpBack]CommonBountyInterrupt",
+            "AwakeningFinishDone"
         ]
     },
     "AwakeningDismissBuffPanel": {
@@ -1016,33 +978,25 @@
         ]
     },
     "AwakeningFinishCleanup": {
-        "doc": "结束觉醒任务时关闭本任务启用的觉醒材料加成。",
-        "action": {
-            "type": "Custom",
-            "param": {
-                "custom_action": "SubTask",
-                "custom_action_param": {
-                    "sub": [
-                        "AwakeningDisableBuff"
-                    ],
-                    "completion_next": [
-                        "AwakeningFinishDone"
-                    ],
-                    "timeout": 60000
-                }
-            }
-        },
+        "pre_delay": 0,
+        "post_delay": 0,
+        "doc": "收尾：加成关闭步骤启用时先执行，否则直接结束。",
+        "action": "DoNothing",
         "next": [
             "[JumpBack]CommonBountyInterrupt",
+            "AwakeningDisableBuff",
             "AwakeningFinishDone"
-        ],
-        "timeout": 60000
+        ]
     },
     "AwakeningFinishDone": {
+        "pre_delay": 0,
+        "post_delay": 0,
         "doc": "觉醒任务完成，停留在当前觉醒层数页。",
         "action": "DoNothing"
     },
     "AwakeningPreset": {
+        "pre_delay": 0,
+        "post_delay": 0,
         "doc": "配置本任务的预设页面与返回位置，完成换队后才继续准备。",
         "enabled": false,
         "action": {
@@ -1095,7 +1049,9 @@
         ]
     },
     "AwakeningPresetDone": {
-        "doc": "确认预设已应用并返回挑战页，禁用本次换队步骤。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "doc": "确认预设已应用并返回挑战页，继续后续准备步骤。",
         "recognition": {
             "type": "And",
             "param": {
@@ -1104,31 +1060,124 @@
                 ]
             }
         },
-        "action": {
-            "type": "Custom",
-            "param": {
-                "custom_action": "DisableNode",
-                "custom_action_param": {
-                    "node_name": "AwakeningPreset"
-                }
-            }
-        },
+        "action": "DoNothing",
         "next": [
-            "AwakeningPreparation"
+            "[JumpBack]CommonBountyInterrupt",
+            "AwakeningEnableBuff",
+            "AwakeningBattleEntry"
         ]
     },
     "AwakeningChallenging": {
+        "pre_delay": 0,
         "doc": "底部妖术或普攻确认正式战斗后等待结算，不点击、不增加成功次数。",
         "recognition": {
             "type": "And",
             "param": {
                 "all_of": [
-                    "PageBattle"
+                    "CommonBattleWait"
                 ]
             }
         },
         "action": "DoNothing",
         "post_delay": 1000,
         "next": []
+    },
+    "AwakeningDropStatistics": {
+        "doc": "奖励入场至少等待2秒；由统计动作确认图标区域持续稳定后，读取最新画面并暂存一次。",
+        "enabled": false,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "DailyBattleResult"
+                ],
+                "box_index": 0
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "RewardDropStatistics",
+                "custom_action_param": {
+                    "scope": "Awakening",
+                    "result_node": "DailyBattleResult"
+                }
+            }
+        },
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_AwakeningBattleResult"
+        ],
+        "pre_delay": 2000
+    },
+    "AwakeningSession": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "doc": "原生流程异常时执行有限加成清理，随后保留失败；停止任务时不再输入。",
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "RunBattleSession",
+                "custom_action_param": {
+                    "scope": "Awakening",
+                    "cleanup_override": {
+                        "SafeInput_AwakeningOpenBuffMenu": {
+                            "max_hit": 3
+                        },
+                        "SafeInput_AwakeningEnableBuffClick": {
+                            "max_hit": 3
+                        },
+                        "SafeInput_AwakeningCloseBuffAfterEnable": {
+                            "max_hit": 3
+                        },
+                        "SafeInput_AwakeningDisableBuffClick": {
+                            "max_hit": 3
+                        },
+                        "SafeInput_AwakeningCloseBuffAfterDisable": {
+                            "max_hit": 3
+                        },
+                        "SafeInput_AwakeningDismissBuffPanel": {
+                            "max_hit": 3
+                        },
+                        "SafeInput_BattleCleanupResult": {
+                            "max_hit": 3
+                        },
+                        "SafeInput_MitamaTreasurePopup": {
+                            "max_hit": 3
+                        },
+                        "NavigateMitamaStage": {
+                            "max_hit": 3
+                        },
+                        "NavigateAwakening": {
+                            "max_hit": 3
+                        },
+                        "CommonBattleEnteringWait": {
+                            "max_hit": 3
+                        },
+                        "NativeNavCancelNoResource": {
+                            "max_hit": 3
+                        },
+                        "DailyPrepare": {
+                            "max_hit": 3
+                        },
+                        "DailyRewardPopup": {
+                            "max_hit": 3
+                        },
+                        "SafeInput_NativeNavCancelNoResource": {
+                            "max_hit": 3
+                        },
+                        "SafeInput_DailyPrepare": {
+                            "max_hit": 3
+                        },
+                        "SafeInput_DailyRewardPopup": {
+                            "max_hit": 3
+                        },
+                        "SafeInput_CommonBattleEnableAuto": {
+                            "max_hit": 3
+                        }
+                    }
+                }
+            }
+        }
     }
 }

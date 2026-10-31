@@ -6,14 +6,19 @@
             "entry": "RealmRaidTask",
             "description": "$realm_raid_task_doc",
             "option": [
-                "结界突破成功次数"
+                "结界突破成功次数",
+                "结界突破主动退出次数",
+                "结界突破友方绿标",
+                "结界突破更换队伍预设",
+                "结界突破战败重试次数",
+                "结界突破战斗失败处理"
             ]
         }
     ],
     "option": {
         "结界突破成功次数": {
             "type": "input",
-            "label": "本轮成功次数（最多九次，不刷新）",
+            "label": "本轮成功次数（最多九次）",
             "inputs": [
                 {
                     "name": "次数",
@@ -33,6 +38,413 @@
                     }
                 }
             }
+        },
+        "结界突破主动退出次数": {
+            "type": "input",
+            "label": "开局主动退出次数（打m退n中的n，0为关闭；每次消耗一张突破券）",
+            "inputs": [
+                {
+                    "name": "退出次数",
+                    "pipeline_type": "int",
+                    "default": "0",
+                    "verify": "^[0-9]$"
+                }
+            ],
+            "pipeline_override": {
+                "RealmRaidRetreatBegin": {
+                    "max_hit": "{退出次数}"
+                },
+                "RealmRaidRetreatRetry": {
+                    "max_hit": "{退出次数}"
+                }
+            },
+            "description": "退出只在开打后进行（当前版本准备阶段没有返回按钮）；开启后本轮第一场不点友方绿标。"
+        },
+        "结界突破友方绿标": {
+            "type": "switch",
+            "label": "友方绿标",
+            "description": "按固定战斗镜头下的友方站位点击，每场正式战斗最多一次；默认关闭。与主动退出互斥：要主动退出的场次不点绿标。",
+            "default_case": "No",
+            "cases": [
+                {
+                    "name": "No",
+                    "pipeline_override": {
+                        "RealmRaidBattleMark": {
+                            "enabled": false
+                        }
+                    }
+                },
+                {
+                    "name": "Yes",
+                    "pipeline_override": {
+                        "RealmRaidBattleMark": {
+                            "enabled": true
+                        }
+                    },
+                    "option": [
+                        "结界突破绿标站位"
+                    ]
+                }
+            ]
+        },
+        "结界突破绿标站位": {
+            "type": "select",
+            "label": "绿标站位",
+            "default_case": "左一",
+            "cases": [
+                {
+                    "name": "左一",
+                    "pipeline_override": {
+                        "SafeInput_RealmRaidBattleMark": {
+                            "action": {
+                                "param": {
+                                    "target": [
+                                        205,
+                                        530,
+                                        60,
+                                        50
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "左二",
+                    "pipeline_override": {
+                        "SafeInput_RealmRaidBattleMark": {
+                            "action": {
+                                "param": {
+                                    "target": [
+                                        425,
+                                        495,
+                                        60,
+                                        50
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "左三",
+                    "pipeline_override": {
+                        "SafeInput_RealmRaidBattleMark": {
+                            "action": {
+                                "param": {
+                                    "target": [
+                                        614,
+                                        450,
+                                        45,
+                                        35
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "左四",
+                    "pipeline_override": {
+                        "SafeInput_RealmRaidBattleMark": {
+                            "action": {
+                                "param": {
+                                    "target": [
+                                        780,
+                                        495,
+                                        55,
+                                        50
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "左五",
+                    "pipeline_override": {
+                        "SafeInput_RealmRaidBattleMark": {
+                            "action": {
+                                "param": {
+                                    "target": [
+                                        955,
+                                        495,
+                                        60,
+                                        50
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "阴阳师",
+                    "pipeline_override": {
+                        "SafeInput_RealmRaidBattleMark": {
+                            "action": {
+                                "param": {
+                                    "target": [
+                                        585,
+                                        575,
+                                        60,
+                                        45
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "结界突破更换队伍预设": {
+            "type": "switch",
+            "label": "更换队伍预设",
+            "default_case": "No",
+            "cases": [
+                {
+                    "name": "No",
+                    "pipeline_override": {
+                        "RealmRaidPreset": {
+                            "enabled": false
+                        }
+                    }
+                },
+                {
+                    "name": "Yes",
+                    "pipeline_override": {
+                        "RealmRaidPreset": {
+                            "enabled": true
+                        }
+                    },
+                    "option": [
+                        "结界突破预设分组与队伍"
+                    ]
+                }
+            ],
+            "description": "进入个人突破页后、选卡前通过右侧“队伍预设”完成分组、队伍、应用和出战确认；未找到入口或预设窗口时停止，不跳过换队。"
+        },
+        "结界突破预设分组与队伍": {
+            "type": "input",
+            "label": "预设分组与队伍",
+            "inputs": [
+                {
+                    "name": "分组",
+                    "pipeline_type": "string",
+                    "default": "默认分组",
+                    "pattern_msg": "分组名称",
+                    "description": "分组名称",
+                    "verify": "^.*\\S.*$"
+                },
+                {
+                    "name": "队伍",
+                    "pipeline_type": "string",
+                    "default": "默认队伍",
+                    "pattern_msg": "队伍名称",
+                    "description": "队伍名称",
+                    "verify": "^.*\\S.*$"
+                }
+            ],
+            "pipeline_override": {
+                "TeamPresetSelectGroup": {
+                    "recognition": {
+                        "param": {
+                            "expected": [
+                                "{分组}"
+                            ],
+                            "roi": [
+                                637,
+                                182,
+                                112,
+                                372
+                            ]
+                        }
+                    }
+                },
+                "TeamPresetGroupSelected": {
+                    "recognition": {
+                        "param": {
+                            "all_of": [
+                                {
+                                    "sub_name": "TeamPresetSelectedGroupText",
+                                    "recognition": {
+                                        "type": "OCR",
+                                        "param": {
+                                            "roi": [
+                                                637,
+                                                182,
+                                                112,
+                                                372
+                                            ],
+                                            "expected": [
+                                                "{分组}"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "recognition": {
+                                        "type": "ColorMatch",
+                                        "param": {
+                                            "roi": "TeamPresetSelectedGroupText",
+                                            "method": 4,
+                                            "lower": [
+                                                235,
+                                                175,
+                                                80
+                                            ],
+                                            "upper": [
+                                                255,
+                                                230,
+                                                175
+                                            ],
+                                            "count": 50
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                },
+                "TeamPresetSelectTeamConfigured": {
+                    "recognition": {
+                        "param": {
+                            "expected": [
+                                "{队伍}"
+                            ],
+                            "roi": [
+                                770,
+                                181,
+                                376,
+                                320
+                            ]
+                        }
+                    }
+                },
+                "TeamPresetApplyIcon": {
+                    "recognition": {
+                        "param": {
+                            "all_of": [
+                                {
+                                    "sub_name": "TeamPresetTeamText",
+                                    "recognition": {
+                                        "type": "OCR",
+                                        "param": {
+                                            "roi": [
+                                                770,
+                                                181,
+                                                376,
+                                                320
+                                            ],
+                                            "expected": [
+                                                "{队伍}"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "recognition": {
+                                        "type": "TemplateMatch",
+                                        "param": {
+                                            "roi": "TeamPresetTeamText",
+                                            "roi_offset": [
+                                                0,
+                                                -5,
+                                                300,
+                                                15
+                                            ],
+                                            "template": [
+                                                "TeamPreset/PresetApply.png",
+                                                "TeamPreset/PresetApplySelected.png"
+                                            ],
+                                            "threshold": [
+                                                0.8,
+                                                0.9
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "结界突破战败重试次数": {
+            "type": "input",
+            "label": "真实战败后重打同一张卡的次数（0为不重试；每次消耗一张突破券）",
+            "description": "在失败页点再次挑战，每张卡单独计数；主动退出产生的失败页不算。次数用完后再按“战斗失败（打不过）时”处理。",
+            "inputs": [
+                {
+                    "name": "重试次数",
+                    "pipeline_type": "int",
+                    "default": "0",
+                    "verify": "^[0-9]$"
+                }
+            ],
+            "pipeline_override": {
+                "RealmRaidFailRetry": {
+                    "max_hit": "{重试次数}"
+                }
+            }
+        },
+        "结界突破战斗失败处理": {
+            "type": "select",
+            "label": "战斗失败（打不过）时",
+            "description": "只针对真实战败（重试次数用完后），主动退出产生的失败页不算。“刷新后继续”还会在九宫格没有可挑战卡片（含任务开始前就失败的卡）时先刷新；刷新会重置攻破记录进度，刷新冷却中无法刷新时结束本轮。",
+            "default_case": "跳过失败目标",
+            "cases": [
+                {
+                    "name": "跳过失败目标",
+                    "pipeline_override": {
+                        "RealmRaidFailStop": {
+                            "enabled": false
+                        },
+                        "RealmRaidFailRefresh": {
+                            "enabled": false
+                        },
+                        "RealmRaidFailRefreshUnavailable": {
+                            "enabled": false
+                        },
+                        "RealmRaidExhaustedRefresh": {
+                            "enabled": false
+                        }
+                    }
+                },
+                {
+                    "name": "刷新后继续",
+                    "pipeline_override": {
+                        "RealmRaidFailStop": {
+                            "enabled": false
+                        },
+                        "RealmRaidFailRefresh": {
+                            "enabled": true
+                        },
+                        "RealmRaidFailRefreshUnavailable": {
+                            "enabled": true
+                        },
+                        "RealmRaidExhaustedRefresh": {
+                            "enabled": true
+                        }
+                    }
+                },
+                {
+                    "name": "结束本轮",
+                    "pipeline_override": {
+                        "RealmRaidFailStop": {
+                            "enabled": true
+                        },
+                        "RealmRaidFailRefresh": {
+                            "enabled": false
+                        },
+                        "RealmRaidFailRefreshUnavailable": {
+                            "enabled": false
+                        },
+                        "RealmRaidExhaustedRefresh": {
+                            "enabled": false
+                        }
+                    }
+                }
+            ]
         }
     }
 }

@@ -8,9 +8,12 @@
                 "觉醒麒麟类型",
                 "觉醒层数",
                 "觉醒作战次数",
+                "觉醒材料加成",
                 "觉醒锁定阵容",
                 "觉醒更换队伍预设",
-                "觉醒材料加成"
+                // "觉醒奖励掉落统计",
+                // "觉醒掉落统计上报",
+                "觉醒友方绿标"
             ],
             "description": "$awakening_task_doc"
         }
@@ -234,7 +237,13 @@
                             }
                         },
                         "AwakeningSearchLayer": {
-                            "next": ["[JumpBack]CommonBountyInterrupt", "AwakeningLayerReady", "SafeInput_AwakeningSelectLayer", "AwakeningLayerScrollUp", "AwakeningLayerScrollDown"]
+                            "next": [
+                                "[JumpBack]CommonBountyInterrupt",
+                                "AwakeningLayerReady",
+                                "SafeInput_AwakeningSelectLayer",
+                                "AwakeningLayerScrollUp",
+                                "AwakeningLayerScrollDown"
+                            ]
                         }
                     }
                 },
@@ -300,7 +309,13 @@
                             }
                         },
                         "AwakeningSearchLayer": {
-                            "next": ["[JumpBack]CommonBountyInterrupt", "AwakeningLayerReady", "SafeInput_AwakeningSelectLayer", "AwakeningLayerScrollUp", "AwakeningLayerScrollDown"]
+                            "next": [
+                                "[JumpBack]CommonBountyInterrupt",
+                                "AwakeningLayerReady",
+                                "SafeInput_AwakeningSelectLayer",
+                                "AwakeningLayerScrollUp",
+                                "AwakeningLayerScrollDown"
+                            ]
                         }
                     }
                 },
@@ -366,7 +381,13 @@
                             }
                         },
                         "AwakeningSearchLayer": {
-                            "next": ["[JumpBack]CommonBountyInterrupt", "AwakeningLayerReady", "SafeInput_AwakeningSelectLayer", "AwakeningLayerScrollUp", "AwakeningLayerScrollDown"]
+                            "next": [
+                                "[JumpBack]CommonBountyInterrupt",
+                                "AwakeningLayerReady",
+                                "SafeInput_AwakeningSelectLayer",
+                                "AwakeningLayerScrollUp",
+                                "AwakeningLayerScrollDown"
+                            ]
                         }
                     }
                 },
@@ -432,7 +453,13 @@
                             }
                         },
                         "AwakeningSearchLayer": {
-                            "next": ["[JumpBack]CommonBountyInterrupt", "AwakeningLayerReady", "SafeInput_AwakeningSelectLayer", "AwakeningLayerScrollUp", "AwakeningLayerScrollDown"]
+                            "next": [
+                                "[JumpBack]CommonBountyInterrupt",
+                                "AwakeningLayerReady",
+                                "SafeInput_AwakeningSelectLayer",
+                                "AwakeningLayerScrollUp",
+                                "AwakeningLayerScrollDown"
+                            ]
                         }
                     }
                 },
@@ -498,7 +525,13 @@
                             }
                         },
                         "AwakeningSearchLayer": {
-                            "next": ["[JumpBack]CommonBountyInterrupt", "AwakeningLayerReady", "SafeInput_AwakeningSelectLayer", "AwakeningLayerScrollUp", "AwakeningLayerScrollDown"]
+                            "next": [
+                                "[JumpBack]CommonBountyInterrupt",
+                                "AwakeningLayerReady",
+                                "SafeInput_AwakeningSelectLayer",
+                                "AwakeningLayerScrollUp",
+                                "AwakeningLayerScrollDown"
+                            ]
                         }
                     }
                 },
@@ -564,7 +597,13 @@
                             }
                         },
                         "AwakeningSearchLayer": {
-                            "next": ["[JumpBack]CommonBountyInterrupt", "AwakeningLayerReady", "SafeInput_AwakeningSelectLayer", "AwakeningLayerScrollUp", "AwakeningLayerScrollDown"]
+                            "next": [
+                                "[JumpBack]CommonBountyInterrupt",
+                                "AwakeningLayerReady",
+                                "SafeInput_AwakeningSelectLayer",
+                                "AwakeningLayerScrollUp",
+                                "AwakeningLayerScrollDown"
+                            ]
                         }
                     }
                 },
@@ -630,7 +669,13 @@
                             }
                         },
                         "AwakeningSearchLayer": {
-                            "next": ["[JumpBack]CommonBountyInterrupt", "AwakeningLayerReady", "SafeInput_AwakeningSelectLayer", "AwakeningLayerScrollDown", "AwakeningLayerScrollUp"]
+                            "next": [
+                                "[JumpBack]CommonBountyInterrupt",
+                                "AwakeningLayerReady",
+                                "SafeInput_AwakeningSelectLayer",
+                                "AwakeningLayerScrollDown",
+                                "AwakeningLayerScrollUp"
+                            ]
                         }
                     }
                 },
@@ -696,7 +741,13 @@
                             }
                         },
                         "AwakeningSearchLayer": {
-                            "next": ["[JumpBack]CommonBountyInterrupt", "AwakeningLayerReady", "SafeInput_AwakeningSelectLayer", "AwakeningLayerScrollDown", "AwakeningLayerScrollUp"]
+                            "next": [
+                                "[JumpBack]CommonBountyInterrupt",
+                                "AwakeningLayerReady",
+                                "SafeInput_AwakeningSelectLayer",
+                                "AwakeningLayerScrollDown",
+                                "AwakeningLayerScrollUp"
+                            ]
                         }
                     }
                 },
@@ -762,7 +813,13 @@
                             }
                         },
                         "AwakeningSearchLayer": {
-                            "next": ["[JumpBack]CommonBountyInterrupt", "AwakeningLayerReady", "SafeInput_AwakeningSelectLayer", "AwakeningLayerScrollDown", "AwakeningLayerScrollUp"]
+                            "next": [
+                                "[JumpBack]CommonBountyInterrupt",
+                                "AwakeningLayerReady",
+                                "SafeInput_AwakeningSelectLayer",
+                                "AwakeningLayerScrollDown",
+                                "AwakeningLayerScrollUp"
+                            ]
                         }
                     }
                 },
@@ -828,7 +885,13 @@
                             }
                         },
                         "AwakeningSearchLayer": {
-                            "next": ["[JumpBack]CommonBountyInterrupt", "AwakeningLayerReady", "SafeInput_AwakeningSelectLayer", "AwakeningLayerScrollDown", "AwakeningLayerScrollUp"]
+                            "next": [
+                                "[JumpBack]CommonBountyInterrupt",
+                                "AwakeningLayerReady",
+                                "SafeInput_AwakeningSelectLayer",
+                                "AwakeningLayerScrollDown",
+                                "AwakeningLayerScrollUp"
+                            ]
                         }
                     }
                 }
@@ -839,20 +902,18 @@
             "label": "$battle_count",
             "inputs": [
                 {
-                    "name": "次数",
+                    "name": "作战次数",
                     "pipeline_type": "int",
                     "default": "10",
-                    "verify": "^[1-9]\\d*$"
+                    "pattern_msg": "请输入作战次数，如10",
+                    "verify": "^[1-9]\\d*$",
+                    "description": "请输入作战次数，如10"
                 }
             ],
             "pipeline_override": {
                 "AwakeningTask": {
-                    "action": {
-                        "param": {
-                            "custom_action_param": {
-                                "target_count": "{次数}"
-                            }
-                        }
+                    "attach": {
+                        "target_count": "{作战次数}"
                     }
                 }
             }
@@ -860,6 +921,7 @@
         "觉醒锁定阵容": {
             "type": "switch",
             "label": "锁定阵容（自动准备）",
+            "description": "挑战前确认左下角阵容锁已锁定，未锁定时点击锁图标；关闭时不检查也不改变锁定状态。",
             "default_case": "Yes",
             "cases": [
                 {
@@ -882,8 +944,8 @@
         },
         "觉醒材料加成": {
             "type": "switch",
-            "label": "开启觉醒材料加成（达到次数后关闭）",
-            "default_case": "No",
+            "label": "觉醒材料加成（任务结束时关闭）",
+            "default_case": "Yes",
             "cases": [
                 {
                     "name": "No",
@@ -1054,8 +1116,8 @@
                                                 15
                                             ],
                                             "template": [
-                                                "Mitama/MitamaPresetTeam.png",
-                                                "Mitama/PresetApplySelected.png"
+                                                "TeamPreset/PresetApply.png",
+                                                "TeamPreset/PresetApplySelected.png"
                                             ],
                                             "threshold": [
                                                 0.8,
@@ -1069,6 +1131,216 @@
                     }
                 }
             }
+        },
+        "觉醒奖励掉落统计": {
+            "type": "switch",
+            "label": "觉醒奖励掉落统计（本地模板匹配）",
+            "default_case": "No",
+            "cases": [
+                {
+                    "name": "No",
+                    "pipeline_override": {
+                        "AwakeningDropStatistics": {
+                            "enabled": false
+                        }
+                    }
+                },
+                {
+                    "name": "Yes",
+                    "pipeline_override": {
+                        "AwakeningDropStatistics": {
+                            "enabled": true
+                        }
+                    }
+                }
+            ],
+            "description": "匹配已有模板，返回副本页后累计；识别不到的奖励不会猜测物品名称。"
+        },
+        "觉醒掉落统计上报": {
+            "type": "switch",
+            "label": "觉醒掉落统计上报",
+            "default_case": "No",
+            "cases": [
+                {
+                    "name": "No",
+                    "pipeline_override": {
+                        "AwakeningTask": {
+                            "attach": {
+                                "report_drops": false
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "Yes",
+                    "pipeline_override": {
+                        "AwakeningTask": {
+                            "attach": {
+                                "report_drops": true
+                            }
+                        }
+                    },
+                    "option": [
+                        "觉醒掉落上报地址"
+                    ]
+                }
+            ],
+            "description": "本地统计独立开关；仅开启并配置地址后发送物品统计，不上传截图。"
+        },
+        "觉醒掉落上报地址": {
+            "type": "input",
+            "label": "觉醒掉落上报地址",
+            "inputs": [
+                {
+                    "name": "觉醒掉落上报地址",
+                    "pipeline_type": "string",
+                    "default": "",
+                    "verify": "^https?://.+$"
+                }
+            ],
+            "pipeline_override": {
+                "AwakeningTask": {
+                    "attach": {
+                        "drop_report_url": "{觉醒掉落上报地址}"
+                    }
+                }
+            }
+        },
+        "觉醒友方绿标": {
+            "type": "switch",
+            "label": "友方绿标",
+            "description": "按固定战斗镜头下的友方站位点击，每场正式战斗最多一次；默认关闭。镜头旋转或站位变化后落点可能不对应，请保持镜头固定。",
+            "default_case": "No",
+            "cases": [
+                {
+                    "name": "No",
+                    "pipeline_override": {
+                        "CommonBattleMark": {
+                            "enabled": false
+                        }
+                    }
+                },
+                {
+                    "name": "Yes",
+                    "pipeline_override": {
+                        "CommonBattleMark": {
+                            "enabled": true
+                        }
+                    },
+                    "option": [
+                        "觉醒绿标站位"
+                    ]
+                }
+            ]
+        },
+        "觉醒绿标站位": {
+            "type": "select",
+            "label": "绿标站位",
+            "default_case": "左一",
+            "cases": [
+                {
+                    "name": "左一",
+                    "pipeline_override": {
+                        "SafeInput_CommonBattleMark": {
+                            "action": {
+                                "param": {
+                                    "target": [
+                                        205,
+                                        530,
+                                        60,
+                                        50
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "左二",
+                    "pipeline_override": {
+                        "SafeInput_CommonBattleMark": {
+                            "action": {
+                                "param": {
+                                    "target": [
+                                        425,
+                                        495,
+                                        60,
+                                        50
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "左三",
+                    "pipeline_override": {
+                        "SafeInput_CommonBattleMark": {
+                            "action": {
+                                "param": {
+                                    "target": [
+                                        614,
+                                        450,
+                                        45,
+                                        35
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "左四",
+                    "pipeline_override": {
+                        "SafeInput_CommonBattleMark": {
+                            "action": {
+                                "param": {
+                                    "target": [
+                                        780,
+                                        495,
+                                        55,
+                                        50
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "左五",
+                    "pipeline_override": {
+                        "SafeInput_CommonBattleMark": {
+                            "action": {
+                                "param": {
+                                    "target": [
+                                        955,
+                                        495,
+                                        60,
+                                        50
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "阴阳师",
+                    "pipeline_override": {
+                        "SafeInput_CommonBattleMark": {
+                            "action": {
+                                "param": {
+                                    "target": [
+                                        585,
+                                        575,
+                                        60,
+                                        45
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
         }
     }
 }

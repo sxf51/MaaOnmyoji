@@ -198,9 +198,9 @@
                 "expected": "^点击(屏幕|空白区域)继续$",
                 "roi": [
                     440,
-                    637,
+                    665,
                     400,
-                    82
+                    55
                 ]
             }
         },
@@ -274,6 +274,8 @@
         "post_delay": 1200
     },
     "NativeMailConfirmEmpty": {
+        "pre_delay": 0,
+        "post_delay": 0,
         "recognition": {
             "type": "And",
             "param": {
@@ -482,6 +484,8 @@
         ]
     },
     "NativeRewardsDone": {
+        "pre_delay": 0,
+        "post_delay": 0,
         "action": "DoNothing"
     },
     "DailyRewardsTaskReady": {
@@ -544,6 +548,8 @@
         "timeout": 20000
     },
     "NativeMailLimitReached": {
+        "pre_delay": 0,
+        "post_delay": 0,
         "recognition": {
             "type": "And",
             "param": {
@@ -558,6 +564,8 @@
         ]
     },
     "NativeTasksLimitReached": {
+        "pre_delay": 0,
+        "post_delay": 0,
         "recognition": {
             "type": "And",
             "param": {
@@ -572,6 +580,8 @@
         ]
     },
     "NativeRewardsLimitReached": {
+        "pre_delay": 0,
+        "post_delay": 0,
         "recognition": {
             "type": "And",
             "param": {
@@ -609,6 +619,8 @@
         "doc": "从花合战任务页切换到奖励页。"
     },
     "NativeRewardsTabReady": {
+        "pre_delay": 0,
+        "post_delay": 0,
         "doc": "等待花合战任务页消失，再确认已进入奖励页面。",
         "recognition": {
             "type": "And",
@@ -626,6 +638,8 @@
         "inverse": true
     },
     "DailyPreparationPassed": {
+        "pre_delay": 0,
+        "post_delay": 0,
         "doc": "准备按钮复核期间已进入战斗或结算时，返回原战斗流程。",
         "recognition": {
             "type": "Or",
@@ -641,6 +655,8 @@
         "next": []
     },
     "NativeRewardsTabReadyWait": {
+        "pre_delay": 0,
+        "post_delay": 0,
         "doc": "等待花合战页签切换，点击失败时重新点击，最多三次。",
         "next": [
             "[JumpBack]CommonBountyInterrupt",

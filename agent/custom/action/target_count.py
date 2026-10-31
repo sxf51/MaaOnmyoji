@@ -101,10 +101,14 @@ class TargetCountInit(CustomAction):
     """初始化一次玩法运行的目标次数。"""
 
     def run(self, context: Context, argv: CustomAction.RunArg) -> CustomAction.RunResult:
-        del context
         global _runtime_params
         try:
-            params = _parse_params(argv.custom_action_param)
+            # Several task options set parameters on this node. Overrides replace
+            # custom_action_param whole but dict-merge attach, so options write attach.
+            attach = (context.get_node_data(argv.node_name) or {}).get("attach") or {}
+            if not isinstance(attach, dict):
+                raise ValueError("attach 必须是 JSON 对象")
+            params = {**_parse_params(argv.custom_action_param), **attach}
             _state.reset(params.get("target_count", 1))
         except (ValueError, RuntimeError) as exc:
             logger.error("初始化目标次数失败：%s", exc)
@@ -136,6 +140,9 @@ class TargetCountProgress(CustomAction):
                 if not all(isinstance(node, str) and node.strip() for node in route):
                     raise ValueError("路由节点名必须是非空字符串")
             _state.progress(params.get("count", 1))
+            from .drop_statistics import commit_drop_statistics
+
+            commit_drop_statistics()
         except (KeyError, ValueError, RuntimeError) as exc:
             logger.error("记录挑战进度失败：%s", exc)
             return CustomAction.RunResult(success=False)

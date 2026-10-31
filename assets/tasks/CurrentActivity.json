@@ -207,8 +207,8 @@
                                                 15
                                             ],
                                             "template": [
-                                                "Mitama/MitamaPresetTeam.png",
-                                                "Mitama/PresetApplySelected.png"
+                                                "TeamPreset/PresetApply.png",
+                                                "TeamPreset/PresetApplySelected.png"
                                             ],
                                             "threshold": [
                                                 0.8,

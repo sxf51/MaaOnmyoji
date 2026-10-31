@@ -4,8 +4,8 @@ from __future__ import annotations
 from typing import Any, Callable
 
 GUARD_PREFIX = ["[JumpBack]CommonBountyInterrupt"]
-_GUARDS = {*GUARD_PREFIX, "[JumpBack]CommonRefuseBounty", "CommonPurchaseStop"}
-_CONTROL_ACTIONS = {"SubTask", "ResetCount", "NodeOverride", "ConfigureTeamRecognition", "TimeWindowRoute", "TargetCountDetermine", "TargetCountInit"}
+_GUARDS = set(GUARD_PREFIX)
+_CONTROL_ACTIONS = {"ResetCount", "NodeOverride", "ConfigureTeamRecognition", "TargetCountDetermine", "TargetCountInit"}
 
 
 def is_control_node(node: Any) -> bool:

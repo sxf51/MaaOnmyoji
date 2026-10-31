@@ -17,6 +17,8 @@
         }
     },
     "CommonCutscene": {
+        "pre_delay": 0,
+        "post_delay": 0,
         "desc": "通用过场图",
         "recognition": {
             "type": "OCR",
@@ -197,18 +199,29 @@
     "CommonNetworkRetry": {
         "desc": "网络异常重试",
         "recognition": {
-            "type": "OCR",
+            "type": "And",
             "param": {
-                "expected": [
-                    "重新连接",
-                    "重试"
+                "all_of": [
+                    "CommonNetworkPrompt",
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "expected": [
+                                    "重新连接",
+                                    "重试"
+                                ],
+                                "roi": [
+                                    280,
+                                    160,
+                                    720,
+                                    420
+                                ]
+                            }
+                        }
+                    }
                 ],
-                "roi": [
-                    280,
-                    160,
-                    720,
-                    420
-                ]
+                "box_index": 1
             }
         },
         "action": "DoNothing",
@@ -337,6 +350,8 @@
         }
     },
     "CommonBattleEnteringWait": {
+        "pre_delay": 0,
+        "post_delay": 0,
         "doc": "过场或灰暗布阵载入时只等待，最多60秒；期间处理协作邀请，不点击准备或重新挑战。",
         "recognition": {
             "type": "Or",
@@ -356,6 +371,8 @@
         "rate_limit": 250
     },
     "CommonBattleEnteringGone": {
+        "pre_delay": 0,
+        "post_delay": 0,
         "doc": "确认过场和灰暗布阵载入已消失，返回调用任务重新判断准备、正式战斗或结算。",
         "recognition": {
             "type": "Or",
@@ -369,5 +386,166 @@
         "inverse": true,
         "action": "DoNothing",
         "next": []
+    },
+    "CommonBattleWait": {
+        "pre_delay": 0,
+        "doc": "已通过底部妖术或普攻识别战斗时只等待，返回调用玩法检查结算。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageBattle"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "post_delay": 1000,
+        "next": []
+    },
+    "CommonBattleEnableAuto": {
+        "doc": "确认正式战斗且仍显示手动后切换自动。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageBattle",
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "expected": "^手动$",
+                                "roi": [
+                                    7,
+                                    522,
+                                    165,
+                                    190
+                                ]
+                            }
+                        }
+                    }
+                ],
+                "box_index": 1
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_CommonBattleEnableAuto"
+        ],
+        "pre_delay": 0,
+        "post_delay": 0,
+        "pre_wait_freezes": 0,
+        "on_error": []
+    },
+    "CommonRewardOverflow": {
+        "doc": "只处理明确的御魂容量已满提示中的知道了按钮。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "expected": "御魂.*(已满|上限|溢出)|贪吃鬼.*(已满|上限)",
+                                "roi": [
+                                    260,
+                                    160,
+                                    760,
+                                    260
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "expected": "^知道了$",
+                                "roi": [
+                                    380,
+                                    370,
+                                    520,
+                                    220
+                                ]
+                            }
+                        }
+                    }
+                ],
+                "box_index": 1
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_CommonRewardOverflow"
+        ],
+        "pre_delay": 0,
+        "post_delay": 0,
+        "pre_wait_freezes": 0,
+        "on_error": []
+    },
+    "CommonRewardOverflowVerify": {
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonRewardOverflowGone",
+            "CommonRewardOverflow"
+        ],
+        "timeout": 5000
+    },
+    "CommonRewardOverflowGone": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "CommonRewardOverflow"
+                ],
+                "box_index": 0
+            }
+        },
+        "inverse": true,
+        "next": []
+    },
+    "CommonNetworkPrompt": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "网络.*(异常|连接|中断)|连接.*(失败|断开)|服务器.*(连接|无响应)",
+                "roi": [
+                    280,
+                    160,
+                    720,
+                    300
+                ]
+            }
+        }
+    },
+    "RewardQuantityWhite": {
+        "doc": "堆叠数量白字过滤；仅作为局部数量OCR的颜色参数。",
+        "recognition": {
+            "type": "ColorMatch",
+            "param": {
+                "roi": [
+                    210,
+                    140,
+                    900,
+                    390
+                ],
+                "method": 4,
+                "lower": [
+                    220,
+                    220,
+                    220
+                ],
+                "upper": [
+                    255,
+                    255,
+                    255
+                ],
+                "count": 1
+            }
+        }
     }
 }

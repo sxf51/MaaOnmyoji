@@ -68,6 +68,7 @@
         "doc": "在已确认更新提示的窗口中点击更新、下载或重试。"
     },
     "StartupDownloading": {
+        "pre_delay": 0,
         "desc": "等待更新或资源下载完成",
         "recognition": {
             "type": "OCR",
@@ -140,15 +141,7 @@
                 ]
             }
         },
-        "action": {
-            "type": "Custom",
-            "param": {
-                "custom_action": "DisableNode",
-                "custom_action_param": {
-                    "node_name": "StartupSkipAnimation"
-                }
-            }
-        },
+        "action": "DoNothing",
         "next": [
             "[JumpBack]CommonBountyInterrupt",
             "StartupHome",
@@ -269,6 +262,8 @@
         "doc": "进入已选定的服务器，等待庭院加载。"
     },
     "StartupHome": {
+        "pre_delay": 0,
+        "post_delay": 0,
         "desc": "通过颜色标志、设备时间和玩家身份共同判断主界面",
         "recognition": {
             "type": "And",
@@ -371,7 +366,7 @@
                     400,
                     90
                 ],
-                "template": "Home.png",
+                "template": "Startup/Home.png",
                 "threshold": 0.8
             }
         },
@@ -398,7 +393,7 @@
                     400,
                     90
                 ],
-                "template": "Back.png",
+                "template": "Common/Back.png",
                 "threshold": 0.8
             }
         },
@@ -425,7 +420,7 @@
                     36,
                     33
                 ],
-                "template": "HomeBack.png",
+                "template": "Startup/HomeBack.png",
                 "threshold": 0.8
             }
         },

@@ -76,7 +76,34 @@ class LocalInputTest(unittest.TestCase):
         detail=InputTarget().analyze(ctx,argv)
         self.assertEqual(detail.box,self.region)
         ctx.run_recognition.assert_called_once_with('Test',self.image)
-        self.assertEqual(ctx.method_calls[0][0],'run_recognition')
+        calls=[call[0] for call in ctx.method_calls]
+        self.assertLess(calls.index('run_recognition'),calls.index('run_recognition_direct'))
+
+    @staticmethod
+    def gated_node(roi='Test',offset=(0,0,0,0)):
+        guard={'sub_name':'SafeInput_Test','recognition':{'type':'Custom','param':{
+            'roi':roi,'roi_offset':list(offset),'custom_recognition':'InputTarget',
+            'custom_recognition_param':{'target_node':'Test'}}}}
+        return {'action':'Click','recognition':{'type':'And','param':{'all_of':['Test',guard],'box_index':1}}}
+
+    def test_native_gate_box_is_reused_without_recognizing_again(self):
+        ctx=context()
+        ctx.get_node_data.return_value=self.gated_node()
+        argv=NS(node_name='SafeInput_Test',image=self.image,roi=[510,410,80,30],
+            custom_recognition_param={'target_node':'Test'})
+        detail=InputTarget().analyze(ctx,argv)
+        self.assertEqual(detail.box,[510,410,80,30])
+        ctx.run_recognition.assert_not_called()
+        ctx.run_recognition_direct.assert_called_once()
+
+    def test_unwired_or_shifted_roi_recognizes_the_target_again(self):
+        for node in (self.gated_node(roi=[0,0,1280,720]),self.gated_node(offset=(5,0,0,0))):
+            ctx=context()
+            ctx.get_node_data.return_value=node
+            argv=NS(node_name='SafeInput_Test',image=self.image,roi=[510,410,80,30],
+                custom_recognition_param={'target_node':'Test'})
+            self.assertEqual(InputTarget().analyze(ctx,argv).box,self.region)
+            ctx.run_recognition.assert_called_once_with('Test',self.image)
 
     def test_wrong_page_never_authorizes_confirmation_or_runs_ocr(self):
         ctx=context(('确定',[90,45,60,25]))
@@ -124,7 +151,7 @@ class LocalInputTest(unittest.TestCase):
 
 
 class LocalPipelineCoverageTest(unittest.TestCase):
-    def test_every_production_touch_has_local_protection_and_no_global_ocr(self):
+    def test_every_production_touch_has_local_protection(self):
         folder=Path(os.environ.get('MAAYYS_PIPELINE_TEST_DIR',ROOT/'assets/resource/base/pipeline'))
         nodes={k:v for p in folder.glob('*.json') if p.name!='Example.json' for k,v in load_jsonc(p).items()}
         count=0
@@ -134,12 +161,18 @@ class LocalPipelineCoverageTest(unittest.TestCase):
             custom=action.get('param',{}).get('custom_action') if isinstance(action,dict) else None
             if kind in ('Click','Swipe','LongPress','TouchDown','TouchMove') or custom=='BezierSwipe':
                 count+=1
-                self.assertEqual(node['recognition']['param']['custom_recognition'],'InputTarget',name)
-                public=node['recognition']['param']['custom_recognition_param']['target_node']
+                # The native target gates the custom check so misses never leave the framework.
+                recognition=node['recognition']
+                self.assertEqual(recognition['type'],'And',name)
+                public,guard=recognition['param']['all_of']
+                self.assertEqual(recognition['param']['box_index'],1,name)
+                self.assertEqual(guard['sub_name'],name)
+                self.assertEqual(guard['recognition']['param']['custom_recognition'],'InputTarget',name)
+                self.assertEqual(guard['recognition']['param']['custom_recognition_param'],{'target_node':public})
+                # The gate's same-frame target box is handed to InputTarget as roi.
+                self.assertEqual(guard['recognition']['param']['roi'],public,name)
                 self.assertEqual(public,name.removeprefix('SafeInput_'))
                 self.assertNotEqual(nodes[public].get('recognition','DirectHit'),'DirectHit')
-            self.assertNotIn('CommonPurchaseStop',node.get('next',[]),name)
-            self.assertNotIn('CommonSafetyScreenReadable',str(node.get('recognition',{})),name)
         self.assertGreater(count,150)
 
 

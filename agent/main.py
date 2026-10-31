@@ -2,21 +2,18 @@ import sys
 
 # 导入模块即完成自定义动作注册。
 from custom.action import (  # noqa: F401
+    battle_session,
     bezier_swipe,
     drop_statistics,
     general,
-    page_detection,
     target_count,
     team_config,
 )
 from custom.action.drop_statistics import recover_pending_reports, shutdown_reporter
-from custom.reco import general as general_reco  # noqa: F401
 from custom.reco import startup as startup_reco  # noqa: F401
-from custom.reco import page as page_reco  # noqa: F401
 from custom.reco import input_target as input_target_reco  # noqa: F401
 from custom.sink import (
     aspect_ratio,  # noqa: F401
-    subtask_state,  # noqa: F401
 )
 from maa.agent.agent_server import AgentServer
 from maa.define import LoggingLevelEnum

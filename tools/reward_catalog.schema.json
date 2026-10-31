@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "templates": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "pattern": "\\.png$"
+        },
+        "minItems": 1
+      },
+      "threshold": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1
+      },
+      "roi": {
+        "type": "array",
+        "prefixItems": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "integer"
+          },
+          {
+            "type": "integer",
+            "minimum": 1
+          },
+          {
+            "type": "integer",
+            "minimum": 1
+          }
+        ],
+        "minItems": 4,
+        "maxItems": 4
+      },
+      "green_mask": {
+        "type": "boolean"
+      },
+      "quantity_mode": {
+        "enum": [
+          "single",
+          "optional",
+          "required"
+        ]
+      },
+      "quantity_roi": {
+        "type": "array",
+        "prefixItems": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "integer"
+          },
+          {
+            "type": "integer",
+            "minimum": 1
+          },
+          {
+            "type": "integer",
+            "minimum": 1
+          }
+        ],
+        "minItems": 4,
+        "maxItems": 4
+      },
+      "quantity_min_white_pixels": {
+        "type": "integer",
+        "minimum": 0
+      }
+    }
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "业火轮·低级": {
+    "templates": [
+      "业火轮·低级.png"
+    ],
+    "roi": [
+      210,
+      145,
+      890,
+      240
+    ],
+    "threshold": 0.88,
+    "quantity_mode": "optional",
+    "quantity_roi": [
+      55,
+      73,
+      42,
+      23
+    ]
+  }
+}

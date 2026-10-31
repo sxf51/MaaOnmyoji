@@ -75,14 +75,15 @@ class AwakeningTest(unittest.TestCase):
             self.assertIsNotNone(re.search(param['expected'],label),label)
         for label in ('准备','加成','点击屏幕继续'):
             self.assertIsNone(re.search(param['expected'],label),label)
-        self.assertEqual(param['roi'],[0,640,1280,80])
+        self.assertEqual(param['roi'],[600,676,680,44])
         for name in ('AwakeningChallenging','MitamaChallenging','CommonActivityChallenging','CurrentActivityChallenging'):
-            self.assertEqual(self.nodes[name]['recognition']['param']['all_of'],['PageBattle'])
+            self.assertEqual(self.nodes[name]['recognition']['param']['all_of'],
+                             ['CommonBattleWait'] if name in ('AwakeningChallenging','MitamaChallenging') else ['PageBattle'])
 
     def test_deployment_wait_precedes_preparation_and_never_counts_or_clicks(self):
         choices=self.nodes['AwakeningBattle']['next']
         self.assertLess(choices.index('[JumpBack]CommonBattleEnteringWait'),choices.index('[JumpBack]DailyPrepare'))
-        self.assertIn('[JumpBack]AwakeningChallenging',choices)
+        self.assertIn('[JumpBack]CommonBattleWait',choices)
         wait=self.nodes['CommonBattleEnteringWait']
         self.assertEqual(wait['action'],'DoNothing')
         self.assertEqual(wait['timeout'],60000)
@@ -98,7 +99,7 @@ class AwakeningTest(unittest.TestCase):
 
     def test_buff_is_optional_and_checks_only_the_awakening_row(self):
         option=self.task['option']['觉醒材料加成']
-        self.assertEqual(option['default_case'],'No')
+        self.assertEqual(option['default_case'],'Yes')
         enabled=option['cases'][1]['pipeline_override']
         self.assertTrue(enabled['AwakeningEnableBuff']['enabled'])
         self.assertTrue(enabled['AwakeningDisableBuff']['enabled'])

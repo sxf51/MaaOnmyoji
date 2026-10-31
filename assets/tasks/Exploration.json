@@ -6,7 +6,8 @@
             "entry": "ExplorationTask",
             "option": [
                 "探索作战次数",
-                "探索章节"
+                "探索章节",
+                "探索突破券阈值"
             ],
             "description": "$exploration_task_doc"
         }
@@ -54,6 +55,79 @@
                     }
                 }
             }
+        },
+        "探索突破券阈值": {
+            "type": "select",
+            "label": "突破券达到数量时结束探索（地图、章节入口及每场结算后检查）",
+            "default_case": "不检查",
+            "cases": [
+                {
+                    "name": "不检查",
+                    "pipeline_override": {
+                        "ExplorationTicketThreshold": {
+                            "enabled": false
+                        }
+                    }
+                },
+                {
+                    "name": "25张及以上",
+                    "pipeline_override": {
+                        "ExplorationTicketThreshold": {
+                            "enabled": true
+                        },
+                        "ExplorationTicketCountMap": {
+                            "recognition": {
+                                "param": {
+                                    "expected": "^(2[5-9]|30)\\s*/\\s*30$"
+                                }
+                            }
+                        },
+                        "ExplorationTicketCountEntrance": {
+                            "recognition": {
+                                "param": {
+                                    "expected": "^(2[5-9]|30)\\s*/\\s*30$"
+                                }
+                            }
+                        },
+                        "ExplorationTicketCountField": {
+                            "recognition": {
+                                "param": {
+                                    "expected": "^(2[5-9]|30)\\s*/\\s*30$"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "30张（已满）",
+                    "pipeline_override": {
+                        "ExplorationTicketThreshold": {
+                            "enabled": true
+                        },
+                        "ExplorationTicketCountMap": {
+                            "recognition": {
+                                "param": {
+                                    "expected": "^30\\s*/\\s*30$"
+                                }
+                            }
+                        },
+                        "ExplorationTicketCountEntrance": {
+                            "recognition": {
+                                "param": {
+                                    "expected": "^30\\s*/\\s*30$"
+                                }
+                            }
+                        },
+                        "ExplorationTicketCountField": {
+                            "recognition": {
+                                "param": {
+                                    "expected": "^30\\s*/\\s*30$"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
         }
     }
 }
