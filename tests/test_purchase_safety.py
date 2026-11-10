@@ -18,8 +18,18 @@ class PurchasePipelineTest(unittest.TestCase):
             if file.name != "Example.json":
                 cls.nodes.update(load_jsonc(file))
 
+    def test_navigation_retry_cannot_send_input(self):
+        retry = self.nodes["NativeNavRetry"]
+        self.assertNotIn("recognition", retry)
+        self.assertEqual((retry["action"], retry["next"]), ("DoNothing", []))
+        users = {name for name, node in self.nodes.items() if "NativeNavRetry" in node.get("next", [])}
+        self.assertEqual(len(users), 25)
+        self.assertTrue(all(name.startswith("Native") for name in users))
+
     def test_every_production_input_requires_matched_target_and_local_guard(self):
         count = 0
+        navigation_steps = {item.removeprefix("[JumpBack]") for name, node in self.nodes.items() if name.startswith("Navigate")
+                            for item in node.get("next", []) if item.startswith("[JumpBack]Native")}
         for name, node in self.nodes.items():
             action = node.get("action", "DoNothing")
             kind = action.get("type") if isinstance(action, dict) else action
@@ -36,13 +46,12 @@ class PurchasePipelineTest(unittest.TestCase):
                     "SafeInput_DailyPrepare": "DailyPreparationPassed",
                     "SafeInput_CommonActivityPrepare": "CommonActivityPreparationPassed",
                     "SafeInput_CurrentActivityPrepare": "CurrentActivityPreparationPassed",
-                    "SafeInput_MitamaRoomMemberReady": "MitamaRoomPreparationPassed",
                 }
                 if name == "SafeInput_CommonRefuseBounty":
                     self.assertEqual(public["next"], ["CommonBountyClosed", name])
                 elif name in preparation_exits:
                     exit_node = preparation_exits[name]
-                    wait = [] if name == 'SafeInput_MitamaRoomMemberReady' else ['[JumpBack]CommonBattleEnteringWait']
+                    wait = ['[JumpBack]CommonBattleEnteringWait']
                     self.assertEqual(public["next"], ["[JumpBack]CommonBountyInterrupt", exit_node, *wait, name])
                     passed = self.nodes[exit_node]
                     self.assertEqual(passed["action"], "DoNothing")
@@ -53,13 +62,17 @@ class PurchasePipelineTest(unittest.TestCase):
                     self.assertEqual(closed["action"], "DoNothing")
                     self.assertTrue(closed["inverse"])
                     self.assertEqual(closed["next"], [])
-                elif name in ("SafeInput_MitamaBattleResult", "SafeInput_MitamaNativeBattleResult"):
-                    stats = "MitamaSoloDropStatistics" if name == "SafeInput_MitamaBattleResult" else "MitamaTeamDropStatistics"
+                elif name in ("SafeInput_MitamaBattleResult", "SafeInput_TeamLeaderBattleResult"):
+                    stats = "MitamaSoloDropStatistics" if name == "SafeInput_MitamaBattleResult" else "TeamLeaderDropStatistics"
                     self.assertEqual(public["next"], ["[JumpBack]CommonBountyInterrupt", "[JumpBack]MitamaTreasurePopup", stats, name])
                     self.assertEqual(self.nodes[stats]["next"], ["[JumpBack]CommonBountyInterrupt", name])
                 elif name == "SafeInput_AwakeningBattleResult":
                     self.assertEqual(public["next"], ["[JumpBack]CommonBountyInterrupt", "[JumpBack]MitamaTreasurePopup", "AwakeningDropStatistics", name])
                     self.assertEqual(self.nodes["AwakeningDropStatistics"]["next"], ["[JumpBack]CommonBountyInterrupt", name])
+                elif name.removeprefix("SafeInput_") in navigation_steps:
+                    # Only a no-input return may follow, and max_hit still limits the retries.
+                    self.assertEqual(public["next"], ["[JumpBack]CommonBountyInterrupt", name, "NativeNavRetry"])
+                    self.assertIsNotNone(public.get("max_hit"))
                 else:
                     self.assertEqual(public["next"], ["[JumpBack]CommonBountyInterrupt", name])
                 target, guard = node["recognition"]["param"]["all_of"]

@@ -38,12 +38,12 @@ class BattleFeaturesTest(unittest.TestCase):
         self.assertEqual(self.nodes['CommonBattleMark']['recognition']['param']['all_of'],['PageBattle'])
         self.assertEqual(self.nodes['CommonBattleMark']['max_hit'],1)
 
-    def test_mark_is_reset_in_solo_leader_member_and_awakening(self):
-        for entry in ('MitamaBattleEntry','MitamaLeaderBattleEntry','MitamaMemberBattleEntry','AwakeningBattleEntry'):
+    def test_mark_is_reset_in_solo_leader_and_awakening(self):
+        for entry in ('MitamaBattleEntry','TeamLeaderBattleEntry','AwakeningBattleEntry'):
             reset=self.nodes[entry]['action']['param']['custom_action_param']['nodes']
             self.assertIn('CommonBattleMark',reset)
             self.assertIn('SafeInput_CommonBattleMark',reset)
-        for loop in ('MitamaBattle','MitamaNativeBattle','AwakeningBattle'):
+        for loop in ('MitamaBattle','TeamLeaderBattle','AwakeningBattle'):
             choices=self.nodes[loop]['next']
             self.assertLess(choices.index('[JumpBack]CommonBattleEnableAuto'),choices.index('[JumpBack]CommonBattleMark'))
             self.assertLess(choices.index('[JumpBack]CommonBattleMark'),choices.index('[JumpBack]CommonBattleWait'))

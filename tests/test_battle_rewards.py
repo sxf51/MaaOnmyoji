@@ -11,7 +11,7 @@ class BattleRewardContracts(unittest.TestCase):
   self.assertEqual(self.nodes['MitamaFinishOnce']['action']['param']['custom_action_param']['continue_node'],'MitamaBattleEntry')
   self.assertNotIn('MitamaSelectBaqin',str(self.nodes['MitamaBattleEntry']))
  def test_auto_and_network_are_shared_by_both_modes(self):
-  for name in ['MitamaBattle','MitamaNativeBattle','AwakeningBattle']:
+  for name in ['MitamaBattle','TeamLeaderBattle','AwakeningBattle']:
    for branch in ['CommonBattleEnteringWait','CommonBattleWait','CommonBattleEnableAuto','CommonNetworkRetry']:
     self.assertIn('[JumpBack]'+branch,self.nodes[name]['next'])
   self.assertEqual(self.nodes['CommonNetworkRetry']['recognition']['param']['all_of'][0],'CommonNetworkPrompt')
@@ -40,12 +40,12 @@ class BattleRewardContracts(unittest.TestCase):
    self.assertNotIn(stats,self.nodes[scope+'BattleFailure']['next'])
 
  def test_default_statistics_nodes_are_disabled_and_private_creation_is_verified(self):
-  for name in ['MitamaSoloDropStatistics','MitamaTeamDropStatistics','AwakeningDropStatistics']:
+  for name in ['MitamaSoloDropStatistics','TeamLeaderDropStatistics','AwakeningDropStatistics']:
    self.assertFalse(self.nodes[name]['enabled'])
-  self.assertIn('MitamaTeamPrivacySelected',self.nodes['MitamaTeamCreate']['recognition']['param']['all_of'])
-  self.assertEqual(self.nodes['SafeInput_MitamaCreateTeam']['next'],['MitamaVerifyTeamPrivacy'])
-  self.assertEqual(self.nodes['SafeInput_MitamaTeamCreate']['next'],['MitamaWaitCreatedRoom'])
+  self.assertIn('TeamLeaderPrivacySelected',self.nodes['TeamLeaderCreateConfirm']['recognition']['param']['all_of'])
+  self.assertEqual(self.nodes['SafeInput_TeamLeaderCreate']['next'],['TeamLeaderVerifyPrivacy'])
+  self.assertEqual(self.nodes['SafeInput_TeamLeaderCreateConfirm']['next'],['TeamLeaderWaitRoom'])
 
  def test_reward_capture_waits_for_reveal_before_matching(self):
-  for name in ['MitamaSoloDropStatistics','MitamaTeamDropStatistics','AwakeningDropStatistics']:
+  for name in ['MitamaSoloDropStatistics','TeamLeaderDropStatistics','AwakeningDropStatistics']:
    self.assertGreaterEqual(self.nodes[name]['pre_delay'],2000)

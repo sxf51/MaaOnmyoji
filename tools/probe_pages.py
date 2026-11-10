@@ -30,6 +30,7 @@ NAVIGATION_ENTRIES = {
     "Explore": "NavigateExplore",
     "MitamaStage": "NavigateMitamaStage",
     "Awakening": "NavigateAwakening",
+    "Bondling": "NavigateBondling",
     "Raid": "NavigateRaid",
     "Mail": "NavigateMail",
     "QuestTasks": "NavigateQuestTasks",

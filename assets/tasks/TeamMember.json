@@ -1,0 +1,58 @@
+{
+    "task": [
+        {
+            "name": "team_member",
+            "label": "$team_member_task",
+            "entry": "TeamMemberTask",
+            "option": [
+                "队长昵称",
+                "组队队员次数"
+            ],
+            "description": "$team_member_task_doc"
+        }
+    ],
+    "option": {
+        "队长昵称": {
+            "type": "input",
+            "label": "队长昵称",
+            "inputs": [
+                {
+                    "name": "完整队长昵称",
+                    "pipeline_type": "string",
+                    "default": "",
+                    "pattern_msg": "请输入队长的完整昵称",
+                    "description": "只接受这个昵称发来的组队邀请",
+                    "verify": "^.+$"
+                }
+            ],
+            "pipeline_override": {
+                "TeamMemberTask": {
+                    "attach": {
+                        "teammate": "{完整队长昵称}"
+                    }
+                }
+            }
+        },
+        "组队队员次数": {
+            "type": "input",
+            "label": "作战次数",
+            "inputs": [
+                {
+                    "name": "队员作战次数",
+                    "pipeline_type": "int",
+                    "default": "15",
+                    "pattern_msg": "请输入作战次数，如15",
+                    "description": "按成功结算次数停止",
+                    "verify": "^[1-9]\\d*$"
+                }
+            ],
+            "pipeline_override": {
+                "TeamMemberTask": {
+                    "attach": {
+                        "target_count": "{队员作战次数}"
+                    }
+                }
+            }
+        }
+    }
+}

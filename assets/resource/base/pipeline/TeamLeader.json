@@ -1,0 +1,1430 @@
+{
+    "TeamLeaderOpen": {
+        "desc": "组队：队长打开组队界面",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    945,
+                    580,
+                    125,
+                    110
+                ],
+                "expected": [
+                    "组队"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "post_delay": 0,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_TeamLeaderOpen"
+        ],
+        "pre_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "on_error": [],
+        "doc": "组队：队长打开组队界面。"
+    },
+    "TeamLeaderCreate": {
+        "desc": "组队：创建队伍",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    396,
+                    569,
+                    813,
+                    100
+                ],
+                "expected": [
+                    "创建队伍"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "post_delay": 0,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_TeamLeaderCreate"
+        ],
+        "pre_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "on_error": [],
+        "doc": "组队：创建队伍。"
+    },
+    "TeamLeaderSetPrivate": {
+        "desc": "组队：不公开",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageTeamCreate",
+                    "TeamLeaderPrivacyText"
+                ],
+                "box_index": 1
+            }
+        },
+        "action": "DoNothing",
+        "post_delay": 0,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_TeamLeaderSetPrivate"
+        ],
+        "pre_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "on_error": [],
+        "doc": "组队：不公开。"
+    },
+    "TeamLeaderCreateConfirm": {
+        "desc": "组队：创建",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageTeamCreate",
+                    "TeamLeaderPrivacySelected",
+                    "TeamLeaderCreateButton"
+                ],
+                "box_index": 2
+            }
+        },
+        "action": "DoNothing",
+        "post_delay": 0,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_TeamLeaderCreateConfirm"
+        ],
+        "pre_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "on_error": [],
+        "doc": "组队：创建。"
+    },
+    "TeamLeaderOpenInvite": {
+        "desc": "组队：打开邀请列表",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    89,
+                    20,
+                    132,
+                    42
+                ],
+                "expected": [
+                    "协战队伍"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "post_delay": 0,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_TeamLeaderOpenInvite"
+        ],
+        "pre_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "on_error": [],
+        "doc": "组队：打开邀请列表。"
+    },
+    "TeamLeaderFindTeammate": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ConfigureTeamRecognition",
+                "custom_action_param": {
+                    "nodes": [
+                        "TeamLeaderTeammateName",
+                        "TeamLeaderRoomTeammate"
+                    ]
+                }
+            }
+        },
+        "next": [
+            "TeamLeaderInviteSearch"
+        ]
+    },
+    "TeamLeaderInviteSearch": {
+        "doc": "在当前栏查找队友：先匹配昵称；人数放得下一屏时直接换栏，否则下滑至预算用尽后换栏。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_TeamLeaderSelectTeammate",
+            "TeamLeaderInviteListFits",
+            "TeamLeaderInviteListAtBottom",
+            "TeamLeaderInviteRememberList",
+            "TeamLeaderInviteAdvance"
+        ],
+        "timeout": 20000
+    },
+    "TeamLeaderInviteListAtBottom": {
+        "doc": "上次下滑后列表和栏位都没变，说明已到底，直接换栏。实测静止噪声约 4%，真实滑动至少 36%，切栏时栏位区约 44%；带上栏位区可避免切栏后沿用上一栏的基准帧。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "FrameUnchanged",
+                "custom_recognition_param": {
+                    "regions": [
+                        [
+                            346,
+                            178,
+                            590,
+                            355
+                        ],
+                        [
+                            330,
+                            85,
+                            455,
+                            60
+                        ]
+                    ],
+                    "max_changed_ratio": 0.15
+                }
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "TeamLeaderInviteAdvance"
+        ]
+    },
+    "TeamLeaderInviteListFits": {
+        "doc": "一屏固定显示 8 人；在线人数不超过 8 时无需滑动。读不出人数时不命中，退回滑动查找。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "^在线\\D*[0-8]$",
+                "roi": [
+                    838,
+                    98,
+                    122,
+                    46
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "TeamLeaderInviteAdvance"
+        ]
+    },
+    "TeamLeaderInviteAdvance": {
+        "doc": "当前栏已查完，按 最近、寮友、跨区 的顺序进入下一个存在的栏；都查完则失败。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_TeamLeaderInviteOpenRecent",
+            "SafeInput_TeamLeaderInviteOpenGuild",
+            "SafeInput_TeamLeaderInviteOpenCross",
+            "TeamLeaderInviteTeammateMissing"
+        ],
+        "timeout": 5000
+    },
+    "TeamLeaderInviteTeammateMissing": {
+        "doc": "所有栏都没有找到完整昵称匹配的队友，停止任务且不发送邀请。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageTeamInvite"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "NativeFlowFailed"
+        ]
+    },
+    "TeamLeaderInviteTabFriends": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "^好友$",
+                "roi": [
+                    330,
+                    85,
+                    455,
+                    60
+                ]
+            }
+        }
+    },
+    "TeamLeaderInviteTabRecent": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "^最近$",
+                "roi": [
+                    330,
+                    85,
+                    455,
+                    60
+                ]
+            }
+        }
+    },
+    "TeamLeaderInviteTabGuild": {
+        "doc": "按栏名定位，未加入寮时缺少此栏也不影响其余栏。“蔡友”“察友”是该字体的常见误读。",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "^(寮|蔡|察)友$",
+                "roi": [
+                    330,
+                    85,
+                    455,
+                    60
+                ]
+            }
+        }
+    },
+    "TeamLeaderInviteTabCross": {
+        "doc": "“路区”“区”是该字体的常见误读。",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "^(跨|路)?区$",
+                "roi": [
+                    330,
+                    85,
+                    455,
+                    60
+                ]
+            }
+        }
+    },
+    "TeamLeaderInviteFriendsSelected": {
+        "doc": "选中栏为浅色底（约 228,184,144），未选中栏为深棕底（约 148,95,70），两者范围不重叠。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    {
+                        "sub_name": "TeamLeaderInviteFriendsLabel",
+                        "recognition": {
+                            "type": "And",
+                            "param": {
+                                "all_of": [
+                                    "TeamLeaderInviteTabFriends"
+                                ],
+                                "box_index": 0
+                            }
+                        }
+                    },
+                    {
+                        "recognition": {
+                            "type": "ColorMatch",
+                            "param": {
+                                "roi": "TeamLeaderInviteFriendsLabel",
+                                "method": 4,
+                                "lower": [
+                                    205,
+                                    145,
+                                    110
+                                ],
+                                "upper": [
+                                    240,
+                                    205,
+                                    165
+                                ],
+                                "count": 200
+                            }
+                        }
+                    }
+                ],
+                "box_index": 0
+            }
+        }
+    },
+    "TeamLeaderInviteRecentSelected": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    {
+                        "sub_name": "TeamLeaderInviteRecentLabel",
+                        "recognition": {
+                            "type": "And",
+                            "param": {
+                                "all_of": [
+                                    "TeamLeaderInviteTabRecent"
+                                ],
+                                "box_index": 0
+                            }
+                        }
+                    },
+                    {
+                        "recognition": {
+                            "type": "ColorMatch",
+                            "param": {
+                                "roi": "TeamLeaderInviteRecentLabel",
+                                "method": 4,
+                                "lower": [
+                                    205,
+                                    145,
+                                    110
+                                ],
+                                "upper": [
+                                    240,
+                                    205,
+                                    165
+                                ],
+                                "count": 200
+                            }
+                        }
+                    }
+                ],
+                "box_index": 0
+            }
+        }
+    },
+    "TeamLeaderInviteGuildSelected": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    {
+                        "sub_name": "TeamLeaderInviteGuildLabel",
+                        "recognition": {
+                            "type": "And",
+                            "param": {
+                                "all_of": [
+                                    "TeamLeaderInviteTabGuild"
+                                ],
+                                "box_index": 0
+                            }
+                        }
+                    },
+                    {
+                        "recognition": {
+                            "type": "ColorMatch",
+                            "param": {
+                                "roi": "TeamLeaderInviteGuildLabel",
+                                "method": 4,
+                                "lower": [
+                                    205,
+                                    145,
+                                    110
+                                ],
+                                "upper": [
+                                    240,
+                                    205,
+                                    165
+                                ],
+                                "count": 200
+                            }
+                        }
+                    }
+                ],
+                "box_index": 0
+            }
+        }
+    },
+    "TeamLeaderInviteCrossSelected": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    {
+                        "sub_name": "TeamLeaderInviteCrossLabel",
+                        "recognition": {
+                            "type": "And",
+                            "param": {
+                                "all_of": [
+                                    "TeamLeaderInviteTabCross"
+                                ],
+                                "box_index": 0
+                            }
+                        }
+                    },
+                    {
+                        "recognition": {
+                            "type": "ColorMatch",
+                            "param": {
+                                "roi": "TeamLeaderInviteCrossLabel",
+                                "method": 4,
+                                "lower": [
+                                    205,
+                                    145,
+                                    110
+                                ],
+                                "upper": [
+                                    240,
+                                    205,
+                                    165
+                                ],
+                                "count": 200
+                            }
+                        }
+                    }
+                ],
+                "box_index": 0
+            }
+        }
+    },
+    "TeamLeaderInviteBeforeGuild": {
+        "recognition": {
+            "type": "Or",
+            "param": {
+                "any_of": [
+                    "TeamLeaderInviteFriendsSelected",
+                    "TeamLeaderInviteRecentSelected"
+                ]
+            }
+        }
+    },
+    "TeamLeaderInviteBeforeCross": {
+        "recognition": {
+            "type": "Or",
+            "param": {
+                "any_of": [
+                    "TeamLeaderInviteFriendsSelected",
+                    "TeamLeaderInviteRecentSelected",
+                    "TeamLeaderInviteGuildSelected"
+                ]
+            }
+        }
+    },
+    "TeamLeaderInviteOpenRecent": {
+        "doc": "好友栏已查完，切到最近栏。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageTeamInvite",
+                    "TeamLeaderInviteFriendsSelected",
+                    "TeamLeaderInviteTabRecent"
+                ],
+                "box_index": 2
+            }
+        },
+        "action": "DoNothing",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_TeamLeaderInviteOpenRecent"
+        ],
+        "on_error": []
+    },
+    "TeamLeaderInviteOpenGuild": {
+        "doc": "排在寮友之前的栏已查完，切到寮友栏。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageTeamInvite",
+                    "TeamLeaderInviteBeforeGuild",
+                    "TeamLeaderInviteTabGuild"
+                ],
+                "box_index": 2
+            }
+        },
+        "action": "DoNothing",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_TeamLeaderInviteOpenGuild"
+        ],
+        "on_error": []
+    },
+    "TeamLeaderInviteOpenCross": {
+        "doc": "排在跨区之前的栏已查完，切到跨区栏。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageTeamInvite",
+                    "TeamLeaderInviteBeforeCross",
+                    "TeamLeaderInviteTabCross"
+                ],
+                "box_index": 2
+            }
+        },
+        "action": "DoNothing",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_TeamLeaderInviteOpenCross"
+        ],
+        "on_error": []
+    },
+    "TeamLeaderInviteRecentReady": {
+        "doc": "确认已切到最近栏：重置滑动预算，并等加载动画结束，避免把上一栏的旧列表当成本栏。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "TeamLeaderInviteRecentSelected"
+                ]
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ResetCount",
+                "custom_action_param": {
+                    "nodes": [
+                        "TeamLeaderInviteRememberList"
+                    ],
+                    "strict": true
+                }
+            }
+        },
+        "post_wait_freezes": {
+            "time": 500,
+            "target": [
+                346,
+                178,
+                590,
+                355
+            ],
+            "timeout": 3000
+        },
+        "next": [
+            "TeamLeaderInviteSearch"
+        ]
+    },
+    "TeamLeaderInviteGuildReady": {
+        "doc": "确认已切到寮友栏：重置滑动预算，并等加载动画结束，避免把上一栏的旧列表当成本栏。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "TeamLeaderInviteGuildSelected"
+                ]
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ResetCount",
+                "custom_action_param": {
+                    "nodes": [
+                        "TeamLeaderInviteRememberList"
+                    ],
+                    "strict": true
+                }
+            }
+        },
+        "post_wait_freezes": {
+            "time": 500,
+            "target": [
+                346,
+                178,
+                590,
+                355
+            ],
+            "timeout": 3000
+        },
+        "next": [
+            "TeamLeaderInviteSearch"
+        ]
+    },
+    "TeamLeaderInviteCrossReady": {
+        "doc": "确认已切到跨区栏：重置滑动预算，并等加载动画结束，避免把上一栏的旧列表当成本栏。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "TeamLeaderInviteCrossSelected"
+                ]
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ResetCount",
+                "custom_action_param": {
+                    "nodes": [
+                        "TeamLeaderInviteRememberList"
+                    ],
+                    "strict": true
+                }
+            }
+        },
+        "post_wait_freezes": {
+            "time": 500,
+            "target": [
+                346,
+                178,
+                590,
+                355
+            ],
+            "timeout": 3000
+        },
+        "next": [
+            "TeamLeaderInviteSearch"
+        ]
+    },
+    "TeamLeaderSendInvite": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "^邀请$",
+                "roi": [
+                    710,
+                    541,
+                    138,
+                    71
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_TeamLeaderSendInvite"
+        ],
+        "pre_delay": 0,
+        "post_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "on_error": [],
+        "doc": "向选中的队友发送组队邀请。"
+    },
+    "TeamLeaderComplete": {
+        "desc": "通过 Agent 记录一次成功结算",
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "TargetCountProgress",
+                "custom_action_param": {
+                    "count": 1
+                }
+            }
+        },
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "[JumpBack]SafeInput_TeamLeaderReinviteTick",
+            "[JumpBack]SafeInput_TeamLeaderReinvite",
+            "[JumpBack]SafeInput_CommonConfirm",
+            "TeamLeaderCountDetermine"
+        ],
+        "pre_delay": 0,
+        "post_delay": 0
+    },
+    "TeamLeaderCountDetermine": {
+        "doc": "队长胜利计次后判断继续或结束。路由参数只写在这里：pipeline_override 会整体替换 custom_action_param。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "TargetCountDetermine",
+                "custom_action_param": {
+                    "decision_node": "TeamLeaderCountDetermine",
+                    "continue_node": "TeamLeaderBattleEntry",
+                    "finish_node": "TeamLeaderFinish"
+                }
+            }
+        },
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "TeamLeaderBattleEntry"
+        ]
+    },
+    "TeamLeaderTeammateName": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "^未配置队友$",
+                "roi": [
+                    431,
+                    179,
+                    492,
+                    351
+                ]
+            }
+        }
+    },
+    "TeamLeaderRoomTeammate": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "^未配置队友$",
+                "roi": [
+                    426,
+                    83,
+                    825,
+                    87
+                ]
+            }
+        }
+    },
+    "TeamLeaderFight": {
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "TeamLeaderBattleStarted",
+            "[JumpBack]SafeInput_TeamLeaderReinviteTick",
+            "[JumpBack]SafeInput_TeamLeaderReinvite",
+            "SafeInput_TeamLeaderStart",
+            "TeamLeaderRoomDestroyed"
+        ],
+        "timeout": 180000,
+        "pre_delay": 0,
+        "post_delay": 0
+    },
+    "TeamLeaderSelectTeammate": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageTeamInvite",
+                    "TeamLeaderTeammateName"
+                ],
+                "box_index": 1
+            }
+        },
+        "action": "DoNothing",
+        "post_delay": 0,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_TeamLeaderSelectTeammate"
+        ],
+        "pre_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "on_error": [],
+        "doc": "在邀请列表中选择完整昵称匹配的队友。"
+    },
+    "TeamLeaderInviteScroll": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageTeamInvite"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "post_delay": 0,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_TeamLeaderInviteScroll"
+        ],
+        "pre_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "on_error": [],
+        "doc": "滑动当前栏的邀请列表继续查找。"
+    },
+    "TeamLeaderInviteRememberList": {
+        "doc": "记下滑动前的画面，供 TeamLeaderInviteListAtBottom 比较，本身不输入。这里也是滑动预算：每栏最多 7 次，切栏后由 TeamLeaderInvite*Ready 重置。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "max_hit": 7,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageTeamInvite"
+                ]
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "RememberFrame"
+            }
+        },
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "TeamLeaderInviteScroll"
+        ]
+    },
+    "TeamLeaderStart": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageTeamRoom",
+                    "TeamLeaderRoomTeammate",
+                    "TeamLeaderStartButton"
+                ],
+                "box_index": 2
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_TeamLeaderStart"
+        ],
+        "post_delay": 0,
+        "pre_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "on_error": [],
+        "doc": "确认指定队友已在队伍中后开始战斗。"
+    },
+    "TeamLeaderBattle": {
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "[JumpBack]MitamaTreasurePopup",
+            "TeamLeaderBattleNoResource",
+            "TeamLeaderBattleFailure",
+            "[JumpBack]CommonRewardOverflow",
+            "TeamLeaderDropStatistics",
+            "SafeInput_TeamLeaderBattleResult",
+            "[JumpBack]CommonBattleEnteringWait",
+            "[JumpBack]DailyPrepare",
+            "[JumpBack]SafeInput_DailyRewardPopup",
+            "[JumpBack]CommonBattleEnableAuto",
+            "[JumpBack]CommonBattleMark",
+            "[JumpBack]CommonBattleWait",
+            "[JumpBack]CommonNetworkRetry",
+            "TeamLeaderRoomDestroyed"
+        ],
+        "timeout": 180000,
+        "pre_delay": 0,
+        "post_delay": 0
+    },
+    "TeamLeaderBattleNoResource": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "DailyNoResource"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "[Anchor]TeamLeaderNoResourceTarget"
+        ]
+    },
+    "TeamLeaderBattleResult": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "DailyBattleResult"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "post_delay": 0,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "[JumpBack]MitamaTreasurePopup",
+            "TeamLeaderDropStatistics",
+            "SafeInput_TeamLeaderBattleResult"
+        ],
+        "timeout": 30000,
+        "pre_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "on_error": [],
+        "doc": "结算点击的识别目标；战斗循环直接调用 SafeInput 节点，同一轮完成识别和点击，不经过这里。"
+    },
+    "TeamLeaderBattleAfterResult": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageTeamRoom"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "TeamLeaderComplete"
+        ],
+        "pre_delay": 0,
+        "post_delay": 0
+    },
+    "TeamLeaderBattleFailure": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "DailyBattleFailed"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_TeamLeaderBattleFailedResult"
+        ],
+        "timeout": 30000,
+        "focus": {
+            "Node.Recognition.Succeeded": "御魂战斗失败，任务停止，本场不计次数"
+        }
+    },
+    "TeamLeaderBattleFailedResult": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "DailyBattleResult"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "post_delay": 0,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_TeamLeaderBattleFailedResult"
+        ],
+        "pre_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "on_error": [],
+        "doc": "关闭组队失败结算，返回房间后停止任务。"
+    },
+    "TeamLeaderBattleFailedReturn": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageTeamRoom"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "NativeFlowFailed"
+        ]
+    },
+    "TeamLeaderDropStatistics": {
+        "doc": "奖励入场至少等待2秒；由统计动作确认图标区域持续稳定后，读取最新画面并暂存一次。",
+        "enabled": false,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "DailyBattleResult"
+                ]
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "RewardDropStatistics",
+                "custom_action_param": {
+                    "scope": "Mitama",
+                    "result_node": "DailyBattleResult"
+                }
+            }
+        },
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_TeamLeaderBattleResult"
+        ],
+        "pre_delay": 2000
+    },
+    "TeamLeaderStartButton": {
+        "doc": "识别组队房间右下角的开始或挑战按钮。书法字的“战”压在动态背景上，OCR 每帧读成不同的错字，只有“挑”稳定，所以只要求首字。",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "^(开始|挑.?)$",
+                "roi": [
+                    1100,
+                    560,
+                    180,
+                    160
+                ]
+            }
+        }
+    },
+    "TeamLeaderWaitBattleStart": {
+        "doc": "等待过场、布阵载入、准备、正式战斗或结算；仅原挑战目标仍存在时允许有界重试。",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "TeamLeaderBattleNoResource",
+            "TeamLeaderBattleStarted",
+            "[JumpBack]SafeInput_TeamLeaderStartConfirm",
+            "SafeInput_TeamLeaderStart"
+        ],
+        "timeout": 60000,
+        "pre_delay": 0,
+        "post_delay": 0
+    },
+    "TeamLeaderBattleStarted": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "doc": "已进入准备、战斗或结算时，转入组队战斗处理。",
+        "recognition": {
+            "type": "Or",
+            "param": {
+                "any_of": [
+                    "DailyPrepare",
+                    "PageBattle",
+                    "DailyBattleResult",
+                    "DailyBattleFailed",
+                    "PageLoading",
+                    "PageBattleEntering"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "TeamLeaderBattle"
+        ]
+    },
+    "TeamLeaderStartConfirm": {
+        "doc": "确认组队房间中的开始战斗提示。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageTeamRoom",
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "expected": "是否.*(开始|挑战)|确认.*(开始|挑战)|队员.*未准备",
+                                "roi": [
+                                    280,
+                                    180,
+                                    720,
+                                    300
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "expected": "^(确定|开始)$",
+                                "roi": [
+                                    580,
+                                    340,
+                                    440,
+                                    250
+                                ]
+                            }
+                        }
+                    }
+                ],
+                "box_index": 2
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_TeamLeaderStartConfirm"
+        ],
+        "pre_delay": 0,
+        "post_delay": 0,
+        "pre_wait_freezes": 0,
+        "on_error": []
+    },
+    "TeamLeaderReinvitePrompt": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "邀请",
+                "roi": [
+                    330,
+                    200,
+                    620,
+                    190
+                ]
+            }
+        }
+    },
+    "TeamLeaderReinviteConfirm": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "^确定$",
+                "roi": [
+                    643,
+                    345,
+                    231,
+                    160
+                ]
+            }
+        }
+    },
+    "TeamLeaderReinviteLabel": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "^默认邀请队友$",
+                "roi": [
+                    540,
+                    330,
+                    240,
+                    60
+                ]
+            }
+        }
+    },
+    "TeamLeaderReinviteUnchecked": {
+        "doc": "未勾选是深色圆盘：实机 530 像素、OAS 样图 525 像素；已勾选被对勾盖住，OAS 样图只有 288 像素。",
+        "recognition": {
+            "type": "ColorMatch",
+            "param": {
+                "roi": [
+                    540,
+                    340,
+                    42,
+                    42
+                ],
+                "method": 4,
+                "lower": [
+                    40,
+                    30,
+                    20
+                ],
+                "upper": [
+                    100,
+                    85,
+                    70
+                ],
+                "count": 430,
+                "connected": true
+            }
+        }
+    },
+    "TeamLeaderReinviteTick": {
+        "doc": "胜利后的弹窗有“默认邀请队友”时先勾选。只在确认未勾选时点击，避免把已勾选点掉；失败后的弹窗没有这一项，直接确定。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "TeamLeaderReinvitePrompt",
+                    "TeamLeaderReinviteLabel",
+                    "TeamLeaderReinviteUnchecked"
+                ],
+                "box_index": 2
+            }
+        },
+        "action": "DoNothing",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_TeamLeaderReinviteTick"
+        ],
+        "on_error": []
+    },
+    "TeamLeaderReinvite": {
+        "doc": "每场结束后询问队长是否再次邀请队友：点确定让队友回房，不能走通用弹窗的取消。勾选默认邀请由 TeamLeaderReinviteTick 先处理。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "TeamLeaderReinvitePrompt",
+                    "TeamLeaderReinviteConfirm"
+                ],
+                "box_index": 1
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_TeamLeaderReinvite"
+        ],
+        "pre_delay": 0,
+        "post_delay": 0,
+        "pre_wait_freezes": 0,
+        "on_error": []
+    },
+    "TeamLeaderRoomDestroyed": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "Or",
+            "param": {
+                "any_of": [
+                    "PageHome",
+                    "PageExplore",
+                    "PageTeamList"
+                ]
+            }
+        },
+        "next": [
+            "NativeFlowFailed"
+        ],
+        "doc": "受邀入房或已开战阶段房间解散，停止且不增加成功次数。"
+    },
+    "TeamLeaderBattleEntry": {
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ResetCount",
+                "custom_action_param": {
+                    "nodes": [
+                        "SafeInput_TeamLeaderStart",
+                        "SafeInput_TeamLeaderStartConfirm",
+                        "SafeInput_TeamLeaderReinviteTick",
+                        "SafeInput_TeamLeaderReinvite",
+                        "SafeInput_CommonBattleEnableAuto",
+                        "SafeInput_CommonNetworkRetry",
+                        "SafeInput_CommonRewardOverflow",
+                        "SafeInput_MitamaTreasurePopup",
+                        "CommonBattleMark",
+                        "SafeInput_CommonBattleMark",
+                        "SafeInput_DailyPrepare",
+                        "SafeInput_TeamLeaderBattleResult",
+                        "SafeInput_CommonConfirm",
+                        "CommonBattleWait",
+                        "CommonBattleEnteringWait",
+                        "CommonCutscene",
+                        "SafeInput_DailyRewardPopup"
+                    ],
+                    "strict": true
+                }
+            }
+        },
+        "next": [
+            "TeamLeaderFight"
+        ],
+        "pre_delay": 0,
+        "post_delay": 0
+    },
+    "TeamLeaderPrivacyText": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "不公开",
+                "roi": [
+                    380,
+                    395,
+                    640,
+                    150
+                ]
+            }
+        }
+    },
+    "TeamLeaderPrivacySelected": {
+        "doc": "“不公开”和其左侧蓝色勾选图标同时命中才允许创建；图标相对文字定位，兼容两种创建窗口布局。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageTeamCreate",
+                    {
+                        "sub_name": "TeamLeaderPrivacyLabel",
+                        "recognition": {
+                            "type": "And",
+                            "param": {
+                                "all_of": [
+                                    "TeamLeaderPrivacyText"
+                                ],
+                                "box_index": 0
+                            }
+                        }
+                    },
+                    {
+                        "recognition": {
+                            "type": "TemplateMatch",
+                            "param": {
+                                "template": "Mitama/PrivateSelected.png",
+                                "roi": "TeamLeaderPrivacyLabel",
+                                "threshold": 0.9,
+                                "roi_offset": [
+                                    -45,
+                                    -14,
+                                    45,
+                                    28
+                                ]
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_TeamLeaderCreateConfirm"
+        ]
+    },
+    "TeamLeaderVerifyPrivacy": {
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "TeamLeaderPrivacySelected",
+            "SafeInput_TeamLeaderSetPrivate"
+        ],
+        "timeout": 5000
+    },
+    "TeamLeaderCreateButton": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    530,
+                    480,
+                    430,
+                    145
+                ],
+                "expected": [
+                    "^创建$"
+                ]
+            }
+        }
+    },
+    "TeamLeaderWaitRoom": {
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "TeamLeaderRoomReady",
+            "SafeInput_TeamLeaderCreateConfirm"
+        ],
+        "timeout": 5000
+    },
+    "TeamLeaderRoomReady": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageTeamRoom"
+                ]
+            }
+        },
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_TeamLeaderOpenInvite"
+        ]
+    },
+    "TeamLeaderFinish": {
+        "doc": "达到次数后回到发起组队的副本收尾，由入口节点的 anchor 决定。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "[Anchor]TeamLeaderFinishTarget"
+        ]
+    }
+}

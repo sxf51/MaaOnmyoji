@@ -17,7 +17,7 @@ class NativePipelineTests(unittest.TestCase):
                 self.nodes.update(load_jsonc(filename))
 
     def test_navigation_callers_check_destination_before_jumpback(self):
-        for name in ("ReturnMain", "MitamaNavigate", "MitamaDisableBuff", "RealmRaidTask",
+        for name in ("ReturnMain", "MitamaDisableBuff", "RealmRaidTask",
                      "DailyRewardsTask", "NativeRewardsToTasks", "NativeRewardsToRewards"):
             choices = self.nodes[name]["next"]
             self.assertTrue(choices[-1].startswith("[JumpBack]Navigate"), name)
@@ -25,7 +25,7 @@ class NativePipelineTests(unittest.TestCase):
 
     def test_battle_never_counts_waiting_room_without_settlement(self):
         # The raid loop checks settlement only once the battle exit button is gone.
-        loops = {"ExplorationBattle": "ExplorationBattle", "MitamaNativeBattle": "MitamaNativeBattle",
+        loops = {"ExplorationBattle": "ExplorationBattle", "TeamLeaderBattle": "TeamLeaderBattle",
                  "RealmRaidBattle": "RealmRaidBattleSettle"}
         for prefix, loop in loops.items():
             after = prefix + "AfterResult"
@@ -47,9 +47,10 @@ class NativePipelineTests(unittest.TestCase):
             target=self.nodes[name]['action']['param']['target']
             self.assertLess(target[1]+target[3],button_roi[1])
 
-    def test_invitation_click_targets_accept_button(self):
-        param = self.nodes["MitamaAcceptNamedInvitation"]["recognition"]["param"]
-        self.assertEqual(param["all_of"][param["box_index"]], "MitamaAcceptInvite")
+    def test_invitation_click_targets_accept_icon(self):
+        param = self.nodes["TeamMemberAccept"]["recognition"]["param"]
+        self.assertEqual(param["all_of"], ["TeamMemberLeaderName", "TeamMemberAcceptIcon"])
+        self.assertEqual(param["all_of"][param["box_index"]], "TeamMemberAcceptIcon")
 
     def test_mitama_prepare_accepts_automatic_battle_transition(self):
         prepare = self.nodes["MitamaPrepare"]
@@ -60,7 +61,7 @@ class NativePipelineTests(unittest.TestCase):
         self.assertEqual(passed["action"], "DoNothing")
         self.assertEqual(passed["next"], [])
         self.assertIn("MitamaChallenging", passed["recognition"]["param"]["any_of"])
-        self.assertIn("[JumpBack]MitamaPrepare", self.nodes["MitamaNativeBattle"]["next"])
+        self.assertIn("[JumpBack]DailyPrepare", self.nodes["TeamLeaderBattle"]["next"])
 
     def test_mitama_treasure_supports_both_reference_titles(self):
         pattern = self.nodes["MitamaTreasurePopup"]["recognition"]["param"]["expected"]
@@ -70,7 +71,7 @@ class NativePipelineTests(unittest.TestCase):
 
     def test_context_specific_confirmations_require_page_and_prompt(self):
         for name, page in (("DailyMailClaimConfirm", "PageMail"),
-                           ("MitamaTeamStartConfirm", "PageTeamRoom")):
+                           ("TeamLeaderStartConfirm", "PageTeamRoom")):
             param = self.nodes[name]["recognition"]["param"]
             self.assertEqual(param["all_of"][0], page)
             self.assertEqual(len(param["all_of"]), 3)
@@ -82,9 +83,9 @@ class NativePipelineTests(unittest.TestCase):
             self.assertEqual(self.nodes[name]["recognition"]["param"]["all_of"], ["PageQuestTasks"])
 
     def test_team_start_uses_verified_button_box(self):
-        param = self.nodes["MitamaNamedTeamStart"]["recognition"]["param"]
-        self.assertEqual(param["all_of"][param["box_index"]], "MitamaTeamStartButton")
-        self.assertIs(self.nodes["SafeInput_MitamaNamedTeamStart"]["action"]["param"]["target"], True)
+        param = self.nodes["TeamLeaderStart"]["recognition"]["param"]
+        self.assertEqual(param["all_of"][param["box_index"]], "TeamLeaderStartButton")
+        self.assertIs(self.nodes["SafeInput_TeamLeaderStart"]["action"]["param"]["target"], True)
 
     def test_settlement_labels_cover_screen_and_blank_area_variants(self):
         for name in ("DailyBattleResult", "PageResult", "MitamaBattleResult", "CommonActivityBattleResult", "CurrentActivityBattleResult"):

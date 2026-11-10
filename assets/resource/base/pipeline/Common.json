@@ -18,7 +18,7 @@
     },
     "CommonCutscene": {
         "pre_delay": 0,
-        "post_delay": 0,
+        "post_delay": 500,
         "desc": "通用过场图",
         "recognition": {
             "type": "OCR",
@@ -34,7 +34,8 @@
                     "yys.163.com"
                 ]
             }
-        }
+        },
+        "max_hit": 240
     },
     "CommonConfirm": {
         "desc": "通用取消弹窗",
@@ -368,7 +369,8 @@
             "CommonBattleEnteringGone"
         ],
         "timeout": 60000,
-        "rate_limit": 250
+        "rate_limit": 250,
+        "max_hit": 20
     },
     "CommonBattleEnteringGone": {
         "pre_delay": 0,
@@ -400,7 +402,8 @@
         },
         "action": "DoNothing",
         "post_delay": 1000,
-        "next": []
+        "next": [],
+        "max_hit": 1800
     },
     "CommonBattleEnableAuto": {
         "doc": "确认正式战斗且仍显示手动后切换自动。",

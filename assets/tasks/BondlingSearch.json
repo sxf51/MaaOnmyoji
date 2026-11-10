@@ -1,0 +1,361 @@
+{
+    "task": [
+        {
+            "name": "bondling_search",
+            "label": "$bondling_search_task",
+            "entry": "BondlingSearchTask",
+            "option": [
+                "契灵探查次数",
+                "契灵锁定阵容",
+                "契灵更换队伍预设",
+                "契灵友方绿标"
+            ],
+            "description": "$bondling_search_task_doc"
+        }
+    ],
+    "option": {
+        "契灵探查次数": {
+            "type": "input",
+            "label": "$battle_count",
+            "description": "成功结算才计数；连续点击探查三次仍未进入战斗（契灵已满五只）时提前结束。",
+            "inputs": [
+                {
+                    "name": "探查次数",
+                    "pipeline_type": "int",
+                    "default": "10",
+                    "pattern_msg": "请输入探查次数，如10",
+                    "verify": "^[1-9]\\d*$",
+                    "description": "请输入探查次数，如10"
+                }
+            ],
+            "pipeline_override": {
+                "BondlingSearchTask": {
+                    "attach": {
+                        "target_count": "{探查次数}"
+                    }
+                }
+            }
+        },
+        "契灵锁定阵容": {
+            "type": "switch",
+            "label": "锁定阵容（自动准备）",
+            "description": "探查前确认底部阵容锁已锁定，未锁定时点击锁图标；关闭时不检查也不改变锁定状态。",
+            "default_case": "Yes",
+            "cases": [
+                {
+                    "name": "No",
+                    "pipeline_override": {
+                        "BondlingSearchLockTeam": {
+                            "enabled": false
+                        }
+                    }
+                },
+                {
+                    "name": "Yes",
+                    "pipeline_override": {
+                        "BondlingSearchLockTeam": {
+                            "enabled": true
+                        }
+                    }
+                }
+            ]
+        },
+        "契灵更换队伍预设": {
+            "type": "switch",
+            "label": "更换队伍预设",
+            "default_case": "No",
+            "cases": [
+                {
+                    "name": "No",
+                    "pipeline_override": {
+                        "BondlingSearchPreset": {
+                            "enabled": false
+                        }
+                    }
+                },
+                {
+                    "name": "Yes",
+                    "pipeline_override": {
+                        "BondlingSearchPreset": {
+                            "enabled": true
+                        }
+                    },
+                    "option": [
+                        "契灵预设分组与队伍"
+                    ]
+                }
+            ],
+            "description": "开始挑战前完成分组、队伍、应用和出战确认；未找到入口或同款预设窗口时停止，不跳过换队。"
+        },
+        "契灵预设分组与队伍": {
+            "type": "input",
+            "label": "预设分组与队伍",
+            "inputs": [
+                {
+                    "name": "分组",
+                    "pipeline_type": "string",
+                    "default": "默认分组",
+                    "pattern_msg": "分组名称",
+                    "description": "分组名称",
+                    "verify": "^.*\\S.*$"
+                },
+                {
+                    "name": "队伍",
+                    "pipeline_type": "string",
+                    "default": "默认队伍",
+                    "pattern_msg": "队伍名称",
+                    "description": "队伍名称",
+                    "verify": "^.*\\S.*$"
+                }
+            ],
+            "pipeline_override": {
+                "TeamPresetSelectGroup": {
+                    "recognition": {
+                        "param": {
+                            "expected": [
+                                "{分组}"
+                            ]
+                        }
+                    }
+                },
+                "TeamPresetGroupSelected": {
+                    "recognition": {
+                        "param": {
+                            "all_of": [
+                                {
+                                    "sub_name": "TeamPresetSelectedGroupText",
+                                    "recognition": {
+                                        "type": "OCR",
+                                        "param": {
+                                            "roi": [
+                                                411,
+                                                161,
+                                                112,
+                                                372
+                                            ],
+                                            "expected": [
+                                                "{分组}"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "recognition": {
+                                        "type": "ColorMatch",
+                                        "param": {
+                                            "roi": "TeamPresetSelectedGroupText",
+                                            "method": 4,
+                                            "lower": [
+                                                235,
+                                                175,
+                                                80
+                                            ],
+                                            "upper": [
+                                                255,
+                                                230,
+                                                175
+                                            ],
+                                            "count": 50
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                },
+                "TeamPresetSelectTeamConfigured": {
+                    "recognition": {
+                        "param": {
+                            "expected": [
+                                "{队伍}"
+                            ]
+                        }
+                    }
+                },
+                "TeamPresetApplyIcon": {
+                    "recognition": {
+                        "param": {
+                            "all_of": [
+                                {
+                                    "sub_name": "TeamPresetTeamText",
+                                    "recognition": {
+                                        "type": "OCR",
+                                        "param": {
+                                            "roi": [
+                                                544,
+                                                160,
+                                                376,
+                                                320
+                                            ],
+                                            "expected": [
+                                                "{队伍}"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "recognition": {
+                                        "type": "TemplateMatch",
+                                        "param": {
+                                            "roi": "TeamPresetTeamText",
+                                            "roi_offset": [
+                                                0,
+                                                -5,
+                                                300,
+                                                15
+                                            ],
+                                            "template": [
+                                                "TeamPreset/PresetApply.png",
+                                                "TeamPreset/PresetApplySelected.png"
+                                            ],
+                                            "threshold": [
+                                                0.8,
+                                                0.9
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "契灵友方绿标": {
+            "type": "switch",
+            "label": "友方绿标",
+            "description": "按固定战斗镜头下的友方站位点击，每场正式战斗最多一次；默认关闭。镜头旋转或站位变化后落点可能不对应，请保持镜头固定。",
+            "default_case": "No",
+            "cases": [
+                {
+                    "name": "No",
+                    "pipeline_override": {
+                        "CommonBattleMark": {
+                            "enabled": false
+                        }
+                    }
+                },
+                {
+                    "name": "Yes",
+                    "pipeline_override": {
+                        "CommonBattleMark": {
+                            "enabled": true
+                        }
+                    },
+                    "option": [
+                        "契灵绿标站位"
+                    ]
+                }
+            ]
+        },
+        "契灵绿标站位": {
+            "type": "select",
+            "label": "绿标站位",
+            "default_case": "左一",
+            "cases": [
+                {
+                    "name": "左一",
+                    "pipeline_override": {
+                        "SafeInput_CommonBattleMark": {
+                            "action": {
+                                "param": {
+                                    "target": [
+                                        205,
+                                        530,
+                                        60,
+                                        50
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "左二",
+                    "pipeline_override": {
+                        "SafeInput_CommonBattleMark": {
+                            "action": {
+                                "param": {
+                                    "target": [
+                                        425,
+                                        495,
+                                        60,
+                                        50
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "左三",
+                    "pipeline_override": {
+                        "SafeInput_CommonBattleMark": {
+                            "action": {
+                                "param": {
+                                    "target": [
+                                        614,
+                                        450,
+                                        45,
+                                        35
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "左四",
+                    "pipeline_override": {
+                        "SafeInput_CommonBattleMark": {
+                            "action": {
+                                "param": {
+                                    "target": [
+                                        780,
+                                        495,
+                                        55,
+                                        50
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "左五",
+                    "pipeline_override": {
+                        "SafeInput_CommonBattleMark": {
+                            "action": {
+                                "param": {
+                                    "target": [
+                                        955,
+                                        495,
+                                        60,
+                                        50
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "阴阳师",
+                    "pipeline_override": {
+                        "SafeInput_CommonBattleMark": {
+                            "action": {
+                                "param": {
+                                    "target": [
+                                        585,
+                                        575,
+                                        60,
+                                        45
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        }
+    }
+}

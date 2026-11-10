@@ -26,7 +26,8 @@
         "action": "Click",
         "post_delay": 800,
         "pre_delay": 0,
-        "pre_wait_freezes": 0
+        "pre_wait_freezes": 0,
+        "max_hit": 5
     },
     "SafeInput_CommonClose": {
         "desc": "通用关闭按钮；坐标需按 1280x720 基准实测",
@@ -222,7 +223,8 @@
         "action": "Click",
         "post_delay": 800,
         "pre_delay": 0,
-        "pre_wait_freezes": 0
+        "pre_wait_freezes": 0,
+        "max_hit": 3
     },
     "SafeInput_CommonActivityChallenge": {
         "desc": "重复挑战：点击挑战",
@@ -264,7 +266,8 @@
             "SafeInput_CommonActivityChallenge"
         ],
         "pre_delay": 0,
-        "pre_wait_freezes": 0
+        "pre_wait_freezes": 0,
+        "max_hit": 3
     },
     "SafeInput_CommonActivityPrepare": {
         "desc": "重复挑战：准备",
@@ -293,7 +296,8 @@
         "action": "Click",
         "next": [],
         "pre_delay": 0,
-        "pre_wait_freezes": 0
+        "pre_wait_freezes": 0,
+        "max_hit": 5
     },
     "SafeInput_CommonActivityBattleResult": {
         "desc": "重复挑战：点击屏幕继续",
@@ -329,7 +333,8 @@
             "CommonActivityFinishOnce"
         ],
         "pre_delay": 0,
-        "pre_wait_freezes": 0
+        "pre_wait_freezes": 0,
+        "max_hit": 5
     },
     "SafeInput_CommonActivityFailedBattleResult": {
         "recognition": {
@@ -364,7 +369,8 @@
         ],
         "timeout": 30000,
         "pre_delay": 0,
-        "pre_wait_freezes": 0
+        "pre_wait_freezes": 0,
+        "max_hit": 5
     },
     "SafeInput_CurrentActivityChallenge": {
         "desc": "重复挑战：点击挑战",
@@ -406,7 +412,8 @@
             "SafeInput_CurrentActivityChallenge"
         ],
         "pre_delay": 0,
-        "pre_wait_freezes": 0
+        "pre_wait_freezes": 0,
+        "max_hit": 3
     },
     "SafeInput_CurrentActivityPrepare": {
         "desc": "重复挑战：准备",
@@ -435,7 +442,8 @@
         "action": "Click",
         "next": [],
         "pre_delay": 0,
-        "pre_wait_freezes": 0
+        "pre_wait_freezes": 0,
+        "max_hit": 5
     },
     "SafeInput_CurrentActivityBattleResult": {
         "desc": "重复挑战：点击屏幕继续",
@@ -471,7 +479,8 @@
             "CurrentActivityFinishOnce"
         ],
         "pre_delay": 0,
-        "pre_wait_freezes": 0
+        "pre_wait_freezes": 0,
+        "max_hit": 5
     },
     "SafeInput_CurrentActivityFailedBattleResult": {
         "recognition": {
@@ -506,7 +515,8 @@
         ],
         "timeout": 30000,
         "pre_delay": 0,
-        "pre_wait_freezes": 0
+        "pre_wait_freezes": 0,
+        "max_hit": 5
     },
     "SafeInput_DailyRewardsClaimAllMail": {
         "recognition": {
@@ -639,7 +649,8 @@
             }
         },
         "pre_delay": 0,
-        "pre_wait_freezes": 0
+        "pre_wait_freezes": 0,
+        "max_hit": 150
     },
     "SafeInput_DailyPrepare": {
         "recognition": {
@@ -671,7 +682,8 @@
             }
         },
         "pre_delay": 0,
-        "pre_wait_freezes": 0
+        "pre_wait_freezes": 0,
+        "max_hit": 5
     },
     "SafeInput_DailyBattleResult": {
         "recognition": {
@@ -1269,7 +1281,8 @@
         ],
         "timeout": 30000,
         "pre_delay": 0,
-        "pre_wait_freezes": 0
+        "pre_wait_freezes": 0,
+        "max_hit": 5
     },
     "SafeInput_ExplorationBattleFailedResult": {
         "recognition": {
@@ -1308,7 +1321,8 @@
             "ExplorationBattleFailedReturn"
         ],
         "pre_delay": 0,
-        "pre_wait_freezes": 0
+        "pre_wait_freezes": 0,
+        "max_hit": 5
     },
     "SafeInput_MitamaOpenExplore": {
         "desc": "庭院：进入探索地图",
@@ -1472,7 +1486,8 @@
             }
         },
         "pre_delay": 0,
-        "pre_wait_freezes": 0
+        "pre_wait_freezes": 0,
+        "max_hit": 8
     },
     "SafeInput_MitamaSelectBaqin": {
         "desc": "御魂：选择八岐大蛇层数",
@@ -1566,7 +1581,8 @@
         "post_delay": 800,
         "next": [],
         "pre_delay": 0,
-        "pre_wait_freezes": 0
+        "pre_wait_freezes": 0,
+        "max_hit": 4
     },
     "SafeInput_MitamaCloseBuffPanel": {
         "desc": "御魂：关闭加成菜单 (safe click)",
@@ -1617,10 +1633,10 @@
             "type": "Click",
             "param": {
                 "target": [
-                    949,
-                    410,
-                    294,
-                    132
+                    940,
+                    300,
+                    100,
+                    130
                 ]
             }
         },
@@ -1654,22 +1670,22 @@
         "pre_wait_freezes": 0,
         "max_hit": 3
     },
-    "SafeInput_MitamaTeamLeader": {
+    "SafeInput_TeamLeaderOpen": {
         "desc": "御魂组队：队长打开组队界面",
         "recognition": {
             "type": "And",
             "param": {
                 "all_of": [
-                    "MitamaTeamLeader",
+                    "TeamLeaderOpen",
                     {
-                        "sub_name": "SafeInput_MitamaTeamLeader",
+                        "sub_name": "SafeInput_TeamLeaderOpen",
                         "recognition": {
                             "type": "Custom",
                             "param": {
-                                "roi": "MitamaTeamLeader",
+                                "roi": "TeamLeaderOpen",
                                 "custom_recognition": "InputTarget",
                                 "custom_recognition_param": {
-                                    "target_node": "MitamaTeamLeader"
+                                    "target_node": "TeamLeaderOpen"
                                 }
                             }
                         }
@@ -1682,27 +1698,27 @@
         "post_delay": 800,
         "next": [
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_MitamaCreateTeam"
+            "SafeInput_TeamLeaderCreate"
         ],
         "pre_delay": 0,
         "pre_wait_freezes": 0
     },
-    "SafeInput_MitamaCreateTeam": {
+    "SafeInput_TeamLeaderCreate": {
         "desc": "御魂组队：创建队伍",
         "recognition": {
             "type": "And",
             "param": {
                 "all_of": [
-                    "MitamaCreateTeam",
+                    "TeamLeaderCreate",
                     {
-                        "sub_name": "SafeInput_MitamaCreateTeam",
+                        "sub_name": "SafeInput_TeamLeaderCreate",
                         "recognition": {
                             "type": "Custom",
                             "param": {
-                                "roi": "MitamaCreateTeam",
+                                "roi": "TeamLeaderCreate",
                                 "custom_recognition": "InputTarget",
                                 "custom_recognition_param": {
-                                    "target_node": "MitamaCreateTeam"
+                                    "target_node": "TeamLeaderCreate"
                                 }
                             }
                         }
@@ -1714,27 +1730,27 @@
         "action": "Click",
         "post_delay": 800,
         "next": [
-            "MitamaVerifyTeamPrivacy"
+            "TeamLeaderVerifyPrivacy"
         ],
         "pre_delay": 0,
         "pre_wait_freezes": 0
     },
-    "SafeInput_MitamaTeamSet": {
+    "SafeInput_TeamLeaderSetPrivate": {
         "desc": "御魂组队：不公开",
         "recognition": {
             "type": "And",
             "param": {
                 "all_of": [
-                    "MitamaTeamSet",
+                    "TeamLeaderSetPrivate",
                     {
-                        "sub_name": "SafeInput_MitamaTeamSet",
+                        "sub_name": "SafeInput_TeamLeaderSetPrivate",
                         "recognition": {
                             "type": "Custom",
                             "param": {
-                                "roi": "MitamaTeamSet",
+                                "roi": "TeamLeaderSetPrivate",
                                 "custom_recognition": "InputTarget",
                                 "custom_recognition_param": {
-                                    "target_node": "MitamaTeamSet"
+                                    "target_node": "TeamLeaderSetPrivate"
                                 }
                             }
                         }
@@ -1746,28 +1762,28 @@
         "action": "Click",
         "post_delay": 800,
         "next": [
-            "MitamaVerifyTeamPrivacy"
+            "TeamLeaderVerifyPrivacy"
         ],
         "pre_delay": 0,
         "pre_wait_freezes": 0,
         "max_hit": 3
     },
-    "SafeInput_MitamaTeamCreate": {
+    "SafeInput_TeamLeaderCreateConfirm": {
         "desc": "御魂组队：创建",
         "recognition": {
             "type": "And",
             "param": {
                 "all_of": [
-                    "MitamaTeamCreate",
+                    "TeamLeaderCreateConfirm",
                     {
-                        "sub_name": "SafeInput_MitamaTeamCreate",
+                        "sub_name": "SafeInput_TeamLeaderCreateConfirm",
                         "recognition": {
                             "type": "Custom",
                             "param": {
-                                "roi": "MitamaTeamCreate",
+                                "roi": "TeamLeaderCreateConfirm",
                                 "custom_recognition": "InputTarget",
                                 "custom_recognition_param": {
-                                    "target_node": "MitamaTeamCreate"
+                                    "target_node": "TeamLeaderCreateConfirm"
                                 }
                             }
                         }
@@ -1779,28 +1795,28 @@
         "action": "Click",
         "post_delay": 800,
         "next": [
-            "MitamaWaitCreatedRoom"
+            "TeamLeaderWaitRoom"
         ],
         "pre_delay": 0,
         "pre_wait_freezes": 0,
         "max_hit": 3
     },
-    "SafeInput_MitamaOpenInvite": {
+    "SafeInput_TeamLeaderOpenInvite": {
         "desc": "御魂组队：打开邀请列表",
         "recognition": {
             "type": "And",
             "param": {
                 "all_of": [
-                    "MitamaOpenInvite",
+                    "TeamLeaderOpenInvite",
                     {
-                        "sub_name": "SafeInput_MitamaOpenInvite",
+                        "sub_name": "SafeInput_TeamLeaderOpenInvite",
                         "recognition": {
                             "type": "Custom",
                             "param": {
-                                "roi": "MitamaOpenInvite",
+                                "roi": "TeamLeaderOpenInvite",
                                 "custom_recognition": "InputTarget",
                                 "custom_recognition_param": {
-                                    "target_node": "MitamaOpenInvite"
+                                    "target_node": "TeamLeaderOpenInvite"
                                 }
                             }
                         }
@@ -1820,28 +1836,38 @@
                 ]
             }
         },
-        "post_delay": 600,
+        "post_wait_freezes": {
+            "time": 500,
+            "target": [
+                346,
+                178,
+                590,
+                355
+            ],
+            "timeout": 3000
+        },
+        "post_delay": 0,
         "next": [
-            "MitamaFindTeammate"
+            "TeamLeaderFindTeammate"
         ],
         "pre_delay": 0,
         "pre_wait_freezes": 0
     },
-    "SafeInput_MitamaSendInvite": {
+    "SafeInput_TeamLeaderSendInvite": {
         "recognition": {
             "type": "And",
             "param": {
                 "all_of": [
-                    "MitamaSendInvite",
+                    "TeamLeaderSendInvite",
                     {
-                        "sub_name": "SafeInput_MitamaSendInvite",
+                        "sub_name": "SafeInput_TeamLeaderSendInvite",
                         "recognition": {
                             "type": "Custom",
                             "param": {
-                                "roi": "MitamaSendInvite",
+                                "roi": "TeamLeaderSendInvite",
                                 "custom_recognition": "InputTarget",
                                 "custom_recognition_param": {
-                                    "target_node": "MitamaSendInvite"
+                                    "target_node": "TeamLeaderSendInvite"
                                 }
                             }
                         }
@@ -1857,105 +1883,7 @@
             }
         },
         "next": [
-            "MitamaLeaderFight"
-        ],
-        "pre_delay": 0,
-        "pre_wait_freezes": 0
-    },
-    "SafeInput_MitamaFindLeaderInvite": {
-        "desc": "御魂组队：识别指定队长的邀请",
-        "timeout": 180000,
-        "recognition": {
-            "type": "And",
-            "param": {
-                "all_of": [
-                    "MitamaFindLeaderInvite",
-                    {
-                        "sub_name": "SafeInput_MitamaFindLeaderInvite",
-                        "recognition": {
-                            "type": "Custom",
-                            "param": {
-                                "roi": "MitamaFindLeaderInvite",
-                                "custom_recognition": "InputTarget",
-                                "custom_recognition_param": {
-                                    "target_node": "MitamaFindLeaderInvite"
-                                }
-                            }
-                        }
-                    }
-                ],
-                "box_index": 1
-            }
-        },
-        "action": "Click",
-        "post_delay": 800,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_MitamaAcceptInvite"
-        ],
-        "pre_delay": 0,
-        "pre_wait_freezes": 0
-    },
-    "SafeInput_MitamaAcceptInvite": {
-        "recognition": {
-            "type": "And",
-            "param": {
-                "all_of": [
-                    "MitamaAcceptInvite",
-                    {
-                        "sub_name": "SafeInput_MitamaAcceptInvite",
-                        "recognition": {
-                            "type": "Custom",
-                            "param": {
-                                "roi": "MitamaAcceptInvite",
-                                "custom_recognition": "InputTarget",
-                                "custom_recognition_param": {
-                                    "target_node": "MitamaAcceptInvite"
-                                }
-                            }
-                        }
-                    }
-                ],
-                "box_index": 1
-            }
-        },
-        "action": {
-            "type": "Click",
-            "param": {
-                "target": true
-            }
-        },
-        "pre_delay": 0,
-        "pre_wait_freezes": 0
-    },
-    "SafeInput_MitamaMemberReady": {
-        "desc": "御魂组队：队员准备并等待队长开战",
-        "recognition": {
-            "type": "And",
-            "param": {
-                "all_of": [
-                    "MitamaMemberReady",
-                    {
-                        "sub_name": "SafeInput_MitamaMemberReady",
-                        "recognition": {
-                            "type": "Custom",
-                            "param": {
-                                "roi": "MitamaMemberReady",
-                                "custom_recognition": "InputTarget",
-                                "custom_recognition_param": {
-                                    "target_node": "MitamaMemberReady"
-                                }
-                            }
-                        }
-                    }
-                ],
-                "box_index": 1
-            }
-        },
-        "action": "Click",
-        "post_delay": 1000,
-        "next": [
-            "MitamaWaitTeamStart"
+            "TeamLeaderFight"
         ],
         "pre_delay": 0,
         "pre_wait_freezes": 0
@@ -2021,7 +1949,8 @@
         "action": "Click",
         "next": [],
         "pre_delay": 0,
-        "pre_wait_freezes": 0
+        "pre_wait_freezes": 0,
+        "max_hit": 5
     },
     "SafeInput_MitamaBattleResult": {
         "desc": "御魂：点击屏幕继续",
@@ -2049,73 +1978,35 @@
             }
         },
         "action": "Click",
-        "post_delay": 2200,
+        "post_delay": 600,
         "next": [
             "[JumpBack]CommonBountyInterrupt",
             "[JumpBack]MitamaTreasurePopup",
             "MitamaBattleFailure",
-            "MitamaBattleResult",
+            "MitamaSoloDropStatistics",
+            "SafeInput_MitamaBattleResult",
             "[JumpBack]CommonCutscene",
             "MitamaFinishOnce"
         ],
         "pre_delay": 0,
-        "pre_wait_freezes": 0
-    },
-    "SafeInput_MitamaTeamStart": {
-        "recognition": {
-            "type": "And",
-            "param": {
-                "all_of": [
-                    "MitamaTeamStart",
-                    {
-                        "sub_name": "SafeInput_MitamaTeamStart",
-                        "recognition": {
-                            "type": "Custom",
-                            "param": {
-                                "roi": "MitamaTeamStart",
-                                "custom_recognition": "InputTarget",
-                                "custom_recognition_param": {
-                                    "target_node": "MitamaTeamStart"
-                                }
-                            }
-                        }
-                    }
-                ],
-                "box_index": 1
-            }
-        },
-        "action": {
-            "type": "Click",
-            "param": {
-                "target": [
-                    1186,
-                    617,
-                    55,
-                    60
-                ]
-            }
-        },
-        "pre_delay": 0,
         "pre_wait_freezes": 0,
-        "next": [
-            "MitamaLeaderBattleEntry"
-        ]
+        "max_hit": 5
     },
-    "SafeInput_MitamaSelectNamedTeammate": {
+    "SafeInput_TeamLeaderSelectTeammate": {
         "recognition": {
             "type": "And",
             "param": {
                 "all_of": [
-                    "MitamaSelectNamedTeammate",
+                    "TeamLeaderSelectTeammate",
                     {
-                        "sub_name": "SafeInput_MitamaSelectNamedTeammate",
+                        "sub_name": "SafeInput_TeamLeaderSelectTeammate",
                         "recognition": {
                             "type": "Custom",
                             "param": {
-                                "roi": "MitamaSelectNamedTeammate",
+                                "roi": "TeamLeaderSelectTeammate",
                                 "custom_recognition": "InputTarget",
                                 "custom_recognition_param": {
-                                    "target_node": "MitamaSelectNamedTeammate"
+                                    "target_node": "TeamLeaderSelectTeammate"
                                 }
                             }
                         }
@@ -2128,26 +2019,26 @@
         "post_delay": 1200,
         "next": [
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_MitamaSendInvite"
+            "SafeInput_TeamLeaderSendInvite"
         ],
         "pre_delay": 0,
         "pre_wait_freezes": 0
     },
-    "SafeInput_MitamaInviteScroll": {
+    "SafeInput_TeamLeaderInviteScroll": {
         "recognition": {
             "type": "And",
             "param": {
                 "all_of": [
-                    "MitamaInviteScroll",
+                    "TeamLeaderInviteScroll",
                     {
-                        "sub_name": "SafeInput_MitamaInviteScroll",
+                        "sub_name": "SafeInput_TeamLeaderInviteScroll",
                         "recognition": {
                             "type": "Custom",
                             "param": {
-                                "roi": "MitamaInviteScroll",
+                                "roi": "TeamLeaderInviteScroll",
                                 "custom_recognition": "InputTarget",
                                 "custom_recognition_param": {
-                                    "target_node": "MitamaInviteScroll"
+                                    "target_node": "TeamLeaderInviteScroll"
                                 }
                             }
                         }
@@ -2183,28 +2074,131 @@
         },
         "post_delay": 1000,
         "next": [
+            "TeamLeaderInviteSearch"
+        ],
+        "pre_delay": 0,
+        "pre_wait_freezes": 0
+    },
+    "SafeInput_TeamLeaderInviteOpenRecent": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "TeamLeaderInviteOpenRecent",
+                    {
+                        "sub_name": "SafeInput_TeamLeaderInviteOpenRecent",
+                        "recognition": {
+                            "type": "Custom",
+                            "param": {
+                                "roi": "TeamLeaderInviteOpenRecent",
+                                "custom_recognition": "InputTarget",
+                                "custom_recognition_param": {
+                                    "target_node": "TeamLeaderInviteOpenRecent"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "box_index": 1
+            }
+        },
+        "action": "Click",
+        "max_hit": 3,
+        "post_delay": 300,
+        "next": [
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_MitamaSelectNamedTeammate",
-            "MitamaInviteScroll"
+            "TeamLeaderInviteRecentReady",
+            "SafeInput_TeamLeaderInviteOpenRecent"
         ],
+        "timeout": 5000,
         "pre_delay": 0,
         "pre_wait_freezes": 0
     },
-    "SafeInput_MitamaAcceptNamedInvitation": {
+    "SafeInput_TeamLeaderInviteOpenGuild": {
         "recognition": {
             "type": "And",
             "param": {
                 "all_of": [
-                    "MitamaAcceptNamedInvitation",
+                    "TeamLeaderInviteOpenGuild",
                     {
-                        "sub_name": "SafeInput_MitamaAcceptNamedInvitation",
+                        "sub_name": "SafeInput_TeamLeaderInviteOpenGuild",
                         "recognition": {
                             "type": "Custom",
                             "param": {
-                                "roi": "MitamaAcceptNamedInvitation",
+                                "roi": "TeamLeaderInviteOpenGuild",
                                 "custom_recognition": "InputTarget",
                                 "custom_recognition_param": {
-                                    "target_node": "MitamaAcceptNamedInvitation"
+                                    "target_node": "TeamLeaderInviteOpenGuild"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "box_index": 1
+            }
+        },
+        "action": "Click",
+        "max_hit": 3,
+        "post_delay": 300,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "TeamLeaderInviteGuildReady",
+            "SafeInput_TeamLeaderInviteOpenGuild"
+        ],
+        "timeout": 5000,
+        "pre_delay": 0,
+        "pre_wait_freezes": 0
+    },
+    "SafeInput_TeamLeaderInviteOpenCross": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "TeamLeaderInviteOpenCross",
+                    {
+                        "sub_name": "SafeInput_TeamLeaderInviteOpenCross",
+                        "recognition": {
+                            "type": "Custom",
+                            "param": {
+                                "roi": "TeamLeaderInviteOpenCross",
+                                "custom_recognition": "InputTarget",
+                                "custom_recognition_param": {
+                                    "target_node": "TeamLeaderInviteOpenCross"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "box_index": 1
+            }
+        },
+        "action": "Click",
+        "max_hit": 3,
+        "post_delay": 300,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "TeamLeaderInviteCrossReady",
+            "SafeInput_TeamLeaderInviteOpenCross"
+        ],
+        "timeout": 5000,
+        "pre_delay": 0,
+        "pre_wait_freezes": 0
+    },
+    "SafeInput_TeamLeaderStart": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "TeamLeaderStart",
+                    {
+                        "sub_name": "SafeInput_TeamLeaderStart",
+                        "recognition": {
+                            "type": "Custom",
+                            "param": {
+                                "roi": "TeamLeaderStart",
+                                "custom_recognition": "InputTarget",
+                                "custom_recognition_param": {
+                                    "target_node": "TeamLeaderStart"
                                 }
                             }
                         }
@@ -2219,65 +2213,29 @@
                 "target": true
             }
         },
-        "post_delay": 1200,
         "next": [
-            "MitamaMemberBattleEntry"
-        ],
-        "pre_delay": 0,
-        "pre_wait_freezes": 0
-    },
-    "SafeInput_MitamaNamedTeamStart": {
-        "recognition": {
-            "type": "And",
-            "param": {
-                "all_of": [
-                    "MitamaNamedTeamStart",
-                    {
-                        "sub_name": "SafeInput_MitamaNamedTeamStart",
-                        "recognition": {
-                            "type": "Custom",
-                            "param": {
-                                "roi": "MitamaNamedTeamStart",
-                                "custom_recognition": "InputTarget",
-                                "custom_recognition_param": {
-                                    "target_node": "MitamaNamedTeamStart"
-                                }
-                            }
-                        }
-                    }
-                ],
-                "box_index": 1
-            }
-        },
-        "action": {
-            "type": "Click",
-            "param": {
-                "target": true
-            }
-        },
-        "next": [
-            "MitamaWaitBattleStart"
+            "TeamLeaderWaitBattleStart"
         ],
         "post_delay": 1000,
         "pre_delay": 0,
         "pre_wait_freezes": 0,
         "max_hit": 3
     },
-    "SafeInput_MitamaNativeBattleResult": {
+    "SafeInput_TeamLeaderReinviteTick": {
         "recognition": {
             "type": "And",
             "param": {
                 "all_of": [
-                    "MitamaNativeBattleResult",
+                    "TeamLeaderReinviteTick",
                     {
-                        "sub_name": "SafeInput_MitamaNativeBattleResult",
+                        "sub_name": "SafeInput_TeamLeaderReinviteTick",
                         "recognition": {
                             "type": "Custom",
                             "param": {
-                                "roi": "MitamaNativeBattleResult",
+                                "roi": "TeamLeaderReinviteTick",
                                 "custom_recognition": "InputTarget",
                                 "custom_recognition_param": {
-                                    "target_node": "MitamaNativeBattleResult"
+                                    "target_node": "TeamLeaderReinviteTick"
                                 }
                             }
                         }
@@ -2292,35 +2250,109 @@
                 "target": true
             }
         },
-        "post_delay": 1200,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "[JumpBack]MitamaTreasurePopup",
-            "MitamaNativeBattleNoResource",
-            "MitamaNativeBattleFailure",
-            "MitamaNativeBattleResult",
-            "[JumpBack]SafeInput_DailyRewardPopup",
-            "MitamaNativeBattleAfterResult"
-        ],
-        "timeout": 30000,
+        "max_hit": 3,
+        "post_delay": 800,
+        "next": [],
         "pre_delay": 0,
         "pre_wait_freezes": 0
     },
-    "SafeInput_MitamaNativeBattleFailedResult": {
+    "SafeInput_TeamLeaderReinvite": {
         "recognition": {
             "type": "And",
             "param": {
                 "all_of": [
-                    "MitamaNativeBattleFailedResult",
+                    "TeamLeaderReinvite",
                     {
-                        "sub_name": "SafeInput_MitamaNativeBattleFailedResult",
+                        "sub_name": "SafeInput_TeamLeaderReinvite",
                         "recognition": {
                             "type": "Custom",
                             "param": {
-                                "roi": "MitamaNativeBattleFailedResult",
+                                "roi": "TeamLeaderReinvite",
                                 "custom_recognition": "InputTarget",
                                 "custom_recognition_param": {
-                                    "target_node": "MitamaNativeBattleFailedResult"
+                                    "target_node": "TeamLeaderReinvite"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "box_index": 1
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "max_hit": 3,
+        "post_delay": 800,
+        "next": [],
+        "pre_delay": 0,
+        "pre_wait_freezes": 0
+    },
+    "SafeInput_TeamLeaderBattleResult": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "TeamLeaderBattleResult",
+                    {
+                        "sub_name": "SafeInput_TeamLeaderBattleResult",
+                        "recognition": {
+                            "type": "Custom",
+                            "param": {
+                                "roi": "TeamLeaderBattleResult",
+                                "custom_recognition": "InputTarget",
+                                "custom_recognition_param": {
+                                    "target_node": "TeamLeaderBattleResult"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "box_index": 1
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "post_delay": 600,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "[JumpBack]MitamaTreasurePopup",
+            "TeamLeaderBattleNoResource",
+            "TeamLeaderBattleFailure",
+            "TeamLeaderDropStatistics",
+            "SafeInput_TeamLeaderBattleResult",
+            "[JumpBack]SafeInput_DailyRewardPopup",
+            "[JumpBack]SafeInput_TeamLeaderReinviteTick",
+            "[JumpBack]SafeInput_TeamLeaderReinvite",
+            "TeamLeaderBattleAfterResult"
+        ],
+        "timeout": 30000,
+        "pre_delay": 0,
+        "pre_wait_freezes": 0,
+        "max_hit": 5
+    },
+    "SafeInput_TeamLeaderBattleFailedResult": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "TeamLeaderBattleFailedResult",
+                    {
+                        "sub_name": "SafeInput_TeamLeaderBattleFailedResult",
+                        "recognition": {
+                            "type": "Custom",
+                            "param": {
+                                "roi": "TeamLeaderBattleFailedResult",
+                                "custom_recognition": "InputTarget",
+                                "custom_recognition_param": {
+                                    "target_node": "TeamLeaderBattleFailedResult"
                                 }
                             }
                         }
@@ -2338,12 +2370,13 @@
         "post_delay": 1200,
         "next": [
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_MitamaNativeBattleFailedResult",
+            "SafeInput_TeamLeaderBattleFailedResult",
             "[JumpBack]SafeInput_DailyRewardPopup",
-            "MitamaNativeBattleFailedReturn"
+            "TeamLeaderBattleFailedReturn"
         ],
         "pre_delay": 0,
-        "pre_wait_freezes": 0
+        "pre_wait_freezes": 0,
+        "max_hit": 5
     },
     "SafeInput_MitamaFailedBattleResult": {
         "recognition": {
@@ -2378,7 +2411,8 @@
         ],
         "timeout": 30000,
         "pre_delay": 0,
-        "pre_wait_freezes": 0
+        "pre_wait_freezes": 0,
+        "max_hit": 5
     },
     "SafeInput_NavOpenExplore": {
         "recognition": {
@@ -3879,7 +3913,8 @@
         ],
         "timeout": 30000,
         "pre_delay": 0,
-        "pre_wait_freezes": 0
+        "pre_wait_freezes": 0,
+        "max_hit": 5
     },
     "SafeInput_RealmRaidBattleFailedResult": {
         "recognition": {
@@ -3918,7 +3953,8 @@
             "RealmRaidBattleFailedReturn"
         ],
         "pre_delay": 0,
-        "pre_wait_freezes": 0
+        "pre_wait_freezes": 0,
+        "max_hit": 5
     },
     "SafeInput_StartupUpdateConfirm": {
         "desc": "检查更新后出现的更新、下载或重试按钮",
@@ -4010,7 +4046,8 @@
         "action": "Click",
         "post_delay": 8000,
         "pre_delay": 0,
-        "pre_wait_freezes": 0
+        "pre_wait_freezes": 0,
+        "max_hit": 5
     },
     "SafeInput_StartupSelectServer": {
         "desc": "选择区域",
@@ -4039,7 +4076,8 @@
         "action": "Click",
         "post_delay": 2000,
         "pre_delay": 0,
-        "pre_wait_freezes": 0
+        "pre_wait_freezes": 0,
+        "max_hit": 5
     },
     "SafeInput_StartupEnterGame": {
         "desc": "选定区服后点击进入游戏",
@@ -4097,7 +4135,8 @@
         "action": "Click",
         "post_delay": 1000,
         "pre_delay": 0,
-        "pre_wait_freezes": 0
+        "pre_wait_freezes": 0,
+        "max_hit": 30
     },
     "SafeInput_ReturnMainBackButton": {
         "desc": "返回上一级",
@@ -4126,7 +4165,8 @@
         "action": "Click",
         "post_delay": 1000,
         "pre_delay": 0,
-        "pre_wait_freezes": 0
+        "pre_wait_freezes": 0,
+        "max_hit": 30
     },
     "SafeInput_ExitXianTing": {
         "desc": "退出闲庭",
@@ -4349,22 +4389,22 @@
         "next": [],
         "max_hit": 3
     },
-    "SafeInput_MitamaTeamStartConfirm": {
+    "SafeInput_TeamLeaderStartConfirm": {
         "doc": "确认组队房间中的开始战斗提示。",
         "recognition": {
             "type": "And",
             "param": {
                 "all_of": [
-                    "MitamaTeamStartConfirm",
+                    "TeamLeaderStartConfirm",
                     {
-                        "sub_name": "SafeInput_MitamaTeamStartConfirm",
+                        "sub_name": "SafeInput_TeamLeaderStartConfirm",
                         "recognition": {
                             "type": "Custom",
                             "param": {
-                                "roi": "MitamaTeamStartConfirm",
+                                "roi": "TeamLeaderStartConfirm",
                                 "custom_recognition": "InputTarget",
                                 "custom_recognition_param": {
-                                    "target_node": "MitamaTeamStartConfirm"
+                                    "target_node": "TeamLeaderStartConfirm"
                                 }
                             }
                         }
@@ -4384,41 +4424,6 @@
         "post_delay": 800,
         "next": [],
         "max_hit": 3
-    },
-    "SafeInput_MitamaRoomMemberReady": {
-        "doc": "指定队长的组队房间中，队员点击准备。",
-        "recognition": {
-            "type": "And",
-            "param": {
-                "all_of": [
-                    "MitamaRoomMemberReady",
-                    {
-                        "sub_name": "SafeInput_MitamaRoomMemberReady",
-                        "recognition": {
-                            "type": "Custom",
-                            "param": {
-                                "roi": "MitamaRoomMemberReady",
-                                "custom_recognition": "InputTarget",
-                                "custom_recognition_param": {
-                                    "target_node": "MitamaRoomMemberReady"
-                                }
-                            }
-                        }
-                    }
-                ],
-                "box_index": 1
-            }
-        },
-        "action": {
-            "type": "Click",
-            "param": {
-                "target": true
-            }
-        },
-        "pre_delay": 0,
-        "pre_wait_freezes": 0,
-        "post_delay": 800,
-        "next": []
     },
     "SafeInput_StartupCloseAnnouncement": {
         "doc": "关闭启动时显示的游戏公告。",
@@ -5027,15 +5032,17 @@
         },
         "pre_delay": 0,
         "pre_wait_freezes": 0,
-        "post_delay": 1500,
+        "post_delay": 600,
         "next": [
             "[JumpBack]CommonBountyInterrupt",
             "[JumpBack]MitamaTreasurePopup",
             "AwakeningBattleFailure",
-            "AwakeningBattleResult",
+            "AwakeningDropStatistics",
+            "SafeInput_AwakeningBattleResult",
             "[JumpBack]SafeInput_DailyRewardPopup",
             "AwakeningAfterResult"
-        ]
+        ],
+        "max_hit": 5
     },
     "SafeInput_AwakeningOpenBuffMenu": {
         "doc": "点击觉醒加成菜单入口。",
@@ -5109,7 +5116,8 @@
         "next": [
             "[JumpBack]CommonBountyInterrupt",
             "AwakeningFailedReturn"
-        ]
+        ],
+        "max_hit": 5
     },
     "SafeInput_AwakeningEnableBuffClick": {
         "doc": "切换觉醒材料加成至开启状态。",
@@ -5264,10 +5272,10 @@
             "type": "Click",
             "param": {
                 "target": [
-                    1000,
-                    400,
-                    120,
-                    100
+                    940,
+                    300,
+                    100,
+                    130
                 ]
             }
         },
@@ -5486,7 +5494,8 @@
         "post_delay": 500,
         "next": [],
         "pre_delay": 0,
-        "pre_wait_freezes": 0
+        "pre_wait_freezes": 0,
+        "max_hit": 3
     },
     "SafeInput_TeamPresetOut": {
         "desc": "队伍预设：预设队伍出战",
@@ -6130,5 +6139,433 @@
         "post_delay": 800,
         "max_hit": 3,
         "next": []
+    },
+    "SafeInput_TeamMemberAcceptDefault": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "TeamMemberAcceptDefault",
+                    {
+                        "sub_name": "SafeInput_TeamMemberAcceptDefault",
+                        "recognition": {
+                            "type": "Custom",
+                            "param": {
+                                "roi": "TeamMemberAcceptDefault",
+                                "custom_recognition": "InputTarget",
+                                "custom_recognition_param": {
+                                    "target_node": "TeamMemberAcceptDefault"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "box_index": 1
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "pre_delay": 0,
+        "pre_wait_freezes": 0,
+        "max_hit": 5,
+        "post_delay": 1200,
+        "next": [
+            "TeamMemberLoop"
+        ]
+    },
+    "SafeInput_TeamMemberAccept": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "TeamMemberAccept",
+                    {
+                        "sub_name": "SafeInput_TeamMemberAccept",
+                        "recognition": {
+                            "type": "Custom",
+                            "param": {
+                                "roi": "TeamMemberAccept",
+                                "custom_recognition": "InputTarget",
+                                "custom_recognition_param": {
+                                    "target_node": "TeamMemberAccept"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "box_index": 1
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "pre_delay": 0,
+        "pre_wait_freezes": 0,
+        "max_hit": 5,
+        "post_delay": 1200,
+        "next": [
+            "TeamMemberLoop"
+        ]
+    },
+    "SafeInput_TeamMemberBattleResult": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "TeamMemberBattleResult",
+                    {
+                        "sub_name": "SafeInput_TeamMemberBattleResult",
+                        "recognition": {
+                            "type": "Custom",
+                            "param": {
+                                "roi": "TeamMemberBattleResult",
+                                "custom_recognition": "InputTarget",
+                                "custom_recognition_param": {
+                                    "target_node": "TeamMemberBattleResult"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "box_index": 1
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "pre_delay": 0,
+        "pre_wait_freezes": 0,
+        "max_hit": 5,
+        "post_delay": 1500,
+        "timeout": 30000,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "TeamMemberBattleFailure",
+            "[JumpBack]MitamaTreasurePopup",
+            "[JumpBack]SafeInput_DailyRewardPopup",
+            "SafeInput_TeamMemberBattleResult",
+            "TeamMemberWon"
+        ]
+    },
+    "SafeInput_TeamMemberFailedResult": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "TeamMemberFailedResult",
+                    {
+                        "sub_name": "SafeInput_TeamMemberFailedResult",
+                        "recognition": {
+                            "type": "Custom",
+                            "param": {
+                                "roi": "TeamMemberFailedResult",
+                                "custom_recognition": "InputTarget",
+                                "custom_recognition_param": {
+                                    "target_node": "TeamMemberFailedResult"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "box_index": 1
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "pre_delay": 0,
+        "pre_wait_freezes": 0,
+        "max_hit": 5,
+        "post_delay": 1200,
+        "timeout": 30000,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_TeamMemberFailedResult",
+            "[JumpBack]SafeInput_DailyRewardPopup",
+            "TeamMemberFailedClosed"
+        ]
+    },
+    "SafeInput_BondlingSearchUnlockTeam": {
+        "doc": "点击未锁定图标，锁定探查阵容。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "BondlingSearchUnlockTeam",
+                    {
+                        "sub_name": "SafeInput_BondlingSearchUnlockTeam",
+                        "recognition": {
+                            "type": "Custom",
+                            "param": {
+                                "roi": "BondlingSearchUnlockTeam",
+                                "custom_recognition": "InputTarget",
+                                "custom_recognition_param": {
+                                    "target_node": "BondlingSearchUnlockTeam"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "box_index": 1
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "pre_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_delay": 1000,
+        "next": [],
+        "max_hit": 3
+    },
+    "SafeInput_BondlingSearchStart": {
+        "doc": "确认探查页和探查按钮后开始战斗。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "BondlingSearchStart",
+                    {
+                        "sub_name": "SafeInput_BondlingSearchStart",
+                        "recognition": {
+                            "type": "Custom",
+                            "param": {
+                                "roi": "BondlingSearchStart",
+                                "custom_recognition": "InputTarget",
+                                "custom_recognition_param": {
+                                    "target_node": "BondlingSearchStart"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "box_index": 1
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "pre_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_delay": 1000,
+        "next": [
+            "BondlingSearchWaitBattleStart"
+        ],
+        "max_hit": 3
+    },
+    "SafeInput_BondlingSearchBattleResult": {
+        "doc": "关闭探查成功结算，等待返回探查页。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "BondlingSearchBattleResult",
+                    {
+                        "sub_name": "SafeInput_BondlingSearchBattleResult",
+                        "recognition": {
+                            "type": "Custom",
+                            "param": {
+                                "roi": "BondlingSearchBattleResult",
+                                "custom_recognition": "InputTarget",
+                                "custom_recognition_param": {
+                                    "target_node": "BondlingSearchBattleResult"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "box_index": 1
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "pre_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_delay": 600,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "BondlingSearchBattleFailure",
+            "SafeInput_BondlingSearchBattleResult",
+            "[JumpBack]SafeInput_DailyRewardPopup",
+            "[JumpBack]SafeInput_BondlingSearchGatherLater",
+            "BondlingSearchAfterResult"
+        ],
+        "max_hit": 5
+    },
+    "SafeInput_BondlingSearchFailedBattleResult": {
+        "doc": "关闭探查失败结算，返回后停止任务。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "BondlingSearchFailedBattleResult",
+                    {
+                        "sub_name": "SafeInput_BondlingSearchFailedBattleResult",
+                        "recognition": {
+                            "type": "Custom",
+                            "param": {
+                                "roi": "BondlingSearchFailedBattleResult",
+                                "custom_recognition": "InputTarget",
+                                "custom_recognition_param": {
+                                    "target_node": "BondlingSearchFailedBattleResult"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "box_index": 1
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "pre_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_delay": 1500,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "BondlingSearchFailedReturn"
+        ],
+        "max_hit": 5
+    },
+    "SafeInput_BondlingSearchGatherLater": {
+        "doc": "探查发现首领时选择稍后集结。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "BondlingSearchGatherLater",
+                    {
+                        "sub_name": "SafeInput_BondlingSearchGatherLater",
+                        "recognition": {
+                            "type": "Custom",
+                            "param": {
+                                "roi": "BondlingSearchGatherLater",
+                                "custom_recognition": "InputTarget",
+                                "custom_recognition_param": {
+                                    "target_node": "BondlingSearchGatherLater"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "box_index": 1
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "pre_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_delay": 1000,
+        "next": [],
+        "max_hit": 3
+    },
+    "SafeInput_NativeToBondlingNavOpenBondling": {
+        "doc": "从探索地图底部入口进入契灵之境。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "NativeToBondlingNavOpenBondling",
+                    {
+                        "sub_name": "SafeInput_NativeToBondlingNavOpenBondling",
+                        "recognition": {
+                            "type": "Custom",
+                            "param": {
+                                "roi": "NativeToBondlingNavOpenBondling",
+                                "custom_recognition": "InputTarget",
+                                "custom_recognition_param": {
+                                    "target_node": "NativeToBondlingNavOpenBondling"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "box_index": 1
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true,
+                "target_offset": [
+                    0,
+                    -45,
+                    0,
+                    45
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_delay": 2000,
+        "next": [],
+        "max_hit": 5
+    },
+    "SafeInput_NativeToBondlingNavOpenExplore": {
+        "doc": "从庭院进入探索地图，再前往契灵之境。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "NativeToBondlingNavOpenExplore",
+                    {
+                        "sub_name": "SafeInput_NativeToBondlingNavOpenExplore",
+                        "recognition": {
+                            "type": "Custom",
+                            "param": {
+                                "roi": "NativeToBondlingNavOpenExplore",
+                                "custom_recognition": "InputTarget",
+                                "custom_recognition_param": {
+                                    "target_node": "NativeToBondlingNavOpenExplore"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "box_index": 1
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "pre_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_delay": 2000,
+        "next": [],
+        "max_hit": 5
     }
 }

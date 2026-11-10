@@ -1,0 +1,366 @@
+{
+    "TeamMemberTask": {
+        "doc": "通用组队队员：在任意页面等待指定队长邀请，接受后等队长开战，完成准备、战斗和结算，再等下一次邀请。不导航、不选层，副本由队长决定。",
+        "desc": "组队队员",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "TargetCountInit",
+                "custom_action_param": {
+                    "target_count": -1
+                }
+            }
+        },
+        "next": [
+            "TeamMemberConfigure"
+        ]
+    },
+    "TeamMemberConfigure": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ConfigureTeamRecognition",
+                "custom_action_param": {
+                    "nodes": [
+                        "TeamMemberLeaderName"
+                    ]
+                }
+            }
+        },
+        "next": [
+            "TeamMemberBattleEntry"
+        ]
+    },
+    "TeamMemberBattleEntry": {
+        "doc": "每场开始前重置点击和等待预算，不清零成功次数。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ResetCount",
+                "custom_action_param": {
+                    "nodes": [
+                        "SafeInput_TeamMemberAcceptDefault",
+                        "SafeInput_TeamMemberAccept",
+                        "SafeInput_TeamMemberBattleResult",
+                        "SafeInput_DailyPrepare",
+                        "TeamMemberRoomWait",
+                        "CommonBattleWait",
+                        "CommonBattleEnteringWait",
+                        "SafeInput_DailyRewardPopup",
+                        "SafeInput_CommonBattleEnableAuto",
+                        "SafeInput_CommonNetworkRetry",
+                        "SafeInput_CommonRewardOverflow",
+                        "SafeInput_MitamaTreasurePopup"
+                    ],
+                    "strict": true
+                }
+            }
+        },
+        "next": [
+            "TeamMemberLoop"
+        ]
+    },
+    "TeamMemberLoop": {
+        "doc": "按当前画面处理邀请、房间等待和战斗，不假设处在哪个阶段：队长可能在接受前就已开战。5 分钟内画面没有可处理的内容则失败。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "TeamMemberBattleFailure",
+            "[JumpBack]MitamaTreasurePopup",
+            "[JumpBack]CommonRewardOverflow",
+            "SafeInput_TeamMemberBattleResult",
+            "[JumpBack]CommonBattleEnteringWait",
+            "[JumpBack]DailyPrepare",
+            "[JumpBack]SafeInput_DailyRewardPopup",
+            "[JumpBack]CommonBattleEnableAuto",
+            "[JumpBack]CommonBattleWait",
+            "[JumpBack]CommonNetworkRetry",
+            "SafeInput_TeamMemberAcceptDefault",
+            "SafeInput_TeamMemberAccept",
+            "TeamMemberBecameLeader",
+            "[JumpBack]TeamMemberRoomWait"
+        ],
+        "timeout": 300000
+    },
+    "TeamMemberLeaderName": {
+        "doc": "邀请弹窗的队长昵称，由 ConfigureTeamRecognition 写入完整匹配。识别范围取自 OAS 的邀请区域，未实机校准。",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "^未配置队长$",
+                "roi": [
+                    0,
+                    190,
+                    500,
+                    330
+                ]
+            }
+        }
+    },
+    "TeamMemberAcceptIcon": {
+        "doc": "接受按钮是绿色对勾图标，没有文字。位置和颜色取自 OAS 的 gi_i_accept：左边是红叉拒绝，右边的齿轮绿勾是默认接受，都不在这个范围内。",
+        "recognition": {
+            "type": "ColorMatch",
+            "param": {
+                "roi": [
+                    113,
+                    225,
+                    63,
+                    280
+                ],
+                "method": 4,
+                "lower": [
+                    40,
+                    140,
+                    50
+                ],
+                "upper": [
+                    130,
+                    230,
+                    130
+                ],
+                "count": 300,
+                "connected": true
+            }
+        }
+    },
+    "TeamMemberAcceptDefaultIcon": {
+        "doc": "默认接受按钮是齿轮加绿色对勾，位置和颜色取自 OAS 的 gi_i_accept_default，只匹配绿勾部分。",
+        "recognition": {
+            "type": "ColorMatch",
+            "param": {
+                "roi": [
+                    205,
+                    223,
+                    61,
+                    297
+                ],
+                "method": 4,
+                "lower": [
+                    40,
+                    140,
+                    50
+                ],
+                "upper": [
+                    130,
+                    230,
+                    130
+                ],
+                "count": 250,
+                "connected": true
+            }
+        }
+    },
+    "TeamMemberAccept": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "TeamMemberLeaderName",
+                    "TeamMemberAcceptIcon"
+                ],
+                "box_index": 1
+            }
+        },
+        "action": "DoNothing",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_TeamMemberAccept"
+        ],
+        "on_error": [],
+        "doc": "邀请上没有默认接受图标时点普通绿勾。其他人的邀请不接受，但同屏有多条邀请时无法按行区分。"
+    },
+    "TeamMemberAcceptDefault": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "TeamMemberLeaderName",
+                    "TeamMemberAcceptDefaultIcon"
+                ],
+                "box_index": 1
+            }
+        },
+        "action": "DoNothing",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_TeamMemberAcceptDefault"
+        ],
+        "on_error": [],
+        "doc": "完整昵称匹配的队长发来邀请时优先点默认接受，之后不用每场再接受。"
+    },
+    "TeamMemberRoomWait": {
+        "doc": "已在房间，等队长开战。每次至少等 1 秒，300 次约等于房间自动解散的 5 分钟。",
+        "pre_delay": 0,
+        "post_delay": 1000,
+        "max_hit": 300,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageTeamRoom"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": []
+    },
+    "TeamMemberBecameLeader": {
+        "doc": "队员不会有挑战按钮；出现说明队长已离开，自己成了队长，停止而不是开战。",
+        "focus": {
+            "Node.Recognition.Succeeded": "队长已离开房间，组队队员任务停止"
+        },
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageTeamRoom",
+                    "TeamLeaderStartButton"
+                ],
+                "box_index": 1
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "NativeFlowFailed"
+        ]
+    },
+    "TeamMemberBattleResult": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "DailyBattleResult"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_TeamMemberBattleResult"
+        ],
+        "on_error": [],
+        "doc": "点掉成功结算，结算消失后才计次。"
+    },
+    "TeamMemberWon": {
+        "doc": "结算消失后记一次成功。队员打完不一定回房间，所以不以房间页为准。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "DailyBattleResult"
+                ]
+            }
+        },
+        "inverse": true,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "TargetCountProgress",
+                "custom_action_param": {
+                    "count": 1,
+                    "continue_node": "TeamMemberBattleEntry",
+                    "finish_node": "TeamMemberFinish"
+                }
+            }
+        },
+        "next": [
+            "TeamMemberBattleEntry"
+        ]
+    },
+    "TeamMemberBattleFailure": {
+        "doc": "战斗失败：报告并点掉结算后停止，不计次数。",
+        "focus": {
+            "Node.Recognition.Succeeded": "组队战斗失败，任务停止，本场不计次数"
+        },
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "DailyBattleFailed"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_TeamMemberFailedResult"
+        ],
+        "timeout": 30000
+    },
+    "TeamMemberFailedResult": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "DailyBattleResult"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_TeamMemberFailedResult"
+        ],
+        "on_error": [],
+        "doc": "关闭失败结算。"
+    },
+    "TeamMemberFailedClosed": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "DailyBattleFailed"
+                ]
+            }
+        },
+        "inverse": true,
+        "action": "DoNothing",
+        "next": [
+            "NativeFlowFailed"
+        ]
+    },
+    "TeamMemberFinish": {
+        "desc": "达到目标次数后结束，停留在当前页面",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "TargetCountFinish"
+            }
+        }
+    }
+}

@@ -151,7 +151,7 @@
         ]
     },
     "ExampleConfigureTeamRecognition": {
-        "doc": "先通过 TargetCountInit 设置 teammate；TargetCountInit 读取 custom_action_param 后再用本节点 attach 逐键覆盖。多个任务选项同时设置参数时写 attach，因为 pipeline_override 会整体替换 custom_action_param、只对 attach 做字典合并。本动作仅将完整昵称转义成精确匹配正则并覆盖三个 OCR 节点，不截图、不点击、不等待。实际组队流程使用 MitamaFindTeammate / MitamaTeamMember / MitamaLeaderFight / MitamaMemberFight。",
+        "doc": "先通过 TargetCountInit 设置 teammate；TargetCountInit 读取 custom_action_param 后再用本节点 attach 逐键覆盖。多个任务选项同时设置参数时写 attach，因为 pipeline_override 会整体替换 custom_action_param、只对 attach 做字典合并。本动作仅将完整昵称转义成精确匹配正则并覆盖 custom_action_param.nodes 列出的 OCR 节点，不截图、不点击、不等待。custom_action_param 的 nodes 列出要覆盖的节点。实际组队流程：队长 TeamLeaderFindTeammate / TeamLeaderFight，队员 TeamMemberTask。",
         "action": {
             "type": "Custom",
             "param": {
@@ -293,7 +293,7 @@
         "doc": "完整运行1场御魂并在结算页匹配奖励模板，确认返回挑战页后累计；新模板放image/Rewards/Mitama或Common，堆叠数量规则见Rewards/README.md。实际开战前执行原任务准备，未开启网络上报。",
         "action": {"type":"Custom","param":{"custom_action":"NodeOverride","custom_action_param":{
             "MitamaTask":{"action":{"param":{"custom_action_param":{"target_count":1,"report_drops":false}}}},
-            "MitamaSoloDropStatistics":{"enabled":true},"MitamaTeamDropStatistics":{"enabled":true}
+            "MitamaSoloDropStatistics":{"enabled":true},"TeamLeaderDropStatistics":{"enabled":true}
         }}},
         "next": ["MitamaTask"]
     },

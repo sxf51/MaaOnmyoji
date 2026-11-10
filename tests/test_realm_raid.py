@@ -23,6 +23,18 @@ class RaidTest(unittest.TestCase):
         self.assertIn('RealmRaidValidateChoice',self.nodes['RealmRaidChoose']['next'])
         self.assertIn('RealmRaidUnmarkedCorner',self.nodes['RealmRaidSelect']['recognition']['param']['all_of'])
 
+    def test_corner_check_stays_clear_of_long_nicknames(self):
+        # A long name ("我起的名字肯定欧") reached into the old y+12..40 corner and blocked an open card.
+        corner=self.nodes['RealmRaidUnmarkedCorner']['recognition']['param']
+        nickname=self.nodes['RealmRaidNickname']['recognition']['param']['roi_offset']
+        x,y,dw,dh=corner['roi_offset']
+        width,height=317+dw,120+dh
+        self.assertEqual(corner['roi'],'RealmRaidChoose')
+        self.assertGreaterEqual(x,nickname[0]+317+nickname[2]+20)
+        self.assertLessEqual(y+height,22)
+        self.assertLess(corner['count'],width*height)
+        self.assertGreater(corner['count'],width*height*0.7)
+
     def test_selection_and_stamp_are_pinned_to_same_card(self):
         for name in ('RealmRaidSelectedCard','RealmRaidBroken'):
             self.assertEqual(self.nodes[name]['recognition']['param']['roi'],'RealmRaidChoose')
@@ -34,7 +46,10 @@ class RaidTest(unittest.TestCase):
         param=self.nodes['RealmRaidValidateChoice']['action']['param']['custom_action_param']
         self.assertEqual(param,{'nodes':['SafeInput_RealmRaidSelect','SafeInput_RealmRaidAttack',
                                          'RealmRaidBattleMark','SafeInput_RealmRaidBattleMark',
-                                         'RealmRaidFailRetry'],'strict':True})
+                                         'RealmRaidFailRetry','SafeInput_DailyPrepare',
+                                         'SafeInput_RealmRaidBattleResult','SafeInput_RealmRaidBattleFailedResult',
+                                         'CommonBattleEnteringWait','SafeInput_DailyRewardPopup',
+                                         'RealmRaidBattleResume'],'strict':True})
 
     def test_no_target_finish_requires_confirmed_page(self):
         self.assertEqual(self.nodes['RealmRaidExhaustedPage']['recognition']['param']['all_of'],['PageRaid'])

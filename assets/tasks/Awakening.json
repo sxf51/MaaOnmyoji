@@ -11,6 +11,7 @@
                 "觉醒材料加成",
                 "觉醒锁定阵容",
                 "觉醒更换队伍预设",
+                "觉醒组队",
                 // "觉醒奖励掉落统计",
                 // "觉醒掉落统计上报",
                 "觉醒友方绿标"
@@ -19,6 +20,59 @@
         }
     ],
     "option": {
+        "觉醒组队": {
+            "type": "switch",
+            "label": "组队（作为队长）",
+            "default_case": "No",
+            "cases": [
+                {
+                    "name": "No",
+                    "pipeline_override": {
+                        "AwakeningBattleModeDestination": {
+                            "next": [
+                                "[JumpBack]CommonBountyInterrupt",
+                                "AwakeningBattleEntry"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Yes",
+                    "pipeline_override": {
+                        "AwakeningBattleModeDestination": {
+                            "next": [
+                                "[JumpBack]CommonBountyInterrupt",
+                                "AwakeningTeamEntry"
+                            ]
+                        }
+                    },
+                    "option": [
+                        "觉醒队友"
+                    ]
+                }
+            ]
+        },
+        "觉醒队友": {
+            "type": "input",
+            "label": "队友",
+            "inputs": [
+                {
+                    "name": "觉醒队友昵称",
+                    "pipeline_type": "string",
+                    "default": "",
+                    "pattern_msg": "请输入队友昵称",
+                    "description": "请输入队友的完整昵称",
+                    "verify": "^.+$"
+                }
+            ],
+            "pipeline_override": {
+                "AwakeningTask": {
+                    "attach": {
+                        "teammate": "{觉醒队友昵称}"
+                    }
+                }
+            }
+        },
         "觉醒麒麟类型": {
             "type": "select",
             "label": "麒麟类型",

@@ -26,7 +26,8 @@
                         "SafeInput_NativeNavCancelNoResource",
                         "SafeInput_DailyPrepare",
                         "SafeInput_DailyRewardPopup",
-                        "SafeInput_CommonBattleEnableAuto"
+                        "SafeInput_CommonBattleEnableAuto",
+                        "NavigateExplore"
                     ]
                 }
             }
@@ -49,7 +50,7 @@
             "[JumpBack]CommonBattleEnableAuto",
             "[JumpBack]BattleCleanupWait",
             "[JumpBack]SafeInput_DailyRewardPopup",
-            "[JumpBack]NavigateMitamaStage"
+            "[JumpBack]NavigateExplore"
         ],
         "timeout": 5000
     },
@@ -60,7 +61,7 @@
             "type": "And",
             "param": {
                 "all_of": [
-                    "PageMitamaStage"
+                    "MitamaBuffPage"
                 ],
                 "box_index": 0
             }
@@ -97,7 +98,8 @@
                         "SafeInput_NativeNavCancelNoResource",
                         "SafeInput_DailyPrepare",
                         "SafeInput_DailyRewardPopup",
-                        "SafeInput_CommonBattleEnableAuto"
+                        "SafeInput_CommonBattleEnableAuto",
+                        "NavigateExplore"
                     ]
                 }
             }

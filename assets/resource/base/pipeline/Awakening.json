@@ -308,7 +308,7 @@
             "AwakeningLockTeam",
             "AwakeningPreset",
             "AwakeningEnableBuff",
-            "AwakeningBattleEntry"
+            "AwakeningBattleModeDestination"
         ]
     },
     "AwakeningLockTeam": {
@@ -341,7 +341,7 @@
             "[JumpBack]CommonBountyInterrupt",
             "AwakeningPreset",
             "AwakeningEnableBuff",
-            "AwakeningBattleEntry"
+            "AwakeningBattleModeDestination"
         ]
     },
     "AwakeningUnlockTeam": {
@@ -380,6 +380,47 @@
         "pre_wait_freezes": 0,
         "on_error": []
     },
+    "AwakeningBattleModeDestination": {
+        "doc": "准备完成后进入单人或组队；“觉醒组队”选项改写 next。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "AwakeningBattleEntry"
+        ]
+    },
+    "AwakeningTeamEntry": {
+        "doc": "Awakening 发起组队：设置共用流程的结束位置和掉落统计范围，再打开组队页。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "NodeOverride",
+                "custom_action_param": {
+                    "TeamLeaderDropStatistics": {
+                        "action": {
+                            "param": {
+                                "custom_action_param": {
+                                    "scope": "Awakening",
+                                    "result_node": "DailyBattleResult"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "anchor": {
+            "TeamLeaderFinishTarget": "AwakeningFinish",
+            "TeamLeaderNoResourceTarget": "AwakeningNoResource"
+        },
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_TeamLeaderOpen"
+        ]
+    },
     "AwakeningBattleEntry": {
         "doc": "开始一场新挑战前重置点击重试上限。",
         "action": {
@@ -394,7 +435,13 @@
                         "SafeInput_CommonRewardOverflow",
                         "SafeInput_MitamaTreasurePopup",
                         "CommonBattleMark",
-                        "SafeInput_CommonBattleMark"
+                        "SafeInput_CommonBattleMark",
+                        "SafeInput_DailyPrepare",
+                        "SafeInput_AwakeningBattleResult",
+                        "CommonBattleWait",
+                        "CommonBattleEnteringWait",
+                        "CommonCutscene",
+                        "SafeInput_DailyRewardPopup"
                     ]
                 }
             }
@@ -403,7 +450,9 @@
             "[JumpBack]CommonBountyInterrupt",
             "AwakeningNoResource",
             "SafeInput_AwakeningChallenge"
-        ]
+        ],
+        "pre_delay": 0,
+        "post_delay": 0
     },
     "AwakeningNoResource": {
         "pre_delay": 0,
@@ -500,7 +549,8 @@
             "[JumpBack]MitamaTreasurePopup",
             "AwakeningBattleFailure",
             "[JumpBack]CommonRewardOverflow",
-            "AwakeningBattleResult",
+            "AwakeningDropStatistics",
+            "SafeInput_AwakeningBattleResult",
             "[JumpBack]CommonBattleEnteringWait",
             "[JumpBack]DailyPrepare",
             "[JumpBack]CommonBattleEnableAuto",
@@ -509,7 +559,9 @@
             "[JumpBack]SafeInput_DailyRewardPopup",
             "[JumpBack]CommonNetworkRetry"
         ],
-        "timeout": 180000
+        "timeout": 180000,
+        "pre_delay": 0,
+        "post_delay": 0
     },
     "AwakeningBattleResult": {
         "doc": "关闭觉醒成功结算，等待返回所选麒麟和层数。",
@@ -650,7 +702,7 @@
             "type": "And",
             "param": {
                 "all_of": [
-                    "PageAwakeningStage",
+                    "AwakeningBuffPage",
                     "CommonBuffMenuIcon"
                 ],
                 "box_index": 1
@@ -703,7 +755,7 @@
             "type": "And",
             "param": {
                 "all_of": [
-                    "PageAwakeningStage",
+                    "AwakeningBuffPage",
                     "AwakeningBuffPanel",
                     {
                         "recognition": {
@@ -740,7 +792,7 @@
             "type": "And",
             "param": {
                 "all_of": [
-                    "PageAwakeningStage",
+                    "AwakeningBuffPage",
                     "AwakeningBuffPanel",
                     {
                         "recognition": {
@@ -861,16 +913,17 @@
         "action": "DoNothing",
         "next": [
             "[JumpBack]CommonBountyInterrupt",
-            "AwakeningBattleEntry"
+            "AwakeningBattleModeDestination"
         ]
     },
     "AwakeningDisableBuff": {
-        "doc": "确认觉醒加成已关闭，仅操作觉醒材料一行。",
+        "doc": "收尾关闭加成：已在选层页或探索页就地关闭，其他页面（如组队房间）先回探索页。",
         "next": [
             "[JumpBack]CommonBountyInterrupt",
             "AwakeningBuffDisabled",
             "[JumpBack]SafeInput_AwakeningDisableBuffClick",
-            "[JumpBack]SafeInput_AwakeningOpenBuffMenu"
+            "[JumpBack]SafeInput_AwakeningOpenBuffMenu",
+            "[JumpBack]NavigateExplore"
         ],
         "action": "DoNothing",
         "enabled": false
@@ -916,7 +969,7 @@
             "type": "And",
             "param": {
                 "all_of": [
-                    "PageAwakeningStage",
+                    "AwakeningBuffPage",
                     "AwakeningBuffPanel"
                 ]
             }
@@ -1064,7 +1117,7 @@
         "next": [
             "[JumpBack]CommonBountyInterrupt",
             "AwakeningEnableBuff",
-            "AwakeningBattleEntry"
+            "AwakeningBattleModeDestination"
         ]
     },
     "AwakeningChallenging": {
@@ -1174,9 +1227,24 @@
                         },
                         "SafeInput_CommonBattleEnableAuto": {
                             "max_hit": 3
+                        },
+                        "NavigateExplore": {
+                            "max_hit": 3
                         }
                     }
                 }
+            }
+        }
+    },
+    "AwakeningBuffPage": {
+        "doc": "可以关闭觉醒加成的页面。探索页面板首行同样是觉醒加成，开关位置相同。",
+        "recognition": {
+            "type": "Or",
+            "param": {
+                "any_of": [
+                    "PageAwakeningStage",
+                    "PageExplore"
+                ]
             }
         }
     }

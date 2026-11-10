@@ -28,10 +28,10 @@ class TeamPresetTest(unittest.TestCase):
         # Native chain: each finished step lists the remaining steps; disabled ones are skipped.
         bounty='[JumpBack]CommonBountyInterrupt'
         self.assertEqual(self.nodes['AwakeningPreparation']['next'],
-                         [bounty,'AwakeningLockTeam','AwakeningPreset','AwakeningEnableBuff','AwakeningBattleEntry'])
-        self.assertEqual(self.nodes['AwakeningLockedTeam']['next'],[bounty,'AwakeningPreset','AwakeningEnableBuff','AwakeningBattleEntry'])
-        self.assertEqual(self.nodes['AwakeningPresetDone']['next'],[bounty,'AwakeningEnableBuff','AwakeningBattleEntry'])
-        self.assertEqual(self.nodes['AwakeningBuffClosedForPreparation']['next'],[bounty,'AwakeningBattleEntry'])
+                         [bounty,'AwakeningLockTeam','AwakeningPreset','AwakeningEnableBuff','AwakeningBattleModeDestination'])
+        self.assertEqual(self.nodes['AwakeningLockedTeam']['next'],[bounty,'AwakeningPreset','AwakeningEnableBuff','AwakeningBattleModeDestination'])
+        self.assertEqual(self.nodes['AwakeningPresetDone']['next'],[bounty,'AwakeningEnableBuff','AwakeningBattleModeDestination'])
+        self.assertEqual(self.nodes['AwakeningBuffClosedForPreparation']['next'],[bounty,'AwakeningBattleModeDestination'])
         task=load_jsonc(ROOT/'assets/tasks/Awakening.json')
         self.assertIn('觉醒材料加成',task['task'][0]['option'])
         self.assertIn('觉醒更换队伍预设',task['task'][0]['option'])

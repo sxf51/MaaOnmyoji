@@ -1,0 +1,507 @@
+{
+    "BondlingSearchTask": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "doc": "导航到契灵之境探查页，按成功结算次数重复探查；连续点击探查仍未进入战斗时视为契灵已满并结束。",
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "TargetCountInit",
+                "custom_action_param": {
+                    "target_count": 10
+                }
+            }
+        },
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "BondlingSearchNavigate"
+        ]
+    },
+    "BondlingSearchNavigate": {
+        "doc": "从当前页面进入契灵之境探查页。",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "NativeNavigationBlocked",
+            "NativeResultBlocked",
+            "[JumpBack]NativeDailyRewardPopup",
+            "[JumpBack]NativeNavCancelNoResource",
+            "[JumpBack]NativeNavConfirmExitExplore",
+            "[JumpBack]NativeNavConfirmExitTeam",
+            "[JumpBack]NativeNavDismissRaidTarget",
+            "[JumpBack]NativeNavCancelInvite",
+            "[JumpBack]NativeNavCancelCreate",
+            "[JumpBack]NativeLoading",
+            "[JumpBack]SafeInput_StartupCloseAnnouncement",
+            "[JumpBack]SafeInput_StartupCancelIllustration",
+            "BondlingSearchNavigationReady",
+            "[JumpBack]NavigateBondling"
+        ],
+        "timeout": 60000
+    },
+    "BondlingSearchNavigationReady": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "doc": "已在探查页，开始战前准备。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageBondling"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "BondlingSearchPreparation"
+        ]
+    },
+    "BondlingSearchPreparation": {
+        "doc": "按顺序进入首个启用的准备步骤；每步完成后直接接后续步骤，选项关闭的步骤由 enabled 原生跳过。",
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "BondlingSearchLockTeam",
+            "BondlingSearchPreset",
+            "BondlingSearchBattleEntry"
+        ]
+    },
+    "BondlingSearchLockTeam": {
+        "doc": "确认阵容锁定；未锁定时点击锁图标。",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "BondlingSearchLockedTeam",
+            "[JumpBack]SafeInput_BondlingSearchUnlockTeam"
+        ],
+        "action": "DoNothing"
+    },
+    "BondlingSearchLockedTeam": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": "Common/FormationLocked.png",
+                "roi": [
+                    795,
+                    630,
+                    90,
+                    80
+                ],
+                "threshold": 0.8
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "BondlingSearchPreset",
+            "BondlingSearchBattleEntry"
+        ]
+    },
+    "BondlingSearchUnlockTeam": {
+        "doc": "点击未锁定图标，锁定探查阵容。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageBondling",
+                    {
+                        "recognition": {
+                            "type": "TemplateMatch",
+                            "param": {
+                                "template": "Common/FormationUnlocked.png",
+                                "roi": [
+                                    795,
+                                    630,
+                                    90,
+                                    80
+                                ],
+                                "threshold": 0.8
+                            }
+                        }
+                    }
+                ],
+                "box_index": 1
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_BondlingSearchUnlockTeam"
+        ],
+        "pre_delay": 0,
+        "post_delay": 0,
+        "pre_wait_freezes": 0,
+        "on_error": []
+    },
+    "BondlingSearchPreset": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "doc": "配置本任务的预设页面与返回位置，完成换队后才继续准备。",
+        "enabled": false,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "NodeOverride",
+                "custom_action_param": {
+                    "TeamPresetContext": {
+                        "recognition": {
+                            "type": "And",
+                            "param": {
+                                "all_of": [
+                                    "PageBondling"
+                                ]
+                            }
+                        }
+                    },
+                    "TeamPresetEntryText": {
+                        "recognition": {
+                            "param": {
+                                "roi": [
+                                    900,
+                                    582,
+                                    128,
+                                    54
+                                ]
+                            }
+                        }
+                    },
+                    "SafeInput_TeamPresetOpen": {
+                        "action": {
+                            "param": {
+                                "target": [
+                                    940,
+                                    553,
+                                    50,
+                                    40
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "anchor": {
+            "TeamPresetReturn": "BondlingSearchPresetDone"
+        },
+        "next": [
+            "TeamPresetRun"
+        ]
+    },
+    "BondlingSearchPresetDone": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "doc": "确认预设已应用并返回探查页，继续后续准备步骤。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageBondling"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "BondlingSearchBattleEntry"
+        ]
+    },
+    "BondlingSearchBattleEntry": {
+        "doc": "开始一次新探查前重置点击重试上限。",
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ResetCount",
+                "custom_action_param": {
+                    "nodes": [
+                        "SafeInput_BondlingSearchStart",
+                        "SafeInput_CommonBattleEnableAuto",
+                        "SafeInput_CommonNetworkRetry",
+                        "SafeInput_CommonRewardOverflow",
+                        "CommonBattleMark",
+                        "SafeInput_CommonBattleMark",
+                        "SafeInput_DailyPrepare",
+                        "SafeInput_BondlingSearchBattleResult",
+                        "SafeInput_BondlingSearchGatherLater",
+                        "CommonBattleWait",
+                        "CommonBattleEnteringWait",
+                        "CommonCutscene",
+                        "SafeInput_DailyRewardPopup"
+                    ]
+                }
+            }
+        },
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "BondlingSearchNoResource",
+            "[JumpBack]SafeInput_BondlingSearchGatherLater",
+            "SafeInput_BondlingSearchStart"
+        ],
+        "pre_delay": 0,
+        "post_delay": 0
+    },
+    "BondlingSearchNoResource": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "doc": "识别明确的体力不足提示，停止探查。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "DailyNoResource"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "NativeFlowFailed"
+        ]
+    },
+    "BondlingSearchButton": {
+        "doc": "OCR 识别探查页右下角的探查按钮。",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "^探查$",
+                "roi": [
+                    1099,
+                    546,
+                    181,
+                    156
+                ]
+            }
+        }
+    },
+    "BondlingSearchStart": {
+        "doc": "确认探查页和探查按钮后开始战斗。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageBondling",
+                    "BondlingSearchButton"
+                ],
+                "box_index": 1
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_BondlingSearchStart"
+        ],
+        "pre_delay": 0,
+        "post_delay": 0,
+        "pre_wait_freezes": 0,
+        "on_error": []
+    },
+    "BondlingSearchWaitBattleStart": {
+        "doc": "等待过场、布阵载入、准备、正式战斗或结算；探查按钮仍在时有界重试，三次后仍未开战视为契灵已满。",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "BondlingSearchNoResource",
+            "BondlingSearchBattleStarted",
+            "SafeInput_BondlingSearchStart"
+        ],
+        "on_error": [
+            "BondlingSearchFull"
+        ],
+        "timeout": 60000
+    },
+    "BondlingSearchFull": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "doc": "多次点击探查仍停留在探查页（参考 OAS click_search：五只契灵已满时探查不再开战），正常结束任务。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageBondling"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "BondlingSearchFinish"
+        ]
+    },
+    "BondlingSearchBattleStarted": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "doc": "已进入准备、战斗或结算，转入战斗处理。",
+        "recognition": {
+            "type": "Or",
+            "param": {
+                "any_of": [
+                    "DailyPrepare",
+                    "PageBattle",
+                    "DailyBattleResult",
+                    "DailyBattleFailed",
+                    "PageLoading",
+                    "PageBattleEntering"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "BondlingSearchBattle"
+        ]
+    },
+    "BondlingSearchBattle": {
+        "doc": "处理准备、自动战斗与结算，不将等待画面计为胜利。",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "BondlingSearchNoResource",
+            "BondlingSearchBattleFailure",
+            "[JumpBack]CommonRewardOverflow",
+            "SafeInput_BondlingSearchBattleResult",
+            "[JumpBack]CommonBattleEnteringWait",
+            "[JumpBack]DailyPrepare",
+            "[JumpBack]CommonBattleEnableAuto",
+            "[JumpBack]CommonBattleMark",
+            "[JumpBack]CommonBattleWait",
+            "[JumpBack]SafeInput_DailyRewardPopup",
+            "[JumpBack]CommonNetworkRetry"
+        ],
+        "timeout": 180000,
+        "pre_delay": 0,
+        "post_delay": 0
+    },
+    "BondlingSearchBattleResult": {
+        "doc": "关闭探查成功结算，等待返回探查页。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "DailyBattleResult"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_BondlingSearchBattleResult"
+        ],
+        "pre_delay": 0,
+        "post_delay": 0,
+        "pre_wait_freezes": 0,
+        "on_error": []
+    },
+    "BondlingSearchGatherLater": {
+        "doc": "探查发现首领时选择稍后集结，留在探查页继续。",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "^稍后集结$",
+                "roi": [
+                    348,
+                    554,
+                    284,
+                    112
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_BondlingSearchGatherLater"
+        ],
+        "pre_delay": 0,
+        "post_delay": 0,
+        "pre_wait_freezes": 0,
+        "on_error": []
+    },
+    "BondlingSearchAfterResult": {
+        "doc": "确认成功结算已返回探查页后，累计成功次数并决定继续或结束；继续时重置每场的点击预算。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageBondling"
+                ],
+                "box_index": 0
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "TargetCountProgress",
+                "custom_action_param": {
+                    "count": 1,
+                    "continue_node": "BondlingSearchBattleEntry",
+                    "finish_node": "BondlingSearchFinish"
+                }
+            }
+        },
+        "next": [
+            "BondlingSearchBattleEntry"
+        ],
+        "pre_delay": 0,
+        "post_delay": 0
+    },
+    "BondlingSearchFinish": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "doc": "达到成功次数或契灵已满后结束，停留在探查页。",
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "TargetCountFinish"
+            }
+        }
+    },
+    "BondlingSearchBattleFailure": {
+        "doc": "战斗失败进入独立退出路径，不增加成功次数。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "DailyBattleFailed"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_BondlingSearchFailedBattleResult"
+        ],
+        "timeout": 30000
+    },
+    "BondlingSearchFailedBattleResult": {
+        "doc": "关闭探查失败结算，返回后停止任务。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "DailyBattleResult"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_BondlingSearchFailedBattleResult"
+        ],
+        "pre_delay": 0,
+        "post_delay": 0,
+        "pre_wait_freezes": 0,
+        "on_error": []
+    },
+    "BondlingSearchFailedReturn": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "doc": "返回探查页后以失败结束。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageBondling"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "NativeFlowFailed"
+        ]
+    }
+}

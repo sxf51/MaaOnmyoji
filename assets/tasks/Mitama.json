@@ -128,7 +128,7 @@
                 {
                     "name": "作战次数",
                     "pipeline_type": "int",
-                    "default": "30",
+                    "default": "15",
                     "pattern_msg": "请输入作战次数，如30",
                     "verify": "^[1-9]\\d*$",
                     "description": "请输入作战次数，如30"
@@ -358,7 +358,7 @@
         },
         "是否组队": {
             "type": "switch",
-            "label": "是否组队（待双账号联测）",
+            "label": "组队（作为队长）",
             "default_case": "No",
             "cases": [
                 {
@@ -374,57 +374,17 @@
                 },
                 {
                     "name": "Yes",
-                    "pipeline_override": {},
-                    "option": [
-                        "身份",
-                        "队友"
-                    ]
-                }
-            ]
-        },
-        "身份": {
-            "type": "select",
-            "label": "身份",
-            "default_case": "队长",
-            "cases": [
-                {
-                    "name": "队长",
                     "pipeline_override": {
                         "MitamaBattleModeDestination": {
                             "next": [
                                 "[JumpBack]CommonBountyInterrupt",
-                                "SafeInput_MitamaTeamLeader"
+                                "MitamaTeamEntry"
                             ]
-                        },
-                        "MitamaCountDetermine": {
-                            "action": {
-                                "param": {
-                                    "custom_action_param": {
-                                        "continue_node": "MitamaLeaderBattleEntry"
-                                    }
-                                }
-                            }
                         }
-                    }
-                },
-                {
-                    "name": "队员",
-                    "pipeline_override": {
-                        "MitamaBattleModeDestination": {
-                            "next": [
-                                "MitamaTeamMember"
-                            ]
-                        },
-                        "MitamaCountDetermine": {
-                            "action": {
-                                "param": {
-                                    "custom_action_param": {
-                                        "continue_node": "MitamaMemberBattleEntry"
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    },
+                    "option": [
+                        "队友"
+                    ]
                 }
             ]
         },
@@ -510,7 +470,7 @@
                         "MitamaSoloDropStatistics": {
                             "enabled": false
                         },
-                        "MitamaTeamDropStatistics": {
+                        "TeamLeaderDropStatistics": {
                             "enabled": false
                         }
                     }
@@ -521,7 +481,7 @@
                         "MitamaSoloDropStatistics": {
                             "enabled": true
                         },
-                        "MitamaTeamDropStatistics": {
+                        "TeamLeaderDropStatistics": {
                             "enabled": true
                         }
                     }

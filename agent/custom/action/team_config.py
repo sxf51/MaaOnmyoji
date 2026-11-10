@@ -5,7 +5,7 @@ import re
 from maa.agent.agent_server import AgentServer
 from maa.custom_action import CustomAction
 
-from custom.action.target_count import get_runtime_params
+from custom.action.target_count import _parse_params, get_runtime_params
 
 logger = logging.getLogger("MaaOnmyoji.team_config")
 
@@ -24,10 +24,12 @@ class ConfigureTeamRecognition(CustomAction):
     def run(self, context, argv):
         try:
             expected = "^" + re.escape(teammate()) + "$"
+            nodes = _parse_params(argv.custom_action_param).get("nodes")
+            if not isinstance(nodes, list) or not nodes:
+                raise ValueError("nodes 必须是非空列表")
         except ValueError as exc:
             logger.error("%s", exc)
             return CustomAction.RunResult(success=False)
-        nodes = ("MitamaTeammateName", "MitamaRoomTeammate", "MitamaInvitationName")
         success = context.override_pipeline({
             node: {"recognition": {"param": {"expected": expected}}}
             for node in nodes

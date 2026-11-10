@@ -384,10 +384,10 @@
             "param": {
                 "expected": "队伍公开权限",
                 "roi": [
-                    286,
-                    437,
-                    244,
-                    47
+                    250,
+                    270,
+                    380,
+                    240
                 ]
             }
         }
@@ -1089,7 +1089,8 @@
         "post_wait_freezes": 0,
         "next": [
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NativeNavConfirmExitExplore"
+            "SafeInput_NativeNavConfirmExitExplore",
+            "NativeNavRetry"
         ],
         "on_error": [],
         "doc": "确认退出当前探索章节。"
@@ -1111,7 +1112,8 @@
         "post_wait_freezes": 0,
         "next": [
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NativeNavConfirmExitTeam"
+            "SafeInput_NativeNavConfirmExitTeam",
+            "NativeNavRetry"
         ],
         "on_error": [],
         "doc": "确认退出当前组队房间。"
@@ -1133,7 +1135,8 @@
         "post_wait_freezes": 0,
         "next": [
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NativeNavDismissRaidTarget"
+            "SafeInput_NativeNavDismissRaidTarget",
+            "NativeNavRetry"
         ],
         "on_error": [],
         "doc": "关闭结界突破目标详情。"
@@ -1157,7 +1160,8 @@
         "post_wait_freezes": 0,
         "next": [
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NativeNavCancelInvite"
+            "SafeInput_NativeNavCancelInvite",
+            "NativeNavRetry"
         ],
         "on_error": [],
         "doc": "关闭组队邀请列表。"
@@ -1181,7 +1185,8 @@
         "post_wait_freezes": 0,
         "next": [
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NativeNavCancelCreate"
+            "SafeInput_NativeNavCancelCreate",
+            "NativeNavRetry"
         ],
         "on_error": [],
         "doc": "取消创建队伍，关闭创建窗口。"
@@ -1203,7 +1208,8 @@
         "post_wait_freezes": 0,
         "next": [
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NativeNavCancelNoResource"
+            "SafeInput_NativeNavCancelNoResource",
+            "NativeNavRetry"
         ],
         "on_error": [],
         "doc": "取消资源不足提示。"
@@ -1225,7 +1231,8 @@
         "post_wait_freezes": 0,
         "next": [
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NativeDailyRewardPopup"
+            "SafeInput_NativeDailyRewardPopup",
+            "NativeNavRetry"
         ],
         "on_error": [],
         "doc": "关闭奖励展示后返回页面导航流程。"
@@ -1247,7 +1254,8 @@
         "post_wait_freezes": 0,
         "next": [
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NativeNavClose"
+            "SafeInput_NativeNavClose",
+            "NativeNavRetry"
         ],
         "on_error": [],
         "doc": "关闭当前面板。"
@@ -1269,7 +1277,8 @@
         "post_wait_freezes": 0,
         "next": [
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NativeNavBack"
+            "SafeInput_NativeNavBack",
+            "NativeNavRetry"
         ],
         "on_error": [],
         "doc": "返回当前页面的上一级。"
@@ -1291,7 +1300,8 @@
         "post_wait_freezes": 0,
         "next": [
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NativeReturnMainHomeButton"
+            "SafeInput_NativeReturnMainHomeButton",
+            "NativeNavRetry"
         ],
         "on_error": [],
         "doc": "点击首页图标，返回庭院。"
@@ -1313,7 +1323,8 @@
         "post_wait_freezes": 0,
         "next": [
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NativeExitXianTing"
+            "SafeInput_NativeExitXianTing",
+            "NativeNavRetry"
         ],
         "on_error": [],
         "doc": "退出闲庭，返回庭院。"
@@ -1400,7 +1411,8 @@
         "post_wait_freezes": 0,
         "next": [
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NativeToExploreNavOpenExplore"
+            "SafeInput_NativeToExploreNavOpenExplore",
+            "NativeNavRetry"
         ],
         "on_error": [],
         "doc": "从庭院打开探索地图。"
@@ -1462,7 +1474,8 @@
         "post_wait_freezes": 0,
         "next": [
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NativeToMitamaStageNavOpenBaqi"
+            "SafeInput_NativeToMitamaStageNavOpenBaqi",
+            "NativeNavRetry"
         ],
         "on_error": [],
         "doc": "从御魂入口进入八岐大蛇层数选择页。"
@@ -1486,7 +1499,8 @@
         "post_wait_freezes": 0,
         "next": [
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NativeToMitamaStageNavOpenMitama"
+            "SafeInput_NativeToMitamaStageNavOpenMitama",
+            "NativeNavRetry"
         ],
         "on_error": [],
         "doc": "从探索地图打开御魂入口。"
@@ -1510,7 +1524,8 @@
         "post_wait_freezes": 0,
         "next": [
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NativeToMitamaStageNavOpenExplore"
+            "SafeInput_NativeToMitamaStageNavOpenExplore",
+            "NativeNavRetry"
         ],
         "on_error": [],
         "doc": "从庭院打开探索地图。"
@@ -1574,7 +1589,8 @@
         "post_wait_freezes": 0,
         "next": [
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NativeToRaidNavOpenRaid"
+            "SafeInput_NativeToRaidNavOpenRaid",
+            "NativeNavRetry"
         ],
         "on_error": [],
         "doc": "从探索地图打开结界突破。"
@@ -1598,7 +1614,8 @@
         "post_wait_freezes": 0,
         "next": [
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NativeToRaidNavOpenExplore"
+            "SafeInput_NativeToRaidNavOpenExplore",
+            "NativeNavRetry"
         ],
         "on_error": [],
         "doc": "从庭院打开探索地图。"
@@ -1659,7 +1676,8 @@
         "post_wait_freezes": 0,
         "next": [
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NativeToMailNavOpenMail"
+            "SafeInput_NativeToMailNavOpenMail",
+            "NativeNavRetry"
         ],
         "on_error": [],
         "doc": "从庭院打开邮件。"
@@ -1721,7 +1739,8 @@
         "post_wait_freezes": 0,
         "next": [
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NativeToQuestTasksNavQuestTasks"
+            "SafeInput_NativeToQuestTasksNavQuestTasks",
+            "NativeNavRetry"
         ],
         "on_error": [],
         "doc": "切换到花合战任务页。"
@@ -1745,7 +1764,8 @@
         "post_wait_freezes": 0,
         "next": [
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NativeToQuestTasksNavOpenQuests"
+            "SafeInput_NativeToQuestTasksNavOpenQuests",
+            "NativeNavRetry"
         ],
         "on_error": [],
         "doc": "从庭院打开花合战。"
@@ -1769,7 +1789,8 @@
         "post_wait_freezes": 0,
         "next": [
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NativeToQuestTasksNavExpandHomeMenu"
+            "SafeInput_NativeToQuestTasksNavExpandHomeMenu",
+            "NativeNavRetry"
         ],
         "on_error": [],
         "doc": "展开庭院功能菜单。"
@@ -1833,7 +1854,8 @@
         "post_wait_freezes": 0,
         "next": [
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NativeToQuestsNavQuestRewards"
+            "SafeInput_NativeToQuestsNavQuestRewards",
+            "NativeNavRetry"
         ],
         "on_error": [],
         "doc": "切换到花合战奖励页。"
@@ -1857,7 +1879,8 @@
         "post_wait_freezes": 0,
         "next": [
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NativeToQuestsNavOpenQuests"
+            "SafeInput_NativeToQuestsNavOpenQuests",
+            "NativeNavRetry"
         ],
         "on_error": [],
         "doc": "从庭院打开花合战。"
@@ -1881,7 +1904,8 @@
         "post_wait_freezes": 0,
         "next": [
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NativeToQuestsNavExpandHomeMenu"
+            "SafeInput_NativeToQuestsNavExpandHomeMenu",
+            "NativeNavRetry"
         ],
         "on_error": [],
         "doc": "展开庭院功能菜单。"
@@ -1946,7 +1970,8 @@
         "post_wait_freezes": 0,
         "next": [
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NativeToChapterNavBack"
+            "SafeInput_NativeToChapterNavBack",
+            "NativeNavRetry"
         ],
         "on_error": [],
         "doc": "返回当前页面的上一级。"
@@ -1978,6 +2003,13 @@
     },
     "NativeNavigationDone": {
         "action": "DoNothing"
+    },
+    "NativeNavRetry": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "doc": "目标已在旧画面匹配、页面随即切走时不等待超时，立刻回到导航循环按当前页面重新判断。不输入，重试次数由调用它的节点的 max_hit 限制。",
+        "action": "DoNothing",
+        "next": []
     },
     "NativeFlowFailed": {
         "pre_delay": 0,
@@ -2217,6 +2249,155 @@
             "NativeAtAwakening",
             "[JumpBack]SafeInput_NativeToAwakeningNavOpenAwakening",
             "[JumpBack]SafeInput_NativeToAwakeningNavOpenExplore",
+            "[JumpBack]NativeNavClose",
+            "[JumpBack]NativeNavBack",
+            "[JumpBack]NativeReturnMainHomeButton",
+            "[JumpBack]NativeExitXianTing"
+        ],
+        "timeout": 60000
+    },
+    "PageBondling": {
+        "doc": "契灵之境探查页：左上角标题与右下角探查按钮同时可见。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "expected": "^契灵之境$",
+                                "roi": [
+                                    14,
+                                    0,
+                                    313,
+                                    94
+                                ]
+                            }
+                        }
+                    },
+                    "BondlingSearchButton"
+                ]
+            }
+        }
+    },
+    "NavBondlingEntry": {
+        "doc": "探索地图底部的契灵之境文字标签。底栏文字间距很小，OCR 常把整排入口合并成一个文字框，无法用于定位，因此优先使用标签模板；文字单独成框时才用 OCR 兜底。",
+        "recognition": {
+            "type": "Or",
+            "param": {
+                "any_of": [
+                    {
+                        "recognition": {
+                            "type": "TemplateMatch",
+                            "param": {
+                                "template": "Navigation/BondlingEntry.png",
+                                "roi": [
+                                    5,
+                                    614,
+                                    1270,
+                                    106
+                                ],
+                                "threshold": 0.8
+                            }
+                        }
+                    },
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "expected": "^契灵之境$",
+                                "roi": [
+                                    5,
+                                    614,
+                                    1270,
+                                    106
+                                ]
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    },
+    "NativeToBondlingNavOpenBondling": {
+        "doc": "从探索地图底部入口进入契灵之境。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageExplore",
+                    "NavBondlingEntry"
+                ],
+                "box_index": 1
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_NativeToBondlingNavOpenBondling"
+        ],
+        "pre_delay": 0,
+        "post_delay": 0,
+        "pre_wait_freezes": 0,
+        "on_error": []
+    },
+    "NativeToBondlingNavOpenExplore": {
+        "doc": "从庭院进入探索地图，再前往契灵之境。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageHome",
+                    "NavOpenExplore"
+                ],
+                "box_index": 1
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_NativeToBondlingNavOpenExplore"
+        ],
+        "pre_delay": 0,
+        "post_delay": 0,
+        "pre_wait_freezes": 0,
+        "on_error": []
+    },
+    "NativeAtBondling": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "doc": "确认已在契灵之境探查页。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageBondling"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": []
+    },
+    "NavigateBondling": {
+        "doc": "识别当前页并导航到契灵之境探查页，已在探查页时直接返回。",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "NativeNavigationBlocked",
+            "NativeResultBlocked",
+            "[JumpBack]NativeDailyRewardPopup",
+            "[JumpBack]NativeNavCancelNoResource",
+            "[JumpBack]NativeNavConfirmExitExplore",
+            "[JumpBack]NativeNavConfirmExitTeam",
+            "[JumpBack]NativeNavDismissRaidTarget",
+            "[JumpBack]NativeNavCancelInvite",
+            "[JumpBack]NativeNavCancelCreate",
+            "[JumpBack]NativeLoading",
+            "[JumpBack]SafeInput_StartupCloseAnnouncement",
+            "[JumpBack]SafeInput_StartupCancelIllustration",
+            "NativeAtBondling",
+            "[JumpBack]SafeInput_NativeToBondlingNavOpenBondling",
+            "[JumpBack]SafeInput_NativeToBondlingNavOpenExplore",
             "[JumpBack]NativeNavClose",
             "[JumpBack]NativeNavBack",
             "[JumpBack]NativeReturnMainHomeButton",

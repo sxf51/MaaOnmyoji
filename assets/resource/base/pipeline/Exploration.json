@@ -258,7 +258,12 @@
                 "custom_action_param": {
                     "nodes": [
                         "ExplorationEnemySwipe",
-                        "ExplorationReenter"
+                        "ExplorationReenter",
+                        "SafeInput_DailyPrepare",
+                        "SafeInput_ExplorationBattleResult",
+                        "SafeInput_ExplorationBattleFailedResult",
+                        "SafeInput_DailyRewardPopup",
+                        "CommonBattleEnteringWait"
                     ]
                 }
             }
@@ -352,7 +357,12 @@
                 "custom_action_param": {
                     "nodes": [
                         "ExplorationEnemySwipe",
-                        "ExplorationReenter"
+                        "ExplorationReenter",
+                        "SafeInput_DailyPrepare",
+                        "SafeInput_ExplorationBattleResult",
+                        "SafeInput_ExplorationBattleFailedResult",
+                        "SafeInput_DailyRewardPopup",
+                        "CommonBattleEnteringWait"
                     ]
                 }
             }

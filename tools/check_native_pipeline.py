@@ -253,7 +253,7 @@ def run_case(resource, controller, nodes, name, entry, flags, events=(), expecte
     assert resource.register_custom_recognition("SimInputTarget", LocalTarget(state))
     assert resource.register_custom_action("SimInput", Input(state))
     for kind in ("TargetCountInit", "TargetCountProgress", "TargetCountDetermine", "TargetCountFinish",
-                 "ResetCount", "ConfigureTeamRecognition", "RewardDropStatistics", "NodeOverride", "RunBattleSession"):
+                 "ResetCount", "ConfigureTeamRecognition", "RememberFrame", "RewardDropStatistics", "NodeOverride", "RunBattleSession"):
         assert resource.register_custom_action(kind, Counter(state, kind))
     override = {}
     for key, original in nodes.items():
@@ -283,7 +283,7 @@ def run_case(resource, controller, nodes, name, entry, flags, events=(), expecte
         if "next" in original:
             node["next"] = original["next"]
         override[key] = node
-    for entry_node in ("MitamaTask", "ExplorationTask", "RealmRaidTask", "CommonActivityTask", "CurrentActivityTask", "AwakeningTask"):
+    for entry_node in ("MitamaTask", "ExplorationTask", "RealmRaidTask", "CommonActivityTask", "CurrentActivityTask", "AwakeningTask", "BondlingSearchTask", "TeamMemberTask"):
         # Same shape as task options: the report option replaces custom_action_param whole, the count lives in attach.
         override[entry_node]["attach"] = {"target_count": requested_count}
         override[entry_node]["action"] = {"param": {"custom_action_param": {"report_drops": False}}}
@@ -292,7 +292,7 @@ def run_case(resource, controller, nodes, name, entry, flags, events=(), expecte
         override["MitamaPreset"]["enabled"] = True
         override["MitamaEnableBuff"]["enabled"] = False
         override["MitamaPreparationDestination"]["next"] = []
-    for stats in ("MitamaSoloDropStatistics", "MitamaTeamDropStatistics", "AwakeningDropStatistics"):
+    for stats in ("MitamaSoloDropStatistics", "TeamLeaderDropStatistics", "AwakeningDropStatistics"):
         override[stats]["enabled"] = enable_drop_statistics
     for step in ("AwakeningEnableBuff", "AwakeningDisableBuff"):
         override[step]["enabled"] = awakening_buff
@@ -302,6 +302,9 @@ def run_case(resource, controller, nodes, name, entry, flags, events=(), expecte
         override[preset_task + "Task"]["next"] = with_purchase_stop([preset_task + "BeforeChallenge"])
     if stop_after_input:
         override['SafeInput_' + stop_after_input]['next'] = []
+    # Cases entering the shared leader flow midway never pass an entry node, so give them Mitama's ending.
+    override["TeamLeaderFinish"]["next"] = ["MitamaFinish"]
+    override["TeamLeaderBattleNoResource"]["next"] = ["[JumpBack]CommonBountyInterrupt", "MitamaFinish"]
     if pipeline_override:
         # Keep structural fields from the normal simulation and merge explicit
         # scenario overrides just as the task UI does.
@@ -362,7 +365,7 @@ def main():
         case('same-frame challenge invitation is refused before target click', 'MitamaBattleModeDestination', {'MitamaChallenge', 'CommonRefuseBounty'},
             [('CommonRefuseBounty', {'MitamaChallenge'}), ('MitamaChallenge', set())], stop_after_input='MitamaChallenge')
         for page, entry in [('Home', 'NavigateHome'), ('Explore', 'NavigateExplore'),
-                            ('MitamaStage', 'NavigateMitamaStage'), ('AwakeningStage', 'NavigateAwakening'),
+                            ('MitamaStage', 'NavigateMitamaStage'), ('AwakeningStage', 'NavigateAwakening'), ('Bondling', 'NavigateBondling'),
                             ('Raid', 'NavigateRaid'), ('Chapter', 'NavigateChapter'), ('Mail', 'NavigateMail'),
                             ('QuestTasks', 'NavigateQuestTasks'), ('Quests', 'NavigateQuests')]:
             case('cooperative invite masks ' + page, entry, {'Page' + page, 'CommonRefuseBounty'},
@@ -400,12 +403,57 @@ def main():
             ("NativeNavBack", {"PageExplore", "NavOpenRaid"}),
             ("NativeToRaidNavOpenRaid", {"PageRaid"})])
         case("refuse navigation during battle", "NavigateHome", {"PageBattle"}, succeeds=False)
-        case("waiting room is not a victory", "MitamaMemberFight", {"PageTeamRoom"}, succeeds=False)
-        case("leader does not start for an unmatched teammate", "MitamaLeaderFight", {"PageTeamRoom"}, succeeds=False)
-        case("unmatched invitation is not accepted", "MitamaTeamMember", {"MitamaInvitationText", "MitamaAcceptInvite"}, succeeds=False)
-        case("named invitation and team settlement", "MitamaTeamMember", {"MitamaInvitationText", "MitamaInvitationName", "MitamaAcceptInvite"}, [
-            ("MitamaAcceptNamedInvitation", {"DailyBattleResult"}),
-            ("MitamaNativeBattleResult", {"PageTeamRoom"})], expected_count=1)
+        # A slow page change can satisfy the public node on the old frame and leave its SafeInput without a target.
+        case("navigation recovers when the page changes after its target matched", "NavigateMitamaStage", {"PageExplore", "NavOpenMitama"}, [
+            ("NativeToMitamaStageNavOpenBaqi", {"PageMitamaStage"})],
+            probe_events=[("NavOpenMitama", {"PageMitamaMenu", "NavOpenBaqi"})])
+        stop_at_layer = {"MitamaLayerReady": {"next": []}}
+        case("mitama entry from another page navigates once and confirms the layer", "MitamaNavigate", {"PageExplore", "NavOpenMitama"}, [
+            ("NativeToMitamaStageNavOpenMitama", {"PageMitamaMenu", "NavOpenBaqi"}),
+            ("NativeToMitamaStageNavOpenBaqi", {"PageMitamaStage", "MitamaLayerSelected"})], pipeline_override=stop_at_layer)
+        case("mitama entry already on the stage clicks nothing", "MitamaNavigate", {"PageMitamaStage", "MitamaLayerSelected"},
+             pipeline_override=stop_at_layer)
+        case("mitama entry still clears a popup covering the stage", "MitamaNavigate", {"PageMitamaStage", "MitamaLayerSelected", "DailyRewardPopup"}, [
+            ("NativeDailyRewardPopup", {"PageMitamaStage", "MitamaLayerSelected"})], pipeline_override=stop_at_layer)
+        case("mitama entry stops when the stage is lost after navigating", "MitamaNavigate", {"PageMitamaStage", "MitamaLayerSelected"},
+             succeeds=False, probe_events=[("PageMitamaStage", {"PageHome"})])
+        case("navigation retry never bypasses the local touch check", "NavigateMitamaStage",
+             {"PageExplore", "NavOpenMitama", "TouchAreaRisk"}, succeeds=False)
+        case("leader battle never counts a waiting room", "TeamLeaderBattle", {"PageTeamRoom"}, succeeds=False)
+        case("leader does not start for an unmatched teammate", "TeamLeaderFight", {"PageTeamRoom"}, succeeds=False)
+        room_wait = {"TeamMemberRoomWait": {"max_hit": 3}}
+        invite = {"TeamMemberLeaderName", "TeamMemberAcceptIcon"}
+        case("waiting room is not a victory", "TeamMemberTask", {"PageTeamRoom"}, succeeds=False, pipeline_override=room_wait)
+        case("unmatched invitation is not accepted", "TeamMemberTask", {"TeamMemberAcceptIcon"}, succeeds=False)
+        case("named invitation and team settlement", "TeamMemberTask", invite, [
+            ("TeamMemberAccept", {"DailyBattleResult"}),
+            ("TeamMemberBattleResult", set())], expected_count=1)
+        case("member accepts again for every battle", "TeamMemberTask", invite, [
+            ("TeamMemberAccept", {"DailyBattleResult"}),
+            ("TeamMemberBattleResult", invite),
+            ("TeamMemberAccept", {"DailyPrepare"}),
+            ("DailyPrepare", {"DailyBattleResult"}),
+            ("TeamMemberBattleResult", set())], requested_count=2, expected_count=2)
+        case("member prefers default accept over plain accept", "TeamMemberTask", invite | {"TeamMemberAcceptDefaultIcon"}, [
+            ("TeamMemberAcceptDefault", {"DailyBattleResult"}),
+            ("TeamMemberBattleResult", set())], expected_count=1)
+        case("unmatched invitation is not default accepted", "TeamMemberTask", {"TeamMemberAcceptDefaultIcon"}, succeeds=False)
+        case("member stays joined after default accept across battles", "TeamMemberTask", invite | {"TeamMemberAcceptDefaultIcon"}, [
+            ("TeamMemberAcceptDefault", {"DailyBattleResult"}),
+            ("TeamMemberBattleResult", {"PageTeamRoom", "DailyBattleResult"}),
+            ("TeamMemberBattleResult", set())], requested_count=1, expected_count=1)
+        case("member keeps waiting in the room until the battle starts", "TeamMemberTask", {"PageTeamRoom"}, [
+            ("TeamMemberBattleResult", set())], expected_count=1,
+            probe_events=[("PageTeamRoom", {"PageTeamRoom"}), ("PageTeamRoom", {"DailyBattleResult"})])
+        case("member joins a battle the leader already started", "TeamMemberTask", {"DailyBattleResult"}, [
+            ("TeamMemberBattleResult", set())], expected_count=1)
+        case("member defeat stops without counting or waiting for another invite", "TeamMemberTask", {"DailyBattleFailed", "DailyBattleResult"}, [
+            ("TeamMemberFailedResult", invite)], succeeds=False)
+        case("member stops when the leader left and the room is now theirs", "TeamMemberTask", {"PageTeamRoom", "TeamLeaderStartButton"}, succeeds=False)
+        case("member accept never bypasses the local touch check", "TeamMemberTask", invite | {"TouchAreaRisk"}, succeeds=False)
+        case("frozen screen stops: member accept never joins", "TeamMemberTask", invite, [("TeamMemberAccept", invite)] * 5, succeeds=False)
+        case("frozen screen stops: member settlement never closes", "TeamMemberTask", {"DailyBattleResult"},
+             [("TeamMemberBattleResult", {"DailyBattleResult"})] * 5, succeeds=False)
         case("exploration counts after settlement", "ExplorationTask", {"PageChapterField", "ExplorationEnemyProbe"}, [
             ("ExplorationFindEnemy", {"DailyBattleResult"}),
             ("ExplorationBattleResult", {"PageChapterField"})], expected_count=1)
@@ -638,7 +686,7 @@ def main():
             ("CommonConfirm", {"CommonConfirm"}),
             ("StartupUpdateConfirm", {"StartupUpdateText", "StartupUpdateButton"}),
             ("ExplorationFindEnemy", {"PageChapterField", "ExplorationEnemyProbe"}),
-            ("MitamaFindTeammate", {"PageTeamInvite", "MitamaTeammateName"}),
+            ("TeamLeaderFindTeammate", {"PageTeamInvite", "TeamLeaderTeammateName"}),
         ]:
             case(entry + " blocks a hazardous button overlapping its touch range", entry,
                  background | {"TouchAreaRisk"}, succeeds=False)
@@ -679,19 +727,80 @@ def main():
         case("mitama failure never collects success rewards", "MitamaBattle", {"DailyBattleFailed","DailyBattleResult"}, [
             ("MitamaFailedBattleResult", {"PageMitamaStage"})], succeeds=False,
             enable_drop_statistics=True, expected_statistics=0)
-        case("mitama disbanded room exits without counting", "MitamaMemberFight", {"PageExplore"}, succeeds=False)
-        private = {"PageTeamCreate","MitamaTeamPrivacyText","MitamaTeamCreateButton","MitamaTeamPrivacySelected"}
-        public = private - {"MitamaTeamPrivacySelected"}
-        case("private room already selected skips toggling", "MitamaVerifyTeamPrivacy", private,
-            [("MitamaTeamCreate", {"PageTeamRoom"})], stop_after_input="MitamaTeamCreate")
-        case("private selection retries a missed toggle", "MitamaVerifyTeamPrivacy", public,
-            [("MitamaTeamSet", public),("MitamaTeamSet",private),("MitamaTeamCreate",{"PageTeamRoom"})],
-            stop_after_input="MitamaTeamCreate")
-        case("private setting never confirmed stops after three clicks", "MitamaVerifyTeamPrivacy", public,
-            [("MitamaTeamSet",public)]*3, succeeds=False)
-        case("creation refuses an unverified private setting", "MitamaTeamCreate", public, succeeds=False)
-        case("created room must be seen before invite panel opens", "MitamaWaitCreatedRoom", {"PageTeamRoom","MitamaOpenInvite"},
-            [("MitamaOpenInvite",set())], stop_after_input="MitamaOpenInvite")
+        case("mitama disbanded room exits without counting", "TeamLeaderBattle", {"PageExplore"}, succeeds=False)
+        # A frozen screen must exhaust exactly its budget and then stop: timeout never fires while nodes keep hitting.
+        result = {"DailyBattleResult"}
+        for title, entry, flags, event, budget, extra in [
+            ("mitama layer never appears", "MitamaNavigateReady", {"PageMitamaStage"}, "MitamaSwipeBaqin", 8, None),
+            ("mitama buff menu never opens", "MitamaEnableBuff", {"PageMitamaStage", "CommonBuffMenuIcon"}, "MitamaOpenBuffMenu", 4,
+             {"MitamaEnableBuff": {"enabled": True}}),
+            ("mitama settlement never closes", "MitamaBattleResult", {"MitamaBattleResult"}, "MitamaBattleResult", 5, None),
+            ("team settlement never closes", "TeamLeaderBattleResult", result, "TeamLeaderBattleResult", 5, None),
+            ("mitama prepare never leaves", "MitamaBattle", {"MitamaPrepare"}, "MitamaPrepare", 5, None),
+            ("exploration settlement never closes", "ExplorationBattle", result, "ExplorationBattleResult", 5, None),
+            ("raid settlement never closes", "RealmRaidBattleSettle", result, "RealmRaidBattleResult", 5, None),
+            ("awakening settlement never closes", "AwakeningBattle", result, "AwakeningBattleResult", 5, None),
+            ("awakening prepare never leaves", "AwakeningBattle", {"DailyPrepare"}, "DailyPrepare", 5, None),
+            ("activity challenge never enters", "CommonActivityTask", {"CommonActivityChallenge"}, "CommonActivityChallenge", 3, None),
+            ("activity prepare never leaves", "CommonActivityTask", {"CommonActivityPrepare"}, "CommonActivityPrepare", 5, None),
+            ("activity settlement never closes", "CommonActivityBattleResult", {"CommonActivityBattleResult"}, "CommonActivityBattleResult", 5, None),
+            ("reward popup never closes", "ExplorationBattle", {"DailyRewardPopup"}, "DailyRewardPopup", 150, None),
+        ]:
+            case("frozen screen stops: " + title, entry, flags, [(event, flags)] * budget, succeeds=False, pipeline_override=extra)
+        one_wait = {"CommonBattleWait": {"max_hit": 3}}
+        case("frozen battle page stops once its wait budget runs out", "MitamaBattle", {"PageBattle"}, succeeds=False, pipeline_override=one_wait)
+        case("retry budgets return on the next battle", "MitamaBattleEntry", {"MitamaChallenge"}, [
+            ("MitamaChallenge", {"MitamaPrepare"}), ("MitamaPrepare", {"MitamaPrepare"}),
+            ("MitamaPrepare", {"DailyBattleResult"}), ("MitamaBattleResult", {"DailyBattleResult"}),
+            ("MitamaBattleResult", {"MitamaChallenge", "MitamaFinishOnce"})] +
+            [("MitamaChallenge", {"MitamaPrepare"}), ("MitamaPrepare", {"MitamaPrepare"}),
+             ("MitamaPrepare", {"MitamaPrepare"}), ("MitamaPrepare", {"MitamaPrepare"}), ("MitamaPrepare", {"MitamaPrepare"}),
+             ("MitamaPrepare", {"DailyBattleResult"}), ("MitamaBattleResult", {"MitamaFinishOnce"})],
+            requested_count=2, expected_count=2)
+        invite = {"PageTeamInvite", "TeamLeaderInviteTabRecent", "TeamLeaderInviteTabGuild", "TeamLeaderInviteTabCross"}
+        friends, recent = invite | {"TeamLeaderInviteFriendsSelected"}, invite | {"TeamLeaderInviteRecentSelected"}
+        guild, cross = invite | {"TeamLeaderInviteGuildSelected"}, invite | {"TeamLeaderInviteCrossSelected"}
+        stop_at_fight = {"SafeInput_TeamLeaderSendInvite": {"next": []}}
+        found = [("TeamLeaderSelectTeammate", {"TeamLeaderSendInvite"}), ("TeamLeaderSendInvite", set())]
+        def teammate(flags):
+            return flags | {"TeamLeaderTeammateName"}
+        case("invite finds teammate on the friends tab without switching", "TeamLeaderFindTeammate", teammate(friends), found,
+            pipeline_override=stop_at_fight)
+        case("invite searches each tab in order and finds teammate on cross server", "TeamLeaderFindTeammate", friends,
+            [("TeamLeaderInviteScroll", friends)] * 7
+            + [("TeamLeaderInviteOpenRecent", recent)] + [("TeamLeaderInviteScroll", recent)] * 7
+            + [("TeamLeaderInviteOpenGuild", guild)] + [("TeamLeaderInviteScroll", guild)] * 7
+            + [("TeamLeaderInviteOpenCross", teammate(cross))] + found, pipeline_override=stop_at_fight)
+        case("invite skips scrolling when the online list fits one page", "TeamLeaderFindTeammate", friends | {"TeamLeaderInviteListFits"}, [
+            ("TeamLeaderInviteOpenRecent", recent | {"TeamLeaderInviteListFits"}),
+            ("TeamLeaderInviteOpenGuild", teammate(guild))] + found, pipeline_override=stop_at_fight)
+        case("invite leaves a tab as soon as the list reaches the bottom", "TeamLeaderFindTeammate", friends, [
+            ("TeamLeaderInviteScroll", friends),
+            ("TeamLeaderInviteScroll", friends | {"TeamLeaderInviteListAtBottom"}),
+            ("TeamLeaderInviteOpenRecent", teammate(recent))] + found, pipeline_override=stop_at_fight)
+        case("invite still checks the nickname on the bottom frame", "TeamLeaderFindTeammate", friends, [
+            ("TeamLeaderInviteScroll", teammate(friends) | {"TeamLeaderInviteListAtBottom"})] + found, pipeline_override=stop_at_fight)
+        case("invite falls through a missing guild tab", "TeamLeaderFindTeammate",
+            (friends - {"TeamLeaderInviteTabGuild"}) | {"TeamLeaderInviteListFits"}, [
+            ("TeamLeaderInviteOpenRecent", (recent - {"TeamLeaderInviteTabGuild"}) | {"TeamLeaderInviteListFits"}),
+            ("TeamLeaderInviteOpenCross", teammate(cross - {"TeamLeaderInviteTabGuild"}))] + found, pipeline_override=stop_at_fight)
+        case("invite fails without inviting once every tab is searched", "TeamLeaderFindTeammate", cross | {"TeamLeaderInviteListFits"}, succeeds=False)
+        case("invite stops when a tab never switches", "TeamLeaderFindTeammate", friends | {"TeamLeaderInviteListFits"},
+            [("TeamLeaderInviteOpenRecent", friends | {"TeamLeaderInviteListFits"})] * 3, succeeds=False)
+        case("invite tab switch respects local touch safety", "TeamLeaderFindTeammate",
+            friends | {"TeamLeaderInviteListFits", "TouchAreaRisk"}, succeeds=False)
+        private = {"PageTeamCreate","TeamLeaderPrivacyText","TeamLeaderCreateButton","TeamLeaderPrivacySelected"}
+        public = private - {"TeamLeaderPrivacySelected"}
+        case("private room already selected skips toggling", "TeamLeaderVerifyPrivacy", private,
+            [("TeamLeaderCreateConfirm", {"PageTeamRoom"})], stop_after_input="TeamLeaderCreateConfirm")
+        case("private selection retries a missed toggle", "TeamLeaderVerifyPrivacy", public,
+            [("TeamLeaderSetPrivate", public),("TeamLeaderSetPrivate",private),("TeamLeaderCreateConfirm",{"PageTeamRoom"})],
+            stop_after_input="TeamLeaderCreateConfirm")
+        case("private setting never confirmed stops after three clicks", "TeamLeaderVerifyPrivacy", public,
+            [("TeamLeaderSetPrivate",public)]*3, succeeds=False)
+        case("creation refuses an unverified private setting", "TeamLeaderCreateConfirm", public, succeeds=False)
+        case("created room must be seen before invite panel opens", "TeamLeaderWaitRoom", {"PageTeamRoom","TeamLeaderOpenInvite"},
+            [("TeamLeaderOpenInvite",set())], stop_after_input="TeamLeaderOpenInvite")
         stage = {"PageMitamaStage", "TeamPresetEntryText"}
         window = {"PageMitamaStage", "TeamPresetFrameTemplate", "TeamPresetOut", "TeamPresetGroupSelected", "TeamPresetSelectTeamConfigured"}
         apply_steps = [
@@ -734,9 +843,9 @@ def main():
             ("MitamaChallenge", {"MitamaPrepare"}),
             ("MitamaPrepare", {"MitamaBattleResult"}),
             ("MitamaBattleResult", {"MitamaFinishOnce"})], expected_count=1)
-        case("team battle also tolerates automatic preparation", "MitamaMemberFight", {"MitamaPrepare"}, [
-            ("MitamaNativeBattleResult", {"PageTeamRoom"})], expected_count=1,
-            probe_events=[("MitamaPrepare", {"MitamaChallenging"}),
+        case("team battle also tolerates automatic preparation", "TeamLeaderBattle", {"DailyPrepare"}, [
+            ("TeamLeaderBattleResult", {"PageTeamRoom"})], expected_count=1,
+            probe_events=[("DailyPrepare", {"MitamaChallenging"}),
                           ("PageBattle", {"DailyBattleResult"})])
         case("first daily treasure closes before continuing settlement", "MitamaChallenge", {"MitamaChallenge"}, [
             ("MitamaChallenge", {"MitamaBattleResult"}),
@@ -756,8 +865,8 @@ def main():
             [("MitamaTreasurePopup", {"MitamaTreasurePopup"})] * 3, succeeds=False)
         case("treasure popup never bypasses purchase protection", "MitamaTreasurePopup",
             {"MitamaTreasurePopup", "TouchAreaRisk"}, succeeds=False)
-        case("team treasure closes before returning to the room", "MitamaMemberFight", {"DailyBattleResult"}, [
-            ("MitamaNativeBattleResult", {"MitamaTreasurePopup"}),
+        case("team treasure closes before returning to the room", "TeamLeaderBattle", {"DailyBattleResult"}, [
+            ("TeamLeaderBattleResult", {"MitamaTreasurePopup"}),
             ("MitamaTreasurePopup", {"PageTeamRoom"})], expected_count=1)
         for prefix in ("CommonActivity", "CurrentActivity"):
             case(prefix + " tolerates automatic preparation", prefix + "Task", {prefix + "Challenge"}, [
@@ -797,16 +906,87 @@ def main():
             ("DailyMailClaimConfirm", {"PageMail"})])
         case("mail illustration prompt is cancelled", "DailyMailIllustrationCancel", {"DailyMailIllustrationCancel"}, [
             ("DailyMailIllustrationCancel", {"PageMail"})])
-        room = {"PageTeamRoom", "MitamaRoomTeammate", "MitamaTeamStartButton"}
-        case("leader retries missed start and handles team start confirmation", "MitamaLeaderFight", room, [
-            ("MitamaNamedTeamStart", room),
-            ("MitamaNamedTeamStart", {"PageTeamRoom", "MitamaTeamStartConfirm"}),
-            ("MitamaTeamStartConfirm", {"DailyBattleResult"}),
-            ("MitamaNativeBattleResult", {"PageTeamRoom"})], expected_count=1)
-        case("matching nickname alone does not authorize team start", "MitamaLeaderFight", {"PageTeamRoom", "MitamaRoomTeammate"}, succeeds=False)
-        case("team member readies in the named room", "MitamaMemberFight", {"PageTeamRoom", "MitamaRoomTeammate", "MitamaRoomMemberReady"}, [
-            ("MitamaRoomMemberReady", {"DailyBattleResult"}),
-            ("MitamaNativeBattleResult", {"PageTeamRoom"})], expected_count=1)
+        room = {"PageTeamRoom", "TeamLeaderRoomTeammate", "TeamLeaderStartButton"}
+        case("leader retries missed start and handles team start confirmation", "TeamLeaderFight", room, [
+            ("TeamLeaderStart", room),
+            ("TeamLeaderStart", {"PageTeamRoom", "TeamLeaderStartConfirm"}),
+            ("TeamLeaderStartConfirm", {"DailyBattleResult"}),
+            ("TeamLeaderBattleResult", {"PageTeamRoom"})], expected_count=1)
+        popup = {"PageTeamRoom", "TeamLeaderReinvitePrompt", "TeamLeaderReinviteConfirm", "CommonConfirm"}
+        waiting = [("PageTeamRoom", {"PageTeamRoom"})] * 3 + [("PageTeamRoom", room)]
+        case("leader waits in the room until the teammate returns, then challenges", "TeamLeaderFight", {"PageTeamRoom"}, [
+            ("TeamLeaderStart", {"DailyBattleResult"}),
+            ("TeamLeaderBattleResult", {"PageTeamRoom"})], expected_count=1, probe_events=waiting,
+            pipeline_override={"TeamLeaderFight": {"timeout": 5000}})
+        case("defeat stops the task and never starts another battle", "TeamLeaderFight", room, [
+            ("TeamLeaderStart", {"DailyBattleFailed", "DailyBattleResult"}),
+            ("TeamLeaderBattleFailedResult", room)], succeeds=False)
+        case("leader confirms reinvite, never cancels it, and starts the next battle", "TeamLeaderFight", room, [
+            ("TeamLeaderStart", {"DailyBattleResult"}),
+            ("TeamLeaderBattleResult", popup),
+            ("TeamLeaderReinvite", {"PageTeamRoom"} | {"TeamLeaderRoomTeammate", "TeamLeaderStartButton"}),
+            ("TeamLeaderStart", {"DailyBattleResult"}),
+            ("TeamLeaderBattleResult", {"PageTeamRoom"})], requested_count=2, expected_count=2)
+        stale_options = {"MitamaCountDetermine": {"action": {"param": {"custom_action_param": {"continue_node": "TeamLeaderBattleEntry"}}}}}
+        case("win loop survives task options cached from before the fix", "TeamLeaderFight", room, [
+            ("TeamLeaderStart", {"DailyBattleResult"}),
+            ("TeamLeaderBattleResult", room),
+            ("TeamLeaderStart", {"DailyBattleResult"}),
+            ("TeamLeaderBattleResult", {"PageTeamRoom"})], requested_count=2, expected_count=2, pipeline_override=stale_options)
+        case("reinvite popup arriving after the count is still confirmed", "TeamLeaderComplete", popup, [
+            ("TeamLeaderReinvite", {"PageTeamRoom"})], expected_count=1)
+        # With default invite the room replaces the settlement with no popup.
+        case("team settlement returning straight to the room counts the win", "TeamLeaderBattle", {"DailyBattleResult"}, [
+            ("TeamLeaderBattleResult", {"PageTeamRoom"})], expected_count=1)
+        case("team two page settlement clicks each page once", "TeamLeaderBattle", {"DailyBattleResult"}, [
+            ("TeamLeaderBattleResult", {"DailyBattleResult"}),
+            ("TeamLeaderBattleResult", {"PageTeamRoom"})], expected_count=1)
+        ticked = {"PageTeamRoom", "TeamLeaderReinvitePrompt", "TeamLeaderReinviteConfirm", "TeamLeaderReinviteLabel"}
+        case("leader ticks default invite before confirming", "TeamLeaderComplete", ticked | {"TeamLeaderReinviteUnchecked"}, [
+            ("TeamLeaderReinviteTick", ticked), ("TeamLeaderReinvite", {"PageTeamRoom"})], expected_count=1)
+        case("already ticked default invite is not clicked again", "TeamLeaderComplete", ticked, [
+            ("TeamLeaderReinvite", {"PageTeamRoom"})], expected_count=1)
+        case("default invite that never ticks still confirms", "TeamLeaderComplete", ticked | {"TeamLeaderReinviteUnchecked"},
+            [("TeamLeaderReinviteTick", ticked | {"TeamLeaderReinviteUnchecked"})] * 3 + [("TeamLeaderReinvite", {"PageTeamRoom"})], expected_count=1)
+        buff_on = {"MitamaDisableBuff": {"enabled": True}}
+        explore = {"PageExplore"}
+        anchored = {"TeamLeaderFinish": {"next": ["[JumpBack]CommonBountyInterrupt", "[Anchor]TeamLeaderFinishTarget"]},
+                    "TeamLeaderBattleNoResource": {"next": ["[JumpBack]CommonBountyInterrupt", "[Anchor]TeamLeaderNoResourceTarget"]},
+                    "SafeInput_TeamLeaderOpen": {"next": ["TeamLeaderFight"]}}
+        for scope in ("Mitama", "Awakening"):
+            case(scope + " team run ends through its own finish", scope + "TeamEntry", {"TeamLeaderOpen"}, [
+                ("TeamLeaderOpen", room),
+                ("TeamLeaderStart", {"DailyBattleResult"}),
+                ("TeamLeaderBattleResult", {"PageTeamRoom"})], expected_count=1, pipeline_override=anchored)
+        case("Awakening team run stops at its no resource handler", "AwakeningTeamEntry", {"TeamLeaderOpen"}, [
+            ("TeamLeaderOpen", room),
+            ("TeamLeaderStart", {"DailyNoResource"})], succeeds=False, pipeline_override=anchored)
+        case("Mitama team run finishes normally when resources run out", "MitamaTeamEntry", {"TeamLeaderOpen"}, [
+            ("TeamLeaderOpen", room),
+            ("TeamLeaderStart", {"DailyNoResource"})], pipeline_override=anchored)
+        awakening_team = {"AwakeningBattleModeDestination": {"next": ["[JumpBack]CommonBountyInterrupt", "AwakeningTeamEntry"]},
+                          "SafeInput_TeamLeaderOpen": {"next": []}}
+        case("awakening team option opens the shared team page", "AwakeningBattleModeDestination", {"TeamLeaderOpen"},
+             [("TeamLeaderOpen", set())], pipeline_override=awakening_team)
+        case("awakening without the team option still challenges solo", "AwakeningBattleModeDestination", {"AwakeningLayerSelected", "AwakeningChallengeButton"},
+             [("AwakeningChallenge", set())], stop_after_input="AwakeningChallenge")
+        case("awakening buff closes from explore after leaving the room", "AwakeningDisableBuff", {"PageTeamRoom", "NavBack"}, [
+            ("NativeNavBack", {"PageExitTeam", "NavConfirmExitTeam"}),
+            ("NativeNavConfirmExitTeam", {"PageExplore", "CommonBuffMenuIcon"}),
+            ("AwakeningOpenBuffMenu", {"PageExplore", "AwakeningBuffPanel", "AwakeningBuffOn"}),
+            ("AwakeningDisableBuffClick", {"PageExplore", "AwakeningBuffPanel", "AwakeningBuffOff"}),
+            ("AwakeningCloseBuffAfterDisable", {"PageExplore"})], awakening_buff=True)
+        case("leader closes the buff from explore without entering mitama", "MitamaDisableBuff", {"PageTeamRoom", "NavBack"}, [
+            ("NativeNavBack", {"PageExitTeam", "NavConfirmExitTeam"}),
+            ("NativeNavConfirmExitTeam", explore | {"CommonBuffMenuIcon"}),
+            ("MitamaOpenBuffMenu", explore | {"MitamaBuffPanel", "MitamaCheckBuffStatusOpen"}),
+            ("MitamaDisableBuffClick", explore | {"MitamaBuffPanel", "MitamaCheckBuffStatusClose"}),
+            ("MitamaFinishCloseBuffPanel", explore)], pipeline_override=buff_on)
+        case("solo finish still closes the buff on the stage page", "MitamaDisableBuff", {"PageMitamaStage", "CommonBuffMenuIcon"}, [
+            ("MitamaOpenBuffMenu", {"PageMitamaStage", "MitamaBuffPanel", "MitamaCheckBuffStatusOpen"}),
+            ("MitamaDisableBuffClick", {"PageMitamaStage", "MitamaBuffPanel", "MitamaCheckBuffStatusClose"}),
+            ("MitamaFinishCloseBuffPanel", {"PageMitamaStage"})], pipeline_override=buff_on)
+        case("matching nickname alone does not authorize team start", "TeamLeaderFight", {"PageTeamRoom", "TeamLeaderRoomTeammate"}, succeeds=False)
         case("startup announcement closes before server entry", "StartupTask", set(), [
             ("StartupTask", {"StartupCloseAnnouncement"}),
             ("StartupCloseAnnouncement", {"startupMain", "StartupCheckServer", "StartupEnterGame"}),
@@ -815,8 +995,8 @@ def main():
             ("StartupTask", {"StartupCancelIllustration"}),
             ("StartupCancelIllustration", {"startupMain", "StartupCheckServer", "StartupEnterGame"}),
             ("StartupEnterGame", {"StartupHome"})])
-        for name in ("ExplorationOpenMainline", "DailyMailClaimConfirm", "DailyMailIllustrationCancel", "MitamaTeamStartConfirm",
-                     "MitamaRoomMemberReady", "StartupCloseAnnouncement", "StartupCancelIllustration"):
+        for name in ("ExplorationOpenMainline", "DailyMailClaimConfirm", "DailyMailIllustrationCancel", "TeamLeaderStartConfirm",
+                     "StartupCloseAnnouncement", "StartupCancelIllustration"):
             case(name + " preserves purchase stop priority", name, {name, "TouchAreaRisk"}, succeeds=False)
         case("collapsed chapter panel expands before chapter search", "ExplorationEnsureMainline", {"PageExplore", "ExplorationExpandChapterPanel"}, [
             ("ExplorationExpandChapterPanel", {"PageExplore", "ExplorationMainlineReady", "ExplorationSelectChapter"}),
@@ -833,8 +1013,8 @@ def main():
             ("MitamaChallenge", {"MitamaBattleResult"}),
             ("MitamaBattleResult", {"MitamaFinishOnce"})], expected_count=1,
             enable_drop_statistics=True, expected_statistics=1)
-        case("team statistics execute once before settlement input", "MitamaMemberFight", {"DailyBattleResult"}, [
-            ("MitamaNativeBattleResult", {"PageTeamRoom"})], expected_count=1,
+        case("team statistics execute once before settlement input", "TeamLeaderBattle", {"DailyBattleResult"}, [
+            ("TeamLeaderBattleResult", {"PageTeamRoom"})], expected_count=1,
             enable_drop_statistics=True, expected_statistics=1)
         case("defeat does not report successful drops", "MitamaChallenge", {"MitamaChallenge"}, [
             ("MitamaChallenge", {"DailyBattleFailed", "MitamaBattleResult"}),
@@ -858,6 +1038,33 @@ def main():
         case('persistent deployment times out without preparation clicks or count', 'CommonBattleEnteringWait', entering,
             succeeds=False)
         case('deployment blocks navigation without clicking back', 'NavigateHome', entering, succeeds=False)
+        bond = {"PageBondling", "BondlingSearchButton", "BondlingSearchLockedTeam"}
+        case("bondling already on explore page searches and counts once", "BondlingSearchTask", bond, [
+            ("BondlingSearchStart", {"DailyBattleResult"}),
+            ("BondlingSearchBattleResult", bond)], expected_count=1)
+        case("bondling routes from courtyard through the explore bottom bar", "BondlingSearchTask", {"PageHome", "NavOpenExplore"}, [
+            ("NativeToBondlingNavOpenExplore", {"PageExplore", "NavBondlingEntry"}),
+            ("NativeToBondlingNavOpenBondling", bond),
+            ("BondlingSearchStart", {"DailyBattleResult"}),
+            ("BondlingSearchBattleResult", bond)], expected_count=1)
+        case("bondling locks an unlocked team before searching", "BondlingSearchTask",
+             {"PageBondling", "BondlingSearchButton", "BondlingSearchUnlockTeam"}, [
+            ("BondlingSearchUnlockTeam", bond),
+            ("BondlingSearchStart", {"DailyBattleResult"}),
+            ("BondlingSearchBattleResult", bond)], expected_count=1)
+        case("bondling search that never starts a battle ends as five bondlings found", "BondlingSearchTask", bond,
+             [("BondlingSearchStart", bond)] * 3, expected_count=0)
+        case("bondling gather-later prompt closes before the next search", "BondlingSearchTask", bond, [
+            ("BondlingSearchStart", {"DailyBattleResult"}),
+            ("BondlingSearchBattleResult", bond | {"BondlingSearchGatherLater"}),
+            ("BondlingSearchGatherLater", bond),
+            ("BondlingSearchStart", {"PageBattle", "CommonBattleEnableAuto"}),
+            ("CommonBattleEnableAuto", {"DailyBattleResult"}),
+            ("BondlingSearchBattleResult", bond)], requested_count=2, expected_count=2)
+        case("bondling defeat stops without counting", "BondlingSearchTask", bond, [
+            ("BondlingSearchStart", {"DailyBattleFailed", "DailyBattleResult"}),
+            ("BondlingSearchFailedBattleResult", bond)], succeeds=False)
+        case("bondling stops on stamina prompt without searching", "BondlingSearchBattleEntry", bond | {"DailyNoResource"}, succeeds=False)
         case("awakening routes from courtyard without forcing a return between battles", "AwakeningTask", {"PageHome", "NavOpenExplore"}, [
             ("NativeToAwakeningNavOpenExplore", {"PageExplore", "NavOpenAwakening"}),
             ("NativeToAwakeningNavOpenAwakening", {"PageAwakeningMenu"}),

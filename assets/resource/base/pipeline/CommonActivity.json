@@ -87,7 +87,7 @@
     },
     "CommonActivityChallenging": {
         "pre_delay": 0,
-        "post_delay": 0,
+        "post_delay": 1000,
         "desc": "重复挑战：挑战中",
         "recognition": {
             "type": "And",
@@ -98,7 +98,8 @@
             }
         },
         "action": "DoNothing",
-        "next": []
+        "next": [],
+        "max_hit": 1800
     },
     "CommonActivityBattleResult": {
         "desc": "重复挑战：点击屏幕继续",
@@ -363,7 +364,24 @@
     },
     "CommonActivityPreparation": {
         "doc": "每场挑战前经过此处；队伍预设启用时只在本任务首次进入时执行一次（max_hit），之后直接挑战。",
-        "action": "DoNothing",
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ResetCount",
+                "custom_action_param": {
+                    "nodes": [
+                        "SafeInput_CommonActivityChallenge",
+                        "SafeInput_CommonActivityPrepare",
+                        "SafeInput_CommonActivityBattleResult",
+                        "CommonActivityChallenging",
+                        "SafeInput_CommonClickAuto",
+                        "CommonBattleEnteringWait",
+                        "CommonCutscene"
+                    ],
+                    "strict": true
+                }
+            }
+        },
         "next": [
             "[JumpBack]CommonBountyInterrupt",
             "CommonActivityPreset",

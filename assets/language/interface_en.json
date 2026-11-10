@@ -1,6 +1,8 @@
 {
     "awakening_task": "Awakening dungeon",
     "awakening_task_doc": "Solo farming for the selected Kirin and floor, with optional team preset and awakening-material buff; count completed victories and stop on purchase or insufficient-stamina prompts.",
+    "bondling_search_task": "Bondling Fairyland - Explore",
+    "bondling_search_task_doc": "Navigate to the Bondling Fairyland explore page and repeat solo explores, counting completed victories; supports team lock, team preset, auto-ready and ally green mark. Stops when three explore clicks fail to start a battle (five bondlings already found), or on purchase or insufficient-stamina prompts.",
     "project_name": "Onmyoji Assistant",
     "project_title": "MaaOnmyoji · Onmyoji Assistant",
     "project_description": "Onmyoji Assistant. Image technology + simulation control, free your hands! Powered by MaaFramework!",
@@ -9,6 +11,8 @@
     "startup_task": "Start Game",
     "shutdown_task": "Shutdown Game",
     "mitama_task": "Mitama",
+    "team_member_task": "Team Member",
+    "team_member_task_doc": "Works for any dungeon: wait on any page for the named leader's invite, join the battle, then wait for the next invite. Fails on defeat or after 5 minutes without an invite.",
     "mitama_task_doc": "Enter Soul Zones from the courtyard and repeat until the configured count or insufficient AP",
     "common_activity_task": "Common Activity",
     "common_activity_task_doc": "Repeat the battle from the event screen until the configured count is reached",

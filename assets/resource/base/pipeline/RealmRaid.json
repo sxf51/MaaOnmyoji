@@ -342,7 +342,8 @@
         "action": "DoNothing",
         "next": [
             "RealmRaidBattle"
-        ]
+        ],
+        "max_hit": 30
     },
     "RealmRaidRetreatBegin": {
         "doc": "打m退n中的退出：本轮第一场开打后点左上角返回并确认退出，主动判负；最多n次，n由任务选项写入max_hit，默认0即关闭。本地实测当前版本准备阶段没有返回按钮，开打后才出现，且确认框弹出期间战斗继续，因此整条退出链去掉默认延迟。每次先重置本次退出的点击预算，不点准备、不计数。参考 runhey/OnmyojiAutoScript@2d2f6d8962a5af17c95670c5d0fb2e384b247162 tasks/RealmRaid/script_task.py::run_2 的 exit_four 与 tasks/Component/GeneralBattle/general_battle.py::run_general_battle_back（先退四再打九、在同一张卡上退出），以及 TanyaShue/MaaYYs@3f9a969 resource_pack/base/pipeline/战斗/自动结界.json 的 突破_开始重新挑战（max_hit计次、失败页再次挑战）。",
@@ -564,7 +565,13 @@
                         "SafeInput_RealmRaidRetreatAgain",
                         "SafeInput_RealmRaidRetreatAgainConfirm",
                         "RealmRaidBattleMark",
-                        "SafeInput_RealmRaidBattleMark"
+                        "SafeInput_RealmRaidBattleMark",
+                        "SafeInput_DailyPrepare",
+                        "SafeInput_RealmRaidBattleResult",
+                        "SafeInput_RealmRaidBattleFailedResult",
+                        "CommonBattleEnteringWait",
+                        "SafeInput_DailyRewardPopup",
+                        "RealmRaidBattleResume"
                     ],
                     "strict": true
                 }
@@ -1233,7 +1240,13 @@
                         "SafeInput_RealmRaidAttack",
                         "RealmRaidBattleMark",
                         "SafeInput_RealmRaidBattleMark",
-                        "RealmRaidFailRetry"
+                        "RealmRaidFailRetry",
+                        "SafeInput_DailyPrepare",
+                        "SafeInput_RealmRaidBattleResult",
+                        "SafeInput_RealmRaidBattleFailedResult",
+                        "CommonBattleEnteringWait",
+                        "SafeInput_DailyRewardPopup",
+                        "RealmRaidBattleResume"
                     ],
                     "strict": true
                 }
@@ -1299,10 +1312,10 @@
             "param": {
                 "roi": "RealmRaidChoose",
                 "roi_offset": [
-                    275,
-                    12,
-                    -290,
-                    -92
+                    290,
+                    4,
+                    -297,
+                    -102
                 ],
                 "method": 4,
                 "lower": [
@@ -1315,9 +1328,9 @@
                     225,
                     210
                 ],
-                "count": 700
+                "count": 300
             }
         },
-        "doc": "只检查所选卡片右上角27×28空白区；颜色条件拒绝亮色遮挡，避免仅靠整体模板分数放行。"
+        "doc": "只检查所选卡片右上角20×18空白区（卡片框内x+290~310、y+4~22），未挑战卡几乎全为米色（实测358~360/360），攻破印记与失败角标都会覆盖该区（实测0）。区域高于昵称行：原27×28区（y+12~40）与昵称行重叠，昵称较长的卡（如“我起的名字肯定欧”，末字压进角落区，实测655/756）会被误判为已标记，导致选卡确认超时失败。"
     }
 }
