@@ -132,22 +132,116 @@
         "on_error": [],
         "doc": "组队：打开邀请列表。"
     },
-    "TeamLeaderFindTeammate": {
-        "action": {
-            "type": "Custom",
+    "TeamLeaderOpenInviteMiddle": {
+        "desc": "组队：从中间空位打开邀请列表",
+        "recognition": {
+            "type": "OCR",
             "param": {
-                "custom_action": "ConfigureTeamRecognition",
-                "custom_action_param": {
-                    "nodes": [
-                        "TeamLeaderTeammateName",
-                        "TeamLeaderRoomTeammate"
-                    ]
-                }
+                "roi": [
+                    89,
+                    20,
+                    132,
+                    42
+                ],
+                "expected": [
+                    "协战队伍"
+                ]
             }
         },
+        "action": "DoNothing",
+        "post_delay": 0,
         "next": [
-            "TeamLeaderInviteSearch"
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_TeamLeaderOpenInviteMiddle"
+        ],
+        "pre_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "on_error": [],
+        "doc": "组队：从中间空位打开邀请列表。"
+    },
+    "TeamLeaderInviteSlot": {
+        "doc": "打开邀请面板前选一个空位：名字行没有字的位置才有“+”。优先右侧，右侧有人时点中间。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "TeamLeaderInviteSlotRight",
+            "TeamLeaderInviteSlotMiddle",
+            "TeamLeaderInviteSlotFull"
         ]
+    },
+    "TeamLeaderInviteSlotRight": {
+        "doc": "右侧位置的名字行没有任何文字时命中（取反），说明这个位置空着。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    900,
+                    95,
+                    350,
+                    55
+                ]
+            }
+        },
+        "inverse": true,
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_TeamLeaderOpenInvite"
+        ]
+    },
+    "TeamLeaderInviteSlotMiddle": {
+        "doc": "中间位置的名字行没有任何文字时命中（取反），说明这个位置空着。中间“+”的位置按三个位置等距推算，未实机校准。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    470,
+                    95,
+                    410,
+                    55
+                ]
+            }
+        },
+        "inverse": true,
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_TeamLeaderOpenInviteMiddle"
+        ]
+    },
+    "TeamLeaderInviteSlotFull": {
+        "doc": "右侧和中间都有名字（房间已满）：队友在判断不在之后已经进房，不再打开邀请面板，直接回去开战。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageTeamRoom"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "TeamLeaderFight"
+        ]
+    },
+    "TeamLeaderFindTeammate": {
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_TeamLeaderInviteOpenFriends",
+            "TeamLeaderInviteSearch"
+        ],
+        "doc": "每轮邀请都从好友栏开始找本轮的队友；面板可能停在上次的栏。本轮找谁由锚点 TeamLeaderSelectTarget 决定。"
     },
     "TeamLeaderInviteSearch": {
         "doc": "在当前栏查找队友：先匹配昵称；人数放得下一屏时直接换栏，否则下滑至预算用尽后换栏。",
@@ -156,7 +250,7 @@
         "action": "DoNothing",
         "next": [
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_TeamLeaderSelectTeammate",
+            "[Anchor]TeamLeaderSelectTarget",
             "TeamLeaderInviteListFits",
             "TeamLeaderInviteListAtBottom",
             "TeamLeaderInviteRememberList",
@@ -232,20 +326,41 @@
         "timeout": 5000
     },
     "TeamLeaderInviteTeammateMissing": {
-        "doc": "所有栏都没有找到完整昵称匹配的队友，停止任务且不发送邀请。",
+        "doc": "所有栏都没有找到匹配的队友：不发送邀请，点“取消”关闭面板回房间重新判断。队友可能在判断不在之后已经进房（进房后不在列表里），所以不直接停止；昵称填错时由每场 3 轮重新邀请的上限停止。",
         "pre_delay": 0,
         "post_delay": 0,
         "recognition": {
             "type": "And",
             "param": {
                 "all_of": [
-                    "PageTeamInvite"
+                    "PageTeamInvite",
+                    "NavCancelInvite"
+                ],
+                "box_index": 1
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_TeamLeaderInviteTeammateMissing"
+        ]
+    },
+    "TeamLeaderInviteClosed": {
+        "doc": "关闭邀请面板后回到房间，照常判断是否还要邀请第二位，再等待开战。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageTeamRoom"
                 ]
             }
         },
         "action": "DoNothing",
         "next": [
-            "NativeFlowFailed"
+            "[JumpBack]CommonBountyInterrupt",
+            "TeamLeaderInviteRoundCheck"
         ]
     },
     "TeamLeaderInviteTabFriends": {
@@ -684,6 +799,188 @@
             "TeamLeaderInviteSearch"
         ]
     },
+    "TeamLeaderInviteNotFriends": {
+        "recognition": {
+            "type": "Or",
+            "param": {
+                "any_of": [
+                    "TeamLeaderInviteRecentSelected",
+                    "TeamLeaderInviteGuildSelected",
+                    "TeamLeaderInviteCrossSelected"
+                ]
+            }
+        }
+    },
+    "TeamLeaderInviteOpenFriends": {
+        "doc": "面板不在好友栏时先切回好友栏，再按顺序查找。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageTeamInvite",
+                    "TeamLeaderInviteNotFriends",
+                    "TeamLeaderInviteTabFriends"
+                ],
+                "box_index": 2
+            }
+        },
+        "action": "DoNothing",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_TeamLeaderInviteOpenFriends"
+        ],
+        "on_error": []
+    },
+    "TeamLeaderInviteFriendsReady": {
+        "doc": "确认已切回好友栏：重置滑动预算，并等列表加载完。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "TeamLeaderInviteFriendsSelected"
+                ]
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ResetCount",
+                "custom_action_param": {
+                    "nodes": [
+                        "TeamLeaderInviteRememberList"
+                    ],
+                    "strict": true
+                }
+            }
+        },
+        "post_wait_freezes": {
+            "time": 500,
+            "target": [
+                346,
+                178,
+                590,
+                355
+            ],
+            "timeout": 3000
+        },
+        "next": [
+            "TeamLeaderInviteSearch"
+        ]
+    },
+    "TeamLeaderInviteNext": {
+        "doc": "一位队友的邀请已发出：回到房间后再判断要不要邀请第二位。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "TeamLeaderInviteRoundCheck",
+            "TeamLeaderInviteStillOpen"
+        ]
+    },
+    "TeamLeaderInviteStillOpen": {
+        "doc": "发送后邀请面板还开着（对已在房间的队友再发邀请时游戏可能不关面板）：等 1 秒确认仍开着，再点“取消”回房间。正常发送后面板会关闭，房间判断优先命中。",
+        "pre_delay": 1000,
+        "post_delay": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageTeamInvite",
+                    "NavCancelInvite"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "max_hit": 3,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "TeamLeaderInviteRoundCheck",
+            "SafeInput_TeamLeaderInviteTeammateMissing"
+        ]
+    },
+    "TeamLeaderInviteRoundCheck": {
+        "doc": "已回到房间：第二位队友不在房间时再开一轮邀请，否则等待队友进房并开战。必须先确认在房间，房间名字区才有文字可判断。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageTeamRoom"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "TeamLeaderInviteAgain",
+            "TeamLeaderFight"
+        ]
+    },
+    "TeamLeaderInviteAgain": {
+        "doc": "邀请第二位队友：房间里还看不到第二位时才命中。没填第二位时它的匹配是空正则，房间名字区任何文字都能命中，取反后不会再开一轮。参考 OAS 先等 3 秒再重新打开邀请面板。",
+        "max_hit": 1,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "TeamLeaderRoomTeammate2"
+                ]
+            }
+        },
+        "inverse": true,
+        "anchor": {
+            "TeamLeaderSelectTarget": "SafeInput_TeamLeaderSelectTeammate2"
+        },
+        "pre_delay": 0,
+        "post_delay": 3000,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ResetCount",
+                "custom_action_param": {
+                    "nodes": [
+                        "TeamLeaderInviteRememberList",
+                        "SafeInput_TeamLeaderInviteOpenFriends",
+                        "SafeInput_TeamLeaderInviteOpenRecent",
+                        "SafeInput_TeamLeaderInviteOpenGuild",
+                        "SafeInput_TeamLeaderInviteOpenCross"
+                    ],
+                    "strict": true
+                }
+            }
+        },
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "TeamLeaderInviteSlot"
+        ]
+    },
+    "TeamLeaderResumeRoom": {
+        "doc": "任务开始时已在房间且所有队友都在：跳过建房和邀请，直接等待开战。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageTeamRoom",
+                    "TeamLeaderRoomTeammate",
+                    "TeamLeaderRoomTeammate2"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "TeamLeaderBattleEntry"
+        ]
+    },
     "TeamLeaderSendInvite": {
         "recognition": {
             "type": "OCR",
@@ -762,6 +1059,22 @@
                     351
                 ]
             }
+        },
+        "doc": "邀请列表里的第一位队友，任务选项写入 ^{队友昵称}$ 精确匹配，避免点到名字相近的玩家。"
+    },
+    "TeamLeaderTeammate2Name": {
+        "doc": "邀请列表里的第二位队友，任务选项写入 ^{第二个队友昵称}$ 精确匹配。",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "^未配置队友$",
+                "roi": [
+                    431,
+                    179,
+                    492,
+                    351
+                ]
+            }
         }
     },
     "TeamLeaderRoomTeammate": {
@@ -770,13 +1083,29 @@
             "param": {
                 "expected": "^未配置队友$",
                 "roi": [
-                    426,
-                    83,
-                    825,
-                    87
+                    50,
+                    90,
+                    1200,
+                    70
                 ]
             }
-        }
+        },
+        "doc": "房间里的第一位队友，任务选项写入 {队友昵称}；OCR 是包含匹配。范围覆盖三个位置的名字行，队友坐在哪个位置都能命中，自己的名字也在范围内。"
+    },
+    "TeamLeaderRoomTeammate2": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "^未配置队友$",
+                "roi": [
+                    50,
+                    90,
+                    1200,
+                    70
+                ]
+            }
+        },
+        "doc": "房间里的第二位队友，任务选项写入 {第二个队友昵称}。没填时是空正则；范围包含自己的名字，总有文字，所以总是命中，不会邀请第二位。"
     },
     "TeamLeaderFight": {
         "next": [
@@ -785,11 +1114,110 @@
             "[JumpBack]SafeInput_TeamLeaderReinviteTick",
             "[JumpBack]SafeInput_TeamLeaderReinvite",
             "SafeInput_TeamLeaderStart",
-            "TeamLeaderRoomDestroyed"
+            "TeamLeaderRoomDestroyed",
+            "[JumpBack]TeamLeaderWaitTeammate",
+            "TeamLeaderInviteMissing",
+            "TeamLeaderTeammateNoShow"
         ],
         "timeout": 180000,
         "pre_delay": 0,
         "post_delay": 0
+    },
+    "TeamLeaderWaitTeammate": {
+        "doc": "在房间里还不能开战：等 1 秒再看。10 次加上每轮识别耗时约 15 秒，用完后重新邀请没进房的队友。",
+        "pre_delay": 0,
+        "post_delay": 1000,
+        "max_hit": 10,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageTeamRoom"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": []
+    },
+    "TeamLeaderInviteMissing": {
+        "doc": "队友约 15 秒没进房：先看第一位，不在就重新邀请第一位（之后照常判断第二位）；第一位在就只邀请第二位。每场最多 3 轮，并重置等待和换栏预算。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "max_hit": 3,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageTeamRoom"
+                ]
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ResetCount",
+                "custom_action_param": {
+                    "nodes": [
+                        "TeamLeaderWaitTeammate",
+                        "TeamLeaderInviteAgain",
+                        "TeamLeaderInviteRememberList",
+                        "SafeInput_TeamLeaderInviteOpenFriends",
+                        "SafeInput_TeamLeaderInviteOpenRecent",
+                        "SafeInput_TeamLeaderInviteOpenGuild",
+                        "SafeInput_TeamLeaderInviteOpenCross"
+                    ],
+                    "strict": true
+                }
+            }
+        },
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "TeamLeaderReinviteFirst",
+            "TeamLeaderInviteAgain",
+            "TeamLeaderFight"
+        ]
+    },
+    "TeamLeaderReinviteFirst": {
+        "doc": "第一位队友不在房间（取反）：本轮邀请第一位。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "TeamLeaderRoomTeammate"
+                ]
+            }
+        },
+        "inverse": true,
+        "anchor": {
+            "TeamLeaderSelectTarget": "SafeInput_TeamLeaderSelectTeammate"
+        },
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "TeamLeaderInviteSlot"
+        ]
+    },
+    "TeamLeaderTeammateNoShow": {
+        "doc": "重新邀请 3 轮后仍不能开战，停止，不再无限等待。",
+        "focus": {
+            "Node.Recognition.Succeeded": "多次邀请后队友仍未全部进入房间（也请检查队友昵称是否填对），任务停止"
+        },
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageTeamRoom"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "NativeFlowFailed"
+        ]
     },
     "TeamLeaderSelectTeammate": {
         "recognition": {
@@ -813,6 +1241,29 @@
         "post_wait_freezes": 0,
         "on_error": [],
         "doc": "在邀请列表中选择完整昵称匹配的队友。"
+    },
+    "TeamLeaderSelectTeammate2": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageTeamInvite",
+                    "TeamLeaderTeammate2Name"
+                ],
+                "box_index": 1
+            }
+        },
+        "action": "DoNothing",
+        "post_delay": 0,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_TeamLeaderSelectTeammate2"
+        ],
+        "pre_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "on_error": [],
+        "doc": "在邀请列表中选择第二位队友。"
     },
     "TeamLeaderInviteScroll": {
         "recognition": {
@@ -866,9 +1317,10 @@
                 "all_of": [
                     "PageTeamRoom",
                     "TeamLeaderRoomTeammate",
+                    "TeamLeaderRoomTeammate2",
                     "TeamLeaderStartButton"
                 ],
-                "box_index": 2
+                "box_index": 3
             }
         },
         "action": "DoNothing",
@@ -881,7 +1333,7 @@
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
         "on_error": [],
-        "doc": "确认指定队友已在队伍中后开始战斗。"
+        "doc": "确认所有配置的队友都在房间后开始战斗。"
     },
     "TeamLeaderBattle": {
         "next": [
@@ -1301,7 +1753,10 @@
                         "CommonBattleWait",
                         "CommonBattleEnteringWait",
                         "CommonCutscene",
-                        "SafeInput_DailyRewardPopup"
+                        "SafeInput_DailyRewardPopup",
+                        "TeamLeaderWaitTeammate",
+                        "TeamLeaderInviteMissing",
+                        "TeamLeaderInviteStillOpen"
                     ],
                     "strict": true
                 }
@@ -1414,8 +1869,24 @@
         },
         "next": [
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_TeamLeaderOpenInvite"
-        ]
+            "TeamLeaderInviteSlot"
+        ],
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ResetCount",
+                "custom_action_param": {
+                    "nodes": [
+                        "TeamLeaderInviteAgain"
+                    ],
+                    "strict": true
+                }
+            }
+        },
+        "doc": "新建的房间：第一轮邀请第一位队友，并允许再开一轮邀请第二位。",
+        "anchor": {
+            "TeamLeaderSelectTarget": "SafeInput_TeamLeaderSelectTeammate"
+        }
     },
     "TeamLeaderFinish": {
         "doc": "达到次数后回到发起组队的副本收尾，由入口节点的 anchor 决定。",

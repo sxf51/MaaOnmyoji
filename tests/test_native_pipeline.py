@@ -49,7 +49,7 @@ class NativePipelineTests(unittest.TestCase):
 
     def test_invitation_click_targets_accept_icon(self):
         param = self.nodes["TeamMemberAccept"]["recognition"]["param"]
-        self.assertEqual(param["all_of"], ["TeamMemberLeaderName", "TeamMemberAcceptIcon"])
+        self.assertEqual(param["all_of"], ["TeamMemberLeaderName", "TeamMemberInviteTarget", "TeamMemberAcceptIcon"])
         self.assertEqual(param["all_of"][param["box_index"]], "TeamMemberAcceptIcon")
 
     def test_mitama_prepare_accepts_automatic_battle_transition(self):
@@ -91,7 +91,8 @@ class NativePipelineTests(unittest.TestCase):
         for name in ("DailyBattleResult", "PageResult", "MitamaBattleResult", "CommonActivityBattleResult", "CurrentActivityBattleResult"):
             expected = self.nodes[name]["recognition"]["param"]["expected"]
             patterns = [expected] if isinstance(expected, str) else expected
-            for text in ("点击屏幕继续", "点击空白区域继续"):
+            # Log 2026-11-13 02:22: the first character is often covered by the reward animation.
+            for text in ("点击屏幕继续", "点击空白区域继续", "击屏幕继续", "击空白区域继续"):
                 self.assertTrue(any(re.fullmatch(pattern, text) for pattern in patterns), (name, text))
 
     def test_composite_references_do_not_rely_on_inverse(self):

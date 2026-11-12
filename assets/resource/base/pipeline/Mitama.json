@@ -24,6 +24,7 @@
         "action": "DoNothing",
         "next": [
             "[JumpBack]CommonBountyInterrupt",
+            "MitamaTeamResume",
             "[JumpBack]MitamaNavigateOnce",
             "MitamaNavigateReady"
         ]
@@ -36,6 +37,81 @@
         "action": "DoNothing",
         "next": [
             "NavigateMitamaStage"
+        ]
+    },
+    "MitamaRoomTargetDungeon": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": ".*御魂.*",
+                "roi": [
+                    700,
+                    635,
+                    420,
+                    50
+                ]
+            }
+        }
+    },
+    "MitamaRoomTargetLayer": {
+        "doc": "选层选项同时写入房间目标的层名（包含匹配）。",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "^未配置目标$",
+                "roi": [
+                    700,
+                    635,
+                    420,
+                    50
+                ]
+            }
+        }
+    },
+    "MitamaTeamResume": {
+        "doc": "组队开启时，任务开始先判断能否在当前房间续接：已在组队房间，房间下方目标与所选关卡一致，所有队友都在，就不退出房间。每个任务只判断一次。仍按选项确认加成后进入组队等待开战；锁阵容和预设只在选层页处理，这里跳过。",
+        "enabled": false,
+        "max_hit": 1,
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageTeamRoom",
+                    "MitamaRoomTargetDungeon",
+                    "MitamaRoomTargetLayer",
+                    "TeamLeaderRoomTeammate",
+                    "TeamLeaderRoomTeammate2"
+                ]
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "NodeOverride",
+                "custom_action_param": {
+                    "TeamLeaderDropStatistics": {
+                        "action": {
+                            "param": {
+                                "custom_action_param": {
+                                    "scope": "Mitama",
+                                    "result_node": "DailyBattleResult"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "anchor": {
+            "TeamLeaderFinishTarget": "MitamaFinish",
+            "TeamLeaderNoResourceTarget": "MitamaFinish"
+        },
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "MitamaEnableBuff",
+            "MitamaPreparationDestination"
         ]
     },
     "MitamaOpenExplore": {
@@ -266,7 +342,7 @@
         "pre_delay": 0
     },
     "MitamaBuffPage": {
-        "doc": "可以开关加成的页面。探索页面板里这一行排第二，但开关和状态都相对这行文字定位，不受影响。",
+        "doc": "收尾时可以就地关闭加成的页面；不在这些页面（如组队房间）就先回探索页。",
         "recognition": {
             "type": "Or",
             "param": {
@@ -277,13 +353,26 @@
             }
         }
     },
+    "MitamaBuffAnyPage": {
+        "doc": "加成面板可能出现的页面：选层页、探索页，以及续接时的组队房间。面板里这一行的位置会变，开关和状态都相对这行文字定位。",
+        "recognition": {
+            "type": "Or",
+            "param": {
+                "any_of": [
+                    "PageMitamaStage",
+                    "PageExplore",
+                    "PageTeamRoom"
+                ]
+            }
+        }
+    },
     "MitamaOpenBuffMenu": {
         "desc": "御魂：打开加成面板",
         "recognition": {
             "type": "And",
             "param": {
                 "all_of": [
-                    "MitamaBuffPage",
+                    "MitamaBuffAnyPage",
                     "CommonBuffMenuIcon"
                 ],
                 "box_index": 1
@@ -307,7 +396,7 @@
             "type": "And",
             "param": {
                 "all_of": [
-                    "MitamaBuffPage",
+                    "MitamaBuffAnyPage",
                     "MitamaBuffPanel",
                     {
                         "recognition": {
@@ -356,7 +445,7 @@
             "type": "And",
             "param": {
                 "all_of": [
-                    "PageMitamaStage",
+                    "MitamaBuffAnyPage",
                     "MitamaBuffPanel"
                 ]
             }
@@ -393,7 +482,7 @@
             "type": "And",
             "param": {
                 "all_of": [
-                    "MitamaBuffPage",
+                    "MitamaBuffAnyPage",
                     "MitamaBuffPanel",
                     {
                         "recognition": {
@@ -442,7 +531,7 @@
             "type": "And",
             "param": {
                 "all_of": [
-                    "MitamaBuffPage",
+                    "MitamaBuffAnyPage",
                     "MitamaBuffPanel"
                 ]
             }
@@ -567,6 +656,7 @@
         },
         "next": [
             "[JumpBack]CommonBountyInterrupt",
+            "TeamLeaderResumeRoom",
             "SafeInput_TeamLeaderOpen"
         ]
     },
@@ -688,7 +778,7 @@
                     55
                 ],
                 "expected": [
-                    "^点击(屏幕|空白区域)继续$"
+                    "^(点?击)?(屏幕|空白区域)继续$"
                 ]
             }
         },
@@ -1053,7 +1143,7 @@
                 "all_of": [
                     "PageMitamaStage",
                     "TeamPresetFrameTemplate",
-                    "TeamPresetOut"
+                    "TeamPresetFooter"
                 ],
                 "box_index": 0
             }
@@ -1131,7 +1221,7 @@
             "type": "And",
             "param": {
                 "all_of": [
-                    "PageMitamaStage",
+                    "MitamaBuffAnyPage",
                     "MitamaBuffPanel",
                     "MitamaCheckBuffStatusClose"
                 ],
@@ -1156,7 +1246,7 @@
             "type": "And",
             "param": {
                 "all_of": [
-                    "MitamaBuffPage",
+                    "MitamaBuffAnyPage",
                     "MitamaBuffPanel",
                     "MitamaCheckBuffStatusOpen"
                 ],

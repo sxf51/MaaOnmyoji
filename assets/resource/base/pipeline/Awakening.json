@@ -21,6 +21,7 @@
         "doc": "从当前页面进入觉醒菜单或层数页。",
         "next": [
             "[JumpBack]CommonBountyInterrupt",
+            "AwakeningTeamResume",
             "NativeNavigationBlocked",
             "NativeResultBlocked",
             "[JumpBack]NativeDailyRewardPopup",
@@ -37,6 +38,97 @@
             "[JumpBack]NavigateAwakening"
         ],
         "timeout": 60000
+    },
+    "AwakeningRoomTargetDungeon": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": ".*觉醒.*",
+                "roi": [
+                    700,
+                    635,
+                    420,
+                    50
+                ]
+            }
+        }
+    },
+    "AwakeningRoomType": {
+        "doc": "麒麟选项同时写入房间目标的麒麟名（包含匹配）。",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "^未配置目标$",
+                "roi": [
+                    700,
+                    635,
+                    420,
+                    50
+                ]
+            }
+        }
+    },
+    "AwakeningRoomLayer": {
+        "doc": "层数选项同时写入房间目标的层数（包含匹配）。",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "^未配置目标$",
+                "roi": [
+                    700,
+                    635,
+                    420,
+                    50
+                ]
+            }
+        }
+    },
+    "AwakeningTeamResume": {
+        "doc": "组队开启时，任务开始先判断能否在当前房间续接：已在组队房间，房间下方目标与所选关卡一致，所有队友都在，就不退出房间。每个任务只判断一次。仍按选项确认加成后进入组队等待开战；锁阵容和预设只在选层页处理，这里跳过。",
+        "enabled": false,
+        "max_hit": 1,
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageTeamRoom",
+                    "AwakeningRoomTargetDungeon",
+                    "AwakeningRoomType",
+                    "AwakeningRoomLayer",
+                    "TeamLeaderRoomTeammate",
+                    "TeamLeaderRoomTeammate2"
+                ]
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "NodeOverride",
+                "custom_action_param": {
+                    "TeamLeaderDropStatistics": {
+                        "action": {
+                            "param": {
+                                "custom_action_param": {
+                                    "scope": "Awakening",
+                                    "result_node": "DailyBattleResult"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "anchor": {
+            "TeamLeaderFinishTarget": "AwakeningFinish",
+            "TeamLeaderNoResourceTarget": "AwakeningNoResource"
+        },
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "AwakeningEnableBuff",
+            "AwakeningBattleModeDestination"
+        ]
     },
     "AwakeningNavigationReady": {
         "doc": "进入觉醒页面后选择配置的麒麟。",
@@ -418,6 +510,7 @@
         },
         "next": [
             "[JumpBack]CommonBountyInterrupt",
+            "TeamLeaderResumeRoom",
             "SafeInput_TeamLeaderOpen"
         ]
     },
@@ -702,7 +795,7 @@
             "type": "And",
             "param": {
                 "all_of": [
-                    "AwakeningBuffPage",
+                    "AwakeningBuffAnyPage",
                     "CommonBuffMenuIcon"
                 ],
                 "box_index": 1
@@ -755,7 +848,7 @@
             "type": "And",
             "param": {
                 "all_of": [
-                    "AwakeningBuffPage",
+                    "AwakeningBuffAnyPage",
                     "AwakeningBuffPanel",
                     {
                         "recognition": {
@@ -792,7 +885,7 @@
             "type": "And",
             "param": {
                 "all_of": [
-                    "AwakeningBuffPage",
+                    "AwakeningBuffAnyPage",
                     "AwakeningBuffPanel",
                     {
                         "recognition": {
@@ -875,7 +968,7 @@
             "type": "And",
             "param": {
                 "all_of": [
-                    "PageAwakeningStage",
+                    "AwakeningBuffAnyPage",
                     "AwakeningBuffPanel"
                 ]
             }
@@ -920,13 +1013,30 @@
         "doc": "收尾关闭加成：已在选层页或探索页就地关闭，其他页面（如组队房间）先回探索页。",
         "next": [
             "[JumpBack]CommonBountyInterrupt",
-            "AwakeningBuffDisabled",
-            "[JumpBack]SafeInput_AwakeningDisableBuffClick",
-            "[JumpBack]SafeInput_AwakeningOpenBuffMenu",
+            "AwakeningDisableBuffReady",
             "[JumpBack]NavigateExplore"
         ],
         "action": "DoNothing",
         "enabled": false
+    },
+    "AwakeningDisableBuffReady": {
+        "doc": "已在可以就地关闭加成的页面时才打开面板，其他页面先回探索页。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "AwakeningBuffPage"
+                ]
+            }
+        },
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "AwakeningBuffDisabled",
+            "[JumpBack]SafeInput_AwakeningDisableBuffClick",
+            "[JumpBack]SafeInput_AwakeningOpenBuffMenu"
+        ]
     },
     "AwakeningBuffDisabled": {
         "doc": "状态确认完成后结束当前加成准备步骤。",
@@ -969,7 +1079,7 @@
             "type": "And",
             "param": {
                 "all_of": [
-                    "AwakeningBuffPage",
+                    "AwakeningBuffAnyPage",
                     "AwakeningBuffPanel"
                 ]
             }
@@ -1237,13 +1347,26 @@
         }
     },
     "AwakeningBuffPage": {
-        "doc": "可以关闭觉醒加成的页面。探索页面板首行同样是觉醒加成，开关位置相同。",
+        "doc": "收尾时可以就地关闭觉醒加成的页面；不在这些页面（如组队房间）就先回探索页。探索页面板首行同样是觉醒加成。",
         "recognition": {
             "type": "Or",
             "param": {
                 "any_of": [
                     "PageAwakeningStage",
                     "PageExplore"
+                ]
+            }
+        }
+    },
+    "AwakeningBuffAnyPage": {
+        "doc": "觉醒加成面板可能出现的页面，包括续接时的组队房间。",
+        "recognition": {
+            "type": "Or",
+            "param": {
+                "any_of": [
+                    "PageAwakeningStage",
+                    "PageExplore",
+                    "PageTeamRoom"
                 ]
             }
         }

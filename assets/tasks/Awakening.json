@@ -23,6 +23,7 @@
         "觉醒组队": {
             "type": "switch",
             "label": "组队（作为队长）",
+            "description": "作为队长建房、邀请队友并开战。组队前请先在游戏里手动选好出战式神：任务不会在组队房间里更换阵容，队伍预设也只换预设御魂、不点出战。",
             "default_case": "No",
             "cases": [
                 {
@@ -39,6 +40,22 @@
                 {
                     "name": "Yes",
                     "pipeline_override": {
+                        "TeamPresetInUse": {
+                            "next": [
+                                "[JumpBack]CommonBountyInterrupt",
+                                "TeamPresetClose"
+                            ]
+                        },
+                        "TeamPresetCloseRetry": {
+                            "next": [
+                                "[JumpBack]CommonBountyInterrupt",
+                                "TeamPresetWindowClosed",
+                                "TeamPresetClose"
+                            ]
+                        },
+                        "AwakeningTeamResume": {
+                            "enabled": true
+                        },
                         "AwakeningBattleModeDestination": {
                             "next": [
                                 "[JumpBack]CommonBountyInterrupt",
@@ -61,14 +78,45 @@
                     "pipeline_type": "string",
                     "default": "",
                     "pattern_msg": "请输入队友昵称",
-                    "description": "请输入队友的完整昵称",
-                    "verify": "^.+$"
+                    "description": "队友的完整昵称，名字含 + * ? ( ) [ ] { } | ^ $ 等符号时，把符号换成英文句点 . 即可（句点匹配任意一个字）",
+                    "verify": "^\\S(.*\\S)?$"
+                },
+                {
+                    "name": "觉醒第二个队友昵称",
+                    "pipeline_type": "string",
+                    "default": "",
+                    "pattern_msg": "三人组队时填写第二位队友的完整昵称，两人组队留空",
+                    "description": "三人组队时填写第二位队友的完整昵称，两人组队留空；名字含 + * ? ( ) [ ] { } | ^ $ 等符号时，把符号换成英文句点 . 即可（句点匹配任意一个字）",
+                    "verify": "^(\\S(.*\\S)?)?$"
                 }
             ],
             "pipeline_override": {
-                "AwakeningTask": {
-                    "attach": {
-                        "teammate": "{觉醒队友昵称}"
+                "TeamLeaderTeammateName": {
+                    "recognition": {
+                        "param": {
+                            "expected": "^{觉醒队友昵称}$"
+                        }
+                    }
+                },
+                "TeamLeaderTeammate2Name": {
+                    "recognition": {
+                        "param": {
+                            "expected": "^{觉醒第二个队友昵称}$"
+                        }
+                    }
+                },
+                "TeamLeaderRoomTeammate": {
+                    "recognition": {
+                        "param": {
+                            "expected": "{觉醒队友昵称}"
+                        }
+                    }
+                },
+                "TeamLeaderRoomTeammate2": {
+                    "recognition": {
+                        "param": {
+                            "expected": "{觉醒第二个队友昵称}"
+                        }
                     }
                 }
             }
@@ -85,6 +133,13 @@
                             "recognition": {
                                 "param": {
                                     "expected": "^火麒麟$"
+                                }
+                            }
+                        },
+                        "AwakeningRoomType": {
+                            "recognition": {
+                                "param": {
+                                    "expected": "火麒麟"
                                 }
                             }
                         },
@@ -124,6 +179,13 @@
                                 }
                             }
                         },
+                        "AwakeningRoomType": {
+                            "recognition": {
+                                "param": {
+                                    "expected": "风麒麟"
+                                }
+                            }
+                        },
                         "SafeInput_AwakeningOpenType": {
                             "action": {
                                 "param": {
@@ -160,6 +222,13 @@
                                 }
                             }
                         },
+                        "AwakeningRoomType": {
+                            "recognition": {
+                                "param": {
+                                    "expected": "水麒麟"
+                                }
+                            }
+                        },
                         "SafeInput_AwakeningOpenType": {
                             "action": {
                                 "param": {
@@ -193,6 +262,13 @@
                             "recognition": {
                                 "param": {
                                     "expected": "^雷麒麟$"
+                                }
+                            }
+                        },
+                        "AwakeningRoomType": {
+                            "recognition": {
+                                "param": {
+                                    "expected": "雷麒麟"
                                 }
                             }
                         },
@@ -236,6 +312,13 @@
                             "recognition": {
                                 "param": {
                                     "expected": "^(壹|一)层$"
+                                }
+                            }
+                        },
+                        "AwakeningRoomLayer": {
+                            "recognition": {
+                                "param": {
+                                    "expected": "(壹|一)层"
                                 }
                             }
                         },
@@ -311,6 +394,13 @@
                                 }
                             }
                         },
+                        "AwakeningRoomLayer": {
+                            "recognition": {
+                                "param": {
+                                    "expected": "(贰|二)层"
+                                }
+                            }
+                        },
                         "AwakeningLayerSelected": {
                             "recognition": {
                                 "param": {
@@ -380,6 +470,13 @@
                             "recognition": {
                                 "param": {
                                     "expected": "^(叁|三)层$"
+                                }
+                            }
+                        },
+                        "AwakeningRoomLayer": {
+                            "recognition": {
+                                "param": {
+                                    "expected": "(叁|三)层"
                                 }
                             }
                         },
@@ -455,6 +552,13 @@
                                 }
                             }
                         },
+                        "AwakeningRoomLayer": {
+                            "recognition": {
+                                "param": {
+                                    "expected": "(肆|四)层"
+                                }
+                            }
+                        },
                         "AwakeningLayerSelected": {
                             "recognition": {
                                 "param": {
@@ -524,6 +628,13 @@
                             "recognition": {
                                 "param": {
                                     "expected": "^(伍|五)层$"
+                                }
+                            }
+                        },
+                        "AwakeningRoomLayer": {
+                            "recognition": {
+                                "param": {
+                                    "expected": "(伍|五)层"
                                 }
                             }
                         },
@@ -599,6 +710,13 @@
                                 }
                             }
                         },
+                        "AwakeningRoomLayer": {
+                            "recognition": {
+                                "param": {
+                                    "expected": "(陆|六)层"
+                                }
+                            }
+                        },
                         "AwakeningLayerSelected": {
                             "recognition": {
                                 "param": {
@@ -668,6 +786,13 @@
                             "recognition": {
                                 "param": {
                                     "expected": "^(柒|七)层$"
+                                }
+                            }
+                        },
+                        "AwakeningRoomLayer": {
+                            "recognition": {
+                                "param": {
+                                    "expected": "(柒|七)层"
                                 }
                             }
                         },
@@ -743,6 +868,13 @@
                                 }
                             }
                         },
+                        "AwakeningRoomLayer": {
+                            "recognition": {
+                                "param": {
+                                    "expected": "(捌|八)层"
+                                }
+                            }
+                        },
                         "AwakeningLayerSelected": {
                             "recognition": {
                                 "param": {
@@ -815,6 +947,13 @@
                                 }
                             }
                         },
+                        "AwakeningRoomLayer": {
+                            "recognition": {
+                                "param": {
+                                    "expected": "(玖|九)层"
+                                }
+                            }
+                        },
                         "AwakeningLayerSelected": {
                             "recognition": {
                                 "param": {
@@ -884,6 +1023,13 @@
                             "recognition": {
                                 "param": {
                                     "expected": "^(拾|十)层$"
+                                }
+                            }
+                        },
+                        "AwakeningRoomLayer": {
+                            "recognition": {
+                                "param": {
+                                    "expected": "(拾|十)层"
                                 }
                             }
                         },
@@ -1050,7 +1196,7 @@
                     ]
                 }
             ],
-            "description": "开始挑战前完成分组、队伍、应用和出战确认；未找到入口或同款预设窗口时停止，不跳过换队。"
+            "description": "开始挑战前选好分组和队伍并应用预设御魂，看到“全队正在使用”后：单人模式点出战（队伍须满 5 人）；组队模式不点出战，关闭窗口后再建房；分组或队伍不在当前一屏时下滑列表查找；未找到入口或同款预设窗口时停止，不跳过换队。"
         },
         "觉醒预设分组与队伍": {
             "type": "input",

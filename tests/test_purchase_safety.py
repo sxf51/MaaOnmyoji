@@ -97,3 +97,40 @@ class PurchasePipelineTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ConfirmTargetTest(unittest.TestCase):
+    """A click next to 确定/确认 is refused unless its node is allowlisted (log 2026-11-13 02:41)."""
+
+    def test_nodes_that_click_a_confirm_button_are_allowlisted(self):
+        import json as _json
+        import re as _re
+        from custom.input_safety import CONFIRM_TARGETS
+        nodes = {}
+        for path in (ROOT / "assets/resource/base/pipeline").glob("*.json"):
+            if path.name != "Example.json":
+                nodes.update(_json.loads(path.read_text(encoding="utf-8")))
+
+        def expects_confirm(recognition, seen):
+            if not isinstance(recognition, dict):
+                return False
+            param = recognition.get("param", {})
+            if recognition.get("type") == "OCR":
+                expected = param.get("expected", [])
+                expected = [expected] if isinstance(expected, str) else expected
+                return any(_re.search(r"确定|确认", item) for item in expected)
+            children = param.get("all_of", param.get("any_of", []))
+            for child in children:
+                if isinstance(child, str):
+                    if child not in seen and expects_confirm(nodes.get(child, {}).get("recognition"), seen | {child}):
+                        return True
+                elif expects_confirm(child.get("recognition"), seen):
+                    return True
+            return False
+
+        for name in nodes:
+            if name.startswith("SafeInput_"):
+                public = name.removeprefix("SafeInput_")
+                if expects_confirm(nodes.get(public, {}).get("recognition"), {public}):
+                    self.assertIn(public, CONFIRM_TARGETS, name)
+

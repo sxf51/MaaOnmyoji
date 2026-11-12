@@ -3,7 +3,10 @@
         {
             "name": "shutdown",
             "label": "$shutdown_task",
-            "entry": "ShutdownTask"
+            "entry": "ShutdownTask",
+            "option": [
+                "游戏渠道"
+            ]
         }
     ]
 }

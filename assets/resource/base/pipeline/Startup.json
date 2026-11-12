@@ -1,5 +1,26 @@
 {
     "StartupTask": {
+        "desc": "启动游戏：先确定包名",
+        "doc": "按任务选项“游戏渠道”(attach.package) 和设备上已安装的包选出阴阳师包名，写进 StartupLaunch 的原生 StartApp。所选渠道没装或选“自动”时，匹配已安装的 com.netease.onmyoji 开头的包（多个时优先官服模拟器包、再网易官方包）。读设备包列表是动态数据，只有这一步用 Custom。",
+        "attach": {
+            "package": ""
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ResolveGamePackage",
+                "custom_action_param": {
+                    "target": "StartupLaunch",
+                    "action": "StartApp"
+                }
+            }
+        },
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "StartupLaunch"
+        ]
+    },
+    "StartupLaunch": {
         "desc": "启动游戏，并依次处理更新、资源下载、启动动画、区服选择和登录",
         "action": {
             "type": "StartApp",
@@ -14,7 +35,8 @@
         ],
         "on_error": [
             "StartupLaunchError"
-        ]
+        ],
+        "doc": "原生 StartApp；包名由 StartupTask 按渠道选项和已安装的包写入，默认官服模拟器包。"
     },
     "StartupLaunchError": {
         "doc": "启动失败的独立错误入口；保留购买保护，不与正常 next 重复路由。",

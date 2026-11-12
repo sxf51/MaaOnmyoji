@@ -137,6 +137,7 @@ class RaidTest(unittest.TestCase):
         self.assertEqual(selected['TeamPresetSelectGroup']['recognition']['param']['roi'],[637,182,112,372])
         self.assertEqual(selected['TeamPresetApplyIcon']['recognition']['param']['all_of'][0]['recognition']['param']['roi'],[770,181,376,320])
         self.assertEqual(override['TeamPresetOut']['recognition']['param']['roi'],[894,503,120,44])
+        self.assertNotIn('SafeInput_TeamPresetClose',override)
 
     def test_defeat_retry_is_per_card_and_after_retreat(self):
         battle=self.nodes['RealmRaidBattleSettle']['next']

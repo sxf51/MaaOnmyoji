@@ -19,16 +19,33 @@
                 {
                     "name": "完整队长昵称",
                     "pipeline_type": "string",
-                    "default": "",
+                    "default": "[一-龥]+",
                     "pattern_msg": "请输入队长的完整昵称",
-                    "description": "只接受这个昵称发来的组队邀请",
-                    "verify": "^.+$"
+                    "description": "只接受这个昵称发来的组队邀请。默认 [一-龥]+ 表示接受任意全中文昵称（含数字、字母或符号的名字不算）；填具体昵称则只接受这一位。名字含 + * ? ( ) [ ] { } | ^ $ 等符号时，把符号换成英文句点 . 即可（句点匹配任意一个字）",
+                    "verify": "^\\S(.*\\S)?$"
+                },
+                {
+                    "name": "邀请目标副本",
+                    "pipeline_type": "string",
+                    "default": "[一-龥]+",
+                    "pattern_msg": "填写邀请上显示的目标，如 御魂悲鸣；默认 [一-龥]+ 接受任何目标",
+                    "description": "邀请弹窗第二行的目标副本，如 御魂悲鸣、觉醒火麒麟；包含即可。默认 [一-龥]+ 表示任何目标都接受；留空同样不检查目标",
+                    "verify": "^(\\S(.*\\S)?)?$"
                 }
             ],
             "pipeline_override": {
-                "TeamMemberTask": {
-                    "attach": {
-                        "teammate": "{完整队长昵称}"
+                "TeamMemberLeaderName": {
+                    "recognition": {
+                        "param": {
+                            "expected": "^\\d*\\s*{完整队长昵称}$"
+                        }
+                    }
+                },
+                "TeamMemberInviteTarget": {
+                    "recognition": {
+                        "param": {
+                            "expected": "{邀请目标副本}"
+                        }
                     }
                 }
             }

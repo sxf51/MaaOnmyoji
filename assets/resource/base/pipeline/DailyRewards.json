@@ -108,10 +108,10 @@
             "param": {
                 "expected": "^获得奖励$",
                 "roi": [
-                    391,
-                    103,
-                    511,
-                    230
+                    460,
+                    95,
+                    360,
+                    130
                 ]
             }
         },
@@ -125,7 +125,7 @@
             "SafeInput_DailyRewardPopup"
         ],
         "on_error": [],
-        "doc": "关闭奖励展示，返回领奖流程。"
+        "doc": "关闭奖励展示，返回领奖流程。 范围参考 OAS I_UI_REWARD（“获得奖励”四个大字约在 530,126,211,66），缩小以减少每轮识别量。"
     },
     "DailyNoResource": {
         "recognition": {
@@ -195,7 +195,7 @@
         "recognition": {
             "type": "OCR",
             "param": {
-                "expected": "^点击(屏幕|空白区域)继续$",
+                "expected": "^(点?击)?(屏幕|空白区域)继续$",
                 "roi": [
                     440,
                     665,
@@ -214,7 +214,7 @@
             "SafeInput_DailyBattleResult"
         ],
         "on_error": [],
-        "doc": "点击结算页的继续提示。"
+        "doc": "点击结算页的继续提示。开头的“点击”允许缺字：提示开头常被奖励动画挡住，OCR 读成“击屏幕继续”（实测日志 2026-11-13 02:22），原来要求以“点击”开头会漏掉整屏 7 秒。"
     },
     "NativeMailClaimLoop": {
         "next": [

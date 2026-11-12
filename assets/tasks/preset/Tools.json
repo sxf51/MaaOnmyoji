@@ -1,0 +1,17 @@
+{
+    "preset": [
+        {
+            "name": "tools",
+            "label": "小工具",
+            "description": "小工具集合",
+            "task": [
+                {
+                    "name": "team_member"
+                },
+                {
+                    "name": "common_activity"
+                }
+            ]
+        }
+    ]
+}

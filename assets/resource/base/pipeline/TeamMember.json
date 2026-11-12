@@ -14,29 +14,11 @@
             }
         },
         "next": [
-            "TeamMemberConfigure"
-        ]
-    },
-    "TeamMemberConfigure": {
-        "pre_delay": 0,
-        "post_delay": 0,
-        "action": {
-            "type": "Custom",
-            "param": {
-                "custom_action": "ConfigureTeamRecognition",
-                "custom_action_param": {
-                    "nodes": [
-                        "TeamMemberLeaderName"
-                    ]
-                }
-            }
-        },
-        "next": [
             "TeamMemberBattleEntry"
         ]
     },
     "TeamMemberBattleEntry": {
-        "doc": "每场开始前重置点击和等待预算，不清零成功次数。",
+        "doc": "每场开始前重置点击和等待预算，不清零成功次数；之后先走结算后的短路径，再进主循环。",
         "pre_delay": 0,
         "post_delay": 0,
         "action": {
@@ -56,65 +38,89 @@
                         "SafeInput_CommonBattleEnableAuto",
                         "SafeInput_CommonNetworkRetry",
                         "SafeInput_CommonRewardOverflow",
-                        "SafeInput_MitamaTreasurePopup"
+                        "SafeInput_MitamaTreasurePopup",
+                        "TeamMemberRoomTick",
+                        "TeamMemberIdleEmoteReady",
+                        "SafeInput_TeamMemberAutoReadyConfirm",
+                        "TeamMemberInBattle",
+                        "TeamMemberAccept",
+                        "TeamMemberAcceptDefault",
+                        "SafeInput_TeamMemberWinResult"
                     ],
                     "strict": true
                 }
             }
         },
         "next": [
-            "TeamMemberLoop"
+            "TeamMemberAfterResult"
         ]
     },
     "TeamMemberLoop": {
-        "doc": "按当前画面处理邀请、房间等待和战斗，不假设处在哪个阶段：队长可能在接受前就已开战。5 分钟内画面没有可处理的内容则失败。",
+        "doc": "队员主循环。邀请和自动准备确认框几秒就过期，所以排在最前；其后是战斗、结算和房间等待。每轮所有候选按顺序在同一张截图上判断，越靠前越快命中。 过场等待不放进来（只等待不输入，删掉不影响流程）；御魂容量已满提示只在点完结算后出现，放在结算后的路由里。",
         "pre_delay": 0,
         "post_delay": 0,
         "action": "DoNothing",
         "next": [
             "[JumpBack]CommonBountyInterrupt",
-            "TeamMemberBattleFailure",
+            "TeamMemberAutoReadyConfirm",
+            "TeamMemberAcceptDefault",
+            "TeamMemberAccept",
+            "SafeInput_TeamMemberWinResult",
+            "TeamMemberResultSeen",
             "[JumpBack]MitamaTreasurePopup",
-            "[JumpBack]CommonRewardOverflow",
-            "SafeInput_TeamMemberBattleResult",
-            "[JumpBack]CommonBattleEnteringWait",
+            "[JumpBack]TeamMemberInBattle",
             "[JumpBack]DailyPrepare",
             "[JumpBack]SafeInput_DailyRewardPopup",
             "[JumpBack]CommonBattleEnableAuto",
             "[JumpBack]CommonBattleWait",
             "[JumpBack]CommonNetworkRetry",
-            "SafeInput_TeamMemberAcceptDefault",
-            "SafeInput_TeamMemberAccept",
             "TeamMemberBecameLeader",
+            "[JumpBack]TeamMemberRoomTick",
+            "[JumpBack]TeamMemberIdleEmoteReady",
             "[JumpBack]TeamMemberRoomWait"
         ],
         "timeout": 300000
     },
     "TeamMemberLeaderName": {
-        "doc": "邀请弹窗的队长昵称，由 ConfigureTeamRecognition 写入完整匹配。识别范围取自 OAS 的邀请区域，未实机校准。",
+        "doc": "邀请弹窗第一行的队长昵称，任务选项写入精确匹配，前面允许 OCR 连带读到的等级数字。范围从等级图标到“跨区”标签右侧，有齿轮按钮时名字整体右移也在范围内，长名字也放得下。",
         "recognition": {
             "type": "OCR",
             "param": {
                 "expected": "^未配置队长$",
                 "roi": [
-                    0,
-                    190,
-                    500,
-                    330
+                    180,
+                    212,
+                    400,
+                    44
+                ]
+            }
+        }
+    },
+    "TeamMemberInviteTarget": {
+        "doc": "邀请弹窗第二行的目标副本（如“御魂悲鸣”），任务选项写入包含匹配；没填时是空正则，任何目标都接受。",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "",
+                "roi": [
+                    180,
+                    254,
+                    400,
+                    40
                 ]
             }
         }
     },
     "TeamMemberAcceptIcon": {
-        "doc": "接受按钮是绿色对勾图标，没有文字。位置和颜色取自 OAS 的 gi_i_accept：左边是红叉拒绝，右边的齿轮绿勾是默认接受，都不在这个范围内。",
+        "doc": "普通接受：红叉右边的绿色对勾，只看弹窗这一行。",
         "recognition": {
             "type": "ColorMatch",
             "param": {
                 "roi": [
-                    113,
-                    225,
-                    63,
-                    280
+                    105,
+                    220,
+                    80,
+                    75
                 ],
                 "method": 4,
                 "lower": [
@@ -133,15 +139,15 @@
         }
     },
     "TeamMemberAcceptDefaultIcon": {
-        "doc": "默认接受按钮是齿轮加绿色对勾，位置和颜色取自 OAS 的 gi_i_accept_default，只匹配绿勾部分。",
+        "doc": "默认接受：带齿轮的绿色对勾，在普通对勾右边，只有部分邀请会出现；只匹配绿勾部分。",
         "recognition": {
             "type": "ColorMatch",
             "param": {
                 "roi": [
-                    205,
-                    223,
-                    61,
-                    297
+                    200,
+                    220,
+                    80,
+                    75
                 ],
                 "method": 4,
                 "lower": [
@@ -165,22 +171,36 @@
             "param": {
                 "all_of": [
                     "TeamMemberLeaderName",
+                    "TeamMemberInviteTarget",
                     "TeamMemberAcceptIcon"
                 ],
-                "box_index": 1
+                "box_index": 2
             }
         },
         "action": "DoNothing",
         "pre_delay": 0,
         "post_delay": 0,
-        "pre_wait_freezes": 0,
+        "pre_wait_freezes": {
+            "time": 300,
+            "target": [
+                0,
+                200,
+                620,
+                110
+            ],
+            "timeout": 2000
+        },
         "post_wait_freezes": 0,
         "next": [
             "[JumpBack]CommonBountyInterrupt",
             "SafeInput_TeamMemberAccept"
         ],
-        "on_error": [],
-        "doc": "邀请上没有默认接受图标时点普通绿勾。其他人的邀请不接受，但同屏有多条邀请时无法按行区分。"
+        "on_error": [
+            "TeamMemberLoop"
+        ],
+        "doc": "昵称和目标副本都对上、但没有齿轮对勾时点普通对勾。 邀请条会从左侧滑入，滑动中识别到的位置不准、按钮也可能还不响应（实测日志 2026-11-13 02:23 第一次点击没生效），所以先等这一块画面静止 300ms，再由 SafeInput 重新识别后点击；邀请已消失（2 秒内重新识别不到）就回主循环。",
+        "max_hit": 10,
+        "timeout": 2000
     },
     "TeamMemberAcceptDefault": {
         "recognition": {
@@ -188,25 +208,240 @@
             "param": {
                 "all_of": [
                     "TeamMemberLeaderName",
+                    "TeamMemberInviteTarget",
                     "TeamMemberAcceptDefaultIcon"
                 ],
-                "box_index": 1
+                "box_index": 2
             }
         },
         "action": "DoNothing",
         "pre_delay": 0,
         "post_delay": 0,
-        "pre_wait_freezes": 0,
+        "pre_wait_freezes": {
+            "time": 300,
+            "target": [
+                0,
+                200,
+                620,
+                110
+            ],
+            "timeout": 2000
+        },
         "post_wait_freezes": 0,
         "next": [
             "[JumpBack]CommonBountyInterrupt",
             "SafeInput_TeamMemberAcceptDefault"
         ],
-        "on_error": [],
-        "doc": "完整昵称匹配的队长发来邀请时优先点默认接受，之后不用每场再接受。"
+        "on_error": [
+            "TeamMemberLoop"
+        ],
+        "doc": "昵称和目标副本都对上时优先点带齿轮的对勾（默认接受），之后不用每场再接受。 邀请条会从左侧滑入，滑动中识别到的位置不准、按钮也可能还不响应（实测日志 2026-11-13 02:23 第一次点击没生效），所以先等这一块画面静止 300ms，再由 SafeInput 重新识别后点击；邀请已消失（2 秒内重新识别不到）就回主循环。",
+        "max_hit": 10,
+        "timeout": 2000
+    },
+    "TeamMemberAutoReadyConfirm": {
+        "doc": "点带齿轮的对勾（默认接受）后可能弹出“…并在战前自动准备”确认框，点“确定”后回主循环。接受后先在 TeamMemberAfterAccept 里找，主循环最前面也会找一次，晚出现也能点掉。不勾“不再提示”。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "TeamMemberAutoReadyText",
+                    "TeamMemberAutoReadyButton"
+                ],
+                "box_index": 1
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_TeamMemberAutoReadyConfirm"
+        ]
+    },
+    "TeamMemberAutoReadyText": {
+        "doc": "确认框正文第二行“并在战前自动准备”（第一行可能被左侧邀请条挡住）。",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "自动准备",
+                "roi": [
+                    420,
+                    270,
+                    440,
+                    75
+                ]
+            }
+        }
+    },
+    "TeamMemberAutoReadyButton": {
+        "doc": "确认框右下“确定”按钮。",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "^确定$",
+                "roi": [
+                    650,
+                    400,
+                    210,
+                    80
+                ]
+            }
+        }
+    },
+    "TeamMemberAfterAccept": {
+        "doc": "刚点了接受：只看自动准备确认框和房间，候选少所以一轮很快。确认框可能不出现；4 秒内都没看到就回主循环。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "timeout": 4000,
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "TeamMemberAutoReadyConfirm",
+            "TeamMemberAcceptJoined"
+        ],
+        "on_error": [
+            "TeamMemberLoop"
+        ]
+    },
+    "TeamMemberAfterResult": {
+        "doc": "结算后（以及任务开始时）的短路径：只看邀请、自动准备确认框、战斗失败、后续结算画面和房间，候选少所以一轮很快，下一场的邀请不会因为主循环一轮太慢而过期。6 秒内都没看到就回主循环。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "timeout": 6000,
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "TeamMemberAutoReadyConfirm",
+            "TeamMemberAcceptDefault",
+            "TeamMemberAccept",
+            "SafeInput_TeamMemberWinResult",
+            "TeamMemberResultSeen",
+            "TeamMemberAfterResultRoom"
+        ],
+        "on_error": [
+            "TeamMemberLoop"
+        ]
+    },
+    "TeamMemberAfterResultRoom": {
+        "doc": "结算后已经回到房间（默认接受时会自动进房）：回主循环等队长开战。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageTeamRoom"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "TeamMemberLoop"
+        ]
+    },
+    "TeamMemberAcceptJoined": {
+        "doc": "接受后没有确认框，已经进房：回主循环等队长开战。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageTeamRoom"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "TeamMemberLoop"
+        ]
+    },
+    "TeamMemberRoomTick": {
+        "doc": "已在房间等队长开战，每次 1 秒，15 次（约 15 秒）后交给 TeamMemberIdleEmote 发一次表情。",
+        "pre_delay": 0,
+        "post_delay": 1000,
+        "max_hit": 15,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageTeamRoom"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": []
+    },
+    "TeamMemberIdleEmoteReady": {
+        "doc": "防挂机：在房间等待约 15 秒后点一次左下角“发言”（参考 OAS 等待开战时定时点表情），避免长时间无操作被判无响应。先重置等待计数再点击；每场最多 20 次（约 5 分钟）。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "max_hit": 20,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageTeamRoom",
+                    "TeamRoomSpeakButton"
+                ],
+                "box_index": 1
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ResetCount",
+                "custom_action_param": {
+                    "nodes": [
+                        "TeamMemberRoomTick"
+                    ],
+                    "strict": true
+                }
+            }
+        },
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_TeamMemberIdleEmote"
+        ]
+    },
+    "TeamMemberIdleEmote": {
+        "doc": "左下角“发言”按钮的点击目标，由 TeamMemberIdleEmoteReady 进入。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageTeamRoom",
+                    "TeamRoomSpeakButton"
+                ],
+                "box_index": 1
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_TeamMemberIdleEmote"
+        ]
+    },
+    "TeamRoomSpeakButton": {
+        "doc": "组队房间左下角“发言”按钮的文字（图标在文字正上方）；房间布局不同时按钮可能更低，所以范围向下放宽。",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "^发言$",
+                "roi": [
+                    15,
+                    570,
+                    90,
+                    120
+                ]
+            }
+        }
     },
     "TeamMemberRoomWait": {
-        "doc": "已在房间，等队长开战。每次至少等 1 秒，300 次约等于房间自动解散的 5 分钟。",
+        "doc": "已在房间等队长开战的兜底等待：找不到“发言”按钮或表情次数用完时才走这里。每次至少等 1 秒，300 次约等于房间自动解散的 5 分钟。",
         "pre_delay": 0,
         "post_delay": 1000,
         "max_hit": 300,
@@ -264,8 +499,47 @@
         "on_error": [],
         "doc": "点掉成功结算，结算消失后才计次。"
     },
+    "TeamMemberWinResult": {
+        "doc": "胜利结算两页（“胜利”页、奖励袋页）的“点击屏幕继续”：认出胜利页就在同一轮直接点，不经过失败判断，提示一出现就点（实测日志 2026-11-13 02:41 先判失败再点慢了约 2 秒）。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "DailyBattleResult",
+                    "CommonBattleWinPage"
+                ],
+                "box_index": 0
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_TeamMemberWinResult"
+        ]
+    },
+    "TeamMemberResultSeen": {
+        "doc": "看到结算页的“点击屏幕继续”后才判断胜负：失败画面同样有这行提示，所以大范围的失败识别不必每轮都做，只在这里做一次，再决定停止还是点结算。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "DailyBattleResult"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "TeamMemberBattleFailure",
+            "SafeInput_TeamMemberBattleResult"
+        ]
+    },
     "TeamMemberWon": {
-        "doc": "结算消失后记一次成功。队员打完不一定回房间，所以不以房间页为准。",
+        "doc": "结算消失后记一次成功。一场战斗会连着出现两个结算画面（胜利、奖励），max_hit 1 保证每场只记一次，进入下一场战斗时由 TeamMemberInBattle 重新放开。队员打完不一定回房间，所以不以房间页为准。",
         "pre_delay": 0,
         "post_delay": 0,
         "recognition": {
@@ -290,7 +564,55 @@
         },
         "next": [
             "TeamMemberBattleEntry"
+        ],
+        "max_hit": 1
+    },
+    "TeamMemberResultCleared": {
+        "doc": "本场已经记过次数后又出现的结算（奖励画面）：点掉后不再计次，回到结算后的短路径（不经过 TeamMemberBattleEntry，点结算的次数上限不被重置）。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "DailyBattleResult"
+                ]
+            }
+        },
+        "inverse": true,
+        "action": "DoNothing",
+        "next": [
+            "TeamMemberAfterResult"
         ]
+    },
+    "TeamMemberInBattle": {
+        "doc": "看到进入战斗、准备或战斗画面：本场还没记过次数，放开 TeamMemberWon。每场只命中一次，不挡后面的战斗等待节点。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "max_hit": 1,
+        "recognition": {
+            "type": "Or",
+            "param": {
+                "any_of": [
+                    "PageBattleEntering",
+                    "DailyPrepare",
+                    "PageBattle"
+                ]
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ResetCount",
+                "custom_action_param": {
+                    "nodes": [
+                        "TeamMemberWon"
+                    ],
+                    "strict": true
+                }
+            }
+        },
+        "next": []
     },
     "TeamMemberBattleFailure": {
         "doc": "战斗失败：报告并点掉结算后停止，不计次数。",

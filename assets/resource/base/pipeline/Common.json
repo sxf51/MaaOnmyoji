@@ -1,6 +1,6 @@
 {
     "CommonBuffMenuIcon": {
-        "doc": "匹配副本顶部竖排加成图标，忽略右上角状态标记；调用方需组合对应副本页面条件。",
+        "doc": "加成灯笼：探索页随活动左右移动（实测约 x=255，活动结束后右移，OAS I_BUFF_1 范围 x 344-472），选层页约 x=420，组队房间约 x=815；范围覆盖 x 220-880。",
         "recognition": {
             "type": "TemplateMatch",
             "param": {
@@ -8,9 +8,9 @@
                 "threshold": 0.9,
                 "green_mask": true,
                 "roi": [
-                    400,
+                    220,
                     0,
-                    210,
+                    660,
                     90
                 ]
             }
@@ -213,10 +213,10 @@
                                     "重试"
                                 ],
                                 "roi": [
-                                    280,
-                                    160,
-                                    720,
-                                    420
+                                    400,
+                                    250,
+                                    480,
+                                    250
                                 ]
                             }
                         }
@@ -235,7 +235,7 @@
             "SafeInput_CommonNetworkRetry"
         ],
         "on_error": [],
-        "doc": "点击网络异常提示中的重试按钮。"
+        "doc": "点击网络异常提示中的重试按钮。 按钮范围参考 OAS（I_NETWORK_ABNORMAL 约 583,330,221,67），未实机校准。"
     },
     "CommonRefuseBounty": {
         "desc": "拒绝悬赏封印",
@@ -517,13 +517,14 @@
             "param": {
                 "expected": "网络.*(异常|连接|中断)|连接.*(失败|断开)|服务器.*(连接|无响应)",
                 "roi": [
-                    280,
-                    160,
-                    720,
-                    300
+                    400,
+                    200,
+                    480,
+                    200
                 ]
             }
-        }
+        },
+        "doc": "网络异常弹窗正文。范围参考 OAS I_NETWORK_ERROR（弹窗约 431,253,416,208），未实机校准。"
     },
     "RewardQuantityWhite": {
         "doc": "堆叠数量白字过滤；仅作为局部数量OCR的颜色参数。",
@@ -548,6 +549,60 @@
                     255
                 ],
                 "count": 1
+            }
+        }
+    },
+    "CommonBattleWinDrum": {
+        "doc": "胜利结算左上的红白太鼓。“胜利”两字是从无到有的动画、位置也随阵容变化，而鼓从第一帧就在（先小后大，实测截图小鼓约 445,175,70,60，大鼓约 395,95,175,180）。只数鲜红色像素：胜利鼓 1111，动画初期小鼓 144，失败页的灰紫鼓 0（2026-11-13 实机截图）。只在已经看到“点击屏幕继续”时使用，其它页面的红色不影响。",
+        "recognition": {
+            "type": "ColorMatch",
+            "param": {
+                "roi": [
+                    370,
+                    80,
+                    240,
+                    230
+                ],
+                "method": 4,
+                "lower": [
+                    171,
+                    0,
+                    0
+                ],
+                "upper": [
+                    255,
+                    59,
+                    69
+                ],
+                "count": 80
+            }
+        }
+    },
+    "CommonBattleRewardBag": {
+        "doc": "胜利结算第二页中间的“祝”字奖励袋（模板取自实机截图，原位置 560,470,180,120），袋子会弹动，范围留了余量。",
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": "Common/BattleRewardBag.png",
+                "roi": [
+                    500,
+                    420,
+                    300,
+                    220
+                ],
+                "threshold": 0.8
+            }
+        }
+    },
+    "CommonBattleWinPage": {
+        "doc": "胜利结算的两页之一：第一页红白太鼓（失败是灰紫鼓），第二页奖励袋。看到就不用再做大范围的失败识别。",
+        "recognition": {
+            "type": "Or",
+            "param": {
+                "any_of": [
+                    "CommonBattleWinDrum",
+                    "CommonBattleRewardBag"
+                ]
             }
         }
     }

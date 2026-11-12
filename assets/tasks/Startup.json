@@ -5,11 +5,110 @@
             "label": "$startup_task",
             "entry": "StartupTask",
             "option": [
+                "游戏渠道",
                 "启动区服"
             ]
         }
     ],
     "option": {
+        "游戏渠道": {
+            "type": "select",
+            "label": "游戏渠道",
+            "description": "选择要启动/关闭的阴阳师渠道包。选“自动”或所选渠道在设备上没装时，自动匹配已安装的 com.netease.onmyoji 开头的包（有多个时优先官服模拟器包）。",
+            "default_case": "自动",
+            "cases": [
+                {
+                    "name": "自动",
+                    "pipeline_override": {
+                        "StartupTask": {
+                            "attach": {
+                                "package": ""
+                            }
+                        },
+                        "ShutdownTask": {
+                            "attach": {
+                                "package": ""
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "官服",
+                    "pipeline_override": {
+                        "StartupTask": {
+                            "attach": {
+                                "package": "com.netease.onmyoji.wyzymnqsd_cps"
+                            }
+                        },
+                        "ShutdownTask": {
+                            "attach": {
+                                "package": "com.netease.onmyoji.wyzymnqsd_cps"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "网易官方包",
+                    "pipeline_override": {
+                        "StartupTask": {
+                            "attach": {
+                                "package": "com.netease.onmyoji"
+                            }
+                        },
+                        "ShutdownTask": {
+                            "attach": {
+                                "package": "com.netease.onmyoji"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "小米",
+                    "pipeline_override": {
+                        "StartupTask": {
+                            "attach": {
+                                "package": "com.netease.onmyoji.mi"
+                            }
+                        },
+                        "ShutdownTask": {
+                            "attach": {
+                                "package": "com.netease.onmyoji.mi"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "华为",
+                    "pipeline_override": {
+                        "StartupTask": {
+                            "attach": {
+                                "package": "com.netease.onmyoji.huawei"
+                            }
+                        },
+                        "ShutdownTask": {
+                            "attach": {
+                                "package": "com.netease.onmyoji.huawei"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "B服",
+                    "pipeline_override": {
+                        "StartupTask": {
+                            "attach": {
+                                "package": "com.netease.onmyoji.bili"
+                            }
+                        },
+                        "ShutdownTask": {
+                            "attach": {
+                                "package": "com.netease.onmyoji.bili"
+                            }
+                        }
+                    }
+                }
+            ]
+        },
         "启动区服": {
             "type": "input",
             "label": "区服",

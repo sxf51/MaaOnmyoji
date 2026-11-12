@@ -15,7 +15,8 @@ CONFIRM_TARGETS = frozenset({
     "NavConfirmExitExplore", "NativeNavConfirmExitExplore",
     "NavConfirmExitTeam", "NativeNavConfirmExitTeam",
     "DailyMailClaimConfirm", "TeamLeaderStartConfirm", "TeamLeaderReinvite",
-    "RealmRaidRetreatConfirm", "RealmRaidRetreatAgainConfirm",
+    "RealmRaidRetreatConfirm", "RealmRaidRetreatAgainConfirm", "RealmRaidRefreshConfirm",
+    "TeamMemberAutoReadyConfirm",
 })
 PURCHASE_WORDS = re.compile(r"购|充值|支付|付费|兑换|勾玉|魂玉|售价|价格")
 CONFIRM_WORDS = re.compile(r"确认|确定")

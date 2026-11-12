@@ -1,12 +1,26 @@
 {
     "TeamPresetRun": {
         "desc": "队伍预设：预设分支入口",
-        "action": "DoNothing",
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ResetCount",
+                "custom_action_param": {
+                    "nodes": [
+                        "TeamPresetGroupRemember",
+                        "TeamPresetTeamRemember",
+                        "TeamPresetClose"
+                    ],
+                    "strict": true
+                }
+            }
+        },
         "next": [
             "[JumpBack]CommonBountyInterrupt",
             "TeamPresetWindowReady",
             "TeamPresetOpen"
-        ]
+        ],
+        "doc": "预设入口：重置分组/队伍列表的滑动预算和组队关窗次数，再打开窗口。"
     },
     "TeamPresetOpen": {
         "desc": "队伍预设：打开队伍预设",
@@ -62,6 +76,109 @@
         "doc": "队伍预设：选择 UI 配置的预设分组。",
         "max_hit": 3
     },
+    "TeamPresetGroupRemember": {
+        "doc": "记下滑动前的画面供 TeamPresetGroupAtBottom 比较，本身不输入。也是分组列表的滑动预算：每次预设最多 5 次。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "TeamPresetWindow"
+                ]
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "RememberFrame"
+            }
+        },
+        "max_hit": 5,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "TeamPresetGroupScroll"
+        ]
+    },
+    "TeamPresetGroupScroll": {
+        "doc": "用贝塞尔曲线上滑左侧分组列表，继续找配置的分组。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "TeamPresetWindow"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_TeamPresetGroupScroll"
+        ]
+    },
+    "TeamPresetGroupAfterScroll": {
+        "doc": "滑动后重新找分组；列表没变说明已到底，滑动预算用完也停止。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "TeamPresetGroupSelected",
+            "TeamPresetSelectGroup",
+            "TeamPresetGroupAtBottom",
+            "TeamPresetGroupRemember",
+            "TeamPresetGroupMissing"
+        ]
+    },
+    "TeamPresetGroupAtBottom": {
+        "doc": "上次下滑后分组列表没变，已经到底。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "FrameUnchanged",
+                "custom_recognition_param": {
+                    "regions": [
+                        [
+                            411,
+                            161,
+                            112,
+                            372
+                        ]
+                    ],
+                    "max_changed_ratio": 0.15
+                }
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "TeamPresetGroupMissing"
+        ]
+    },
+    "TeamPresetGroupMissing": {
+        "doc": "滑到底仍找不到配置的分组，停止而不是换成别的预设。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "TeamPresetWindow"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "focus": {
+            "Node.Recognition.Succeeded": "队伍预设里找不到配置的分组，请检查分组名称，任务停止"
+        },
+        "next": [
+            "NativeFlowFailed"
+        ]
+    },
     "TeamPresetGroupSelected": {
         "desc": "队伍预设：检查 UI 配置的预设分组已经显示为金色选中背景",
         "recognition": {
@@ -112,7 +229,7 @@
         "action": "DoNothing",
         "next": [
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_TeamPresetSelectTeamConfigured"
+            "TeamPresetFindTeam"
         ]
     },
     "TeamPresetSelectTeam": {
@@ -150,6 +267,119 @@
         "post_wait_freezes": 0,
         "on_error": [],
         "doc": "队伍预设：选择 UI 配置的预设队伍。"
+    },
+    "TeamPresetFindTeam": {
+        "doc": "分组已选中：在右侧队伍列表找配置的队伍，当前一屏看不到就下滑继续找。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_TeamPresetSelectTeamConfigured",
+            "TeamPresetTeamRemember"
+        ]
+    },
+    "TeamPresetTeamRemember": {
+        "doc": "记下滑动前的画面供 TeamPresetTeamAtBottom 比较，本身不输入。也是队伍列表的滑动预算：每次预设最多 6 次。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "TeamPresetWindow"
+                ]
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "RememberFrame"
+            }
+        },
+        "max_hit": 6,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "TeamPresetTeamScroll"
+        ]
+    },
+    "TeamPresetTeamScroll": {
+        "doc": "用贝塞尔曲线上滑右侧队伍列表，继续找配置的队伍。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "TeamPresetWindow"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_TeamPresetTeamScroll"
+        ]
+    },
+    "TeamPresetTeamAfterScroll": {
+        "doc": "滑动后重新找队伍；列表没变说明已到底，滑动预算用完也停止。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_TeamPresetSelectTeamConfigured",
+            "TeamPresetTeamAtBottom",
+            "TeamPresetTeamRemember",
+            "TeamPresetTeamMissing"
+        ]
+    },
+    "TeamPresetTeamAtBottom": {
+        "doc": "上次下滑后队伍列表没变，已经到底。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "FrameUnchanged",
+                "custom_recognition_param": {
+                    "regions": [
+                        [
+                            544,
+                            160,
+                            376,
+                            320
+                        ]
+                    ],
+                    "max_changed_ratio": 0.15
+                }
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "TeamPresetTeamMissing"
+        ]
+    },
+    "TeamPresetTeamMissing": {
+        "doc": "滑到底仍找不到配置的队伍，停止而不是换成别的预设。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "TeamPresetWindow"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "focus": {
+            "Node.Recognition.Succeeded": "队伍预设里找不到配置的队伍，请检查队伍名称，任务停止"
+        },
+        "next": [
+            "NativeFlowFailed"
+        ]
     },
     "TeamPresetApply": {
         "desc": "队伍预设：反复点击预设队伍图标并处理确认框，直到全队开始使用",
@@ -284,10 +514,10 @@
             "type": "OCR",
             "param": {
                 "roi": [
-                    440,
+                    450,
                     160,
-                    400,
-                    55
+                    380,
+                    115
                 ],
                 "expected": [
                     "全队正在使用"
@@ -297,8 +527,10 @@
         "action": "DoNothing",
         "next": [
             "[JumpBack]CommonBountyInterrupt",
-            "TeamPresetOut"
-        ]
+            "TeamPresetOut",
+            "TeamPresetShortTeam"
+        ],
+        "doc": "看到“全队正在使用预设御魂（和阴阳术）”：单人模式接着点“出战”（不满 5 人没有出战按钮时停止）；组队模式由组队选项改写成直接关窗口。提示单独出现时在 y≈237（日志 2026-11-13 00:47 [502,237,273,19]）；同时还有“替换阴阳师契灵成功”时两条叠放，这一条被顶到 y≈175-205（2026-11-13 03:14 截图），所以范围覆盖 y 160-275。"
     },
     "TeamPresetOut": {
         "desc": "队伍预设：预设队伍出战",
@@ -326,8 +558,47 @@
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
         "on_error": [],
-        "doc": "队伍预设：预设队伍出战。",
+        "doc": "单人模式：看到“全队正在使用”后点“出战”把这支预设设为当前阵容，再确认窗口已关闭。最多 3 次。",
         "max_hit": 3
+    },
+    "TeamPresetShortTeam": {
+        "doc": "单人模式：预设已应用但底栏没有“出战”（选中的队伍不满 5 人），无法出战，停止并提示，不当作换好了。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "TeamPresetWindow"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "focus": {
+            "Node.Recognition.Succeeded": "预设队伍不满 5 个式神，单人模式无法出战，请补满队伍或换一个预设，任务停止"
+        },
+        "next": [
+            "NativeFlowFailed"
+        ]
+    },
+    "TeamPresetClose": {
+        "doc": "组队模式：预设御魂已应用（全队正在使用），不点“出战”，点窗口右侧空白处 [969,424,284,120] 关闭窗口（在窗口右边框外、组队/挑战按钮上方）。由组队选项改写 TeamPresetInUse 和 TeamPresetCloseRetry 接到这里；单人模式不经过。最多 3 次。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "TeamPresetWindow"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "max_hit": 3,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_TeamPresetClose"
+        ]
     },
     "TeamPresetDone": {
         "pre_delay": 0,
@@ -363,13 +634,31 @@
         }
     },
     "TeamPresetFrame": {
-        "doc": "识别预设窗口边框或配置分组文字；窗口判定还需调用页和出战按钮同时命中。",
+        "doc": "识别预设窗口边框或配置分组文字；窗口判定还需调用页和底栏同时命中。",
         "recognition": {
             "type": "Or",
             "param": {
                 "any_of": [
                     "TeamPresetFrameTemplate",
                     "TeamPresetSelectGroup"
+                ]
+            }
+        }
+    },
+    "TeamPresetFooter": {
+        "doc": "预设窗口底栏：选中的队伍满 5 人时是“出战”按钮，不满时是“预设队伍中式神数量必须满5人才能出战”提示，两种都算窗口开着。点击出战仍由 TeamPresetOut 识别。",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    545,
+                    482,
+                    380,
+                    44
+                ],
+                "expected": [
+                    "出战",
+                    "必须满"
                 ]
             }
         }
@@ -381,10 +670,11 @@
                 "all_of": [
                     "TeamPresetContext",
                     "TeamPresetFrame",
-                    "TeamPresetOut"
+                    "TeamPresetFooter"
                 ]
             }
-        }
+        },
+        "doc": "预设窗口已打开：调用页、窗口边框或分组文字、底栏同时命中。底栏按当前选中的队伍显示“出战”或“预设队伍中式神数量必须满5人才能出战”，两种都算。"
     },
     "TeamPresetWindowReady": {
         "recognition": {
@@ -398,8 +688,10 @@
         "next": [
             "[JumpBack]CommonBountyInterrupt",
             "TeamPresetGroupSelected",
-            "TeamPresetSelectGroup"
-        ]
+            "TeamPresetSelectGroup",
+            "TeamPresetGroupRemember"
+        ],
+        "doc": "窗口已打开：配置的分组已选中就去找队伍；看得到就点；当前一屏看不到就下滑分组列表继续找。"
     },
     "TeamPresetWaitWindow": {
         "pre_delay": 0,

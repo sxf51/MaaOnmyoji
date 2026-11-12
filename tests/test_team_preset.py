@@ -66,14 +66,16 @@ class TeamPresetTest(unittest.TestCase):
             self.assertEqual(selected['TeamPresetApplyIcon']['recognition']['param']['all_of'][0]['recognition']['param']['roi'],[544,160,376,320])
 
     def test_shared_flow_verifies_window_before_and_after_input(self):
-        self.assertEqual(self.nodes['TeamPresetWindow']['recognition']['param']['all_of'],['TeamPresetContext','TeamPresetFrame','TeamPresetOut'])
+        self.assertEqual(self.nodes['TeamPresetWindow']['recognition']['param']['all_of'],['TeamPresetContext','TeamPresetFrame','TeamPresetFooter'])
         self.assertTrue(self.nodes['TeamPresetWindowClosed']['inverse'])
         self.assertEqual(self.nodes['SafeInput_TeamPresetOut']['next'],['TeamPresetVerifyClosed'])
         self.assertTrue(is_control_route(self.nodes['SafeInput_TeamPresetOut']['next'],self.nodes.get))
+        self.assertEqual(self.nodes['SafeInput_TeamPresetClose']['next'],['TeamPresetVerifyClosed'])
         self.assertEqual(self.nodes['TeamPresetVerifyClosed']['next'][:1],['[JumpBack]CommonBountyInterrupt'])
         self.assertEqual(self.nodes['TeamPresetDone']['next'],["[JumpBack]CommonBountyInterrupt",'[Anchor]TeamPresetReturn'])
         self.assertEqual(self.nodes['TeamPresetOpen']['max_hit'],3)
         self.assertEqual(self.nodes['TeamPresetOut']['max_hit'],3)
+        self.assertEqual(self.nodes['TeamPresetClose']['max_hit'],3)
 
     def test_activity_repeats_skip_completed_preset_not_preparation_gate(self):
         for prefix in ('CommonActivity','CurrentActivity'):
@@ -83,4 +85,77 @@ class TeamPresetTest(unittest.TestCase):
                              ['[JumpBack]CommonBountyInterrupt',prefix+'Preset','SafeInput_'+prefix+'Challenge'])
             # Every battle passes Preparation again; max_hit runs the preset once per task.
             self.assertEqual(self.nodes[prefix+'Preset']['max_hit'],1)
+
+    def test_group_and_team_lists_are_searched_with_bezier_swipes(self):
+        bounty='[JumpBack]CommonBountyInterrupt'
+        self.assertEqual(self.nodes['TeamPresetWindowReady']['next'][-1],'TeamPresetGroupRemember')
+        self.assertEqual(self.nodes['TeamPresetGroupSelected']['next'],[bounty,'TeamPresetFindTeam'])
+        self.assertEqual(self.nodes['TeamPresetFindTeam']['next'],[bounty,'SafeInput_TeamPresetSelectTeamConfigured','TeamPresetTeamRemember'])
+        resets=self.nodes['TeamPresetRun']['action']['param']['custom_action_param']['nodes']
+        for side,roi,budget in (('Group',[411,161,112,372],5),('Team',[544,160,376,320],6)):
+            remember=self.nodes[f'TeamPreset{side}Remember']
+            self.assertEqual(remember['action']['param']['custom_action'],'RememberFrame')
+            self.assertEqual(remember['max_hit'],budget)
+            self.assertIn(f'TeamPreset{side}Remember',resets)
+            swipe=self.nodes[f'SafeInput_TeamPreset{side}Scroll']['action']['param']
+            self.assertEqual(swipe['custom_action'],'BezierSwipe')
+            begin,end=swipe['custom_action_param']['begin'],swipe['custom_action_param']['end']
+            for x,y,w,h in (begin,end):
+                self.assertTrue(roi[0]<=x and x+w<=roi[0]+roi[2] and roi[1]<=y and y+h<=roi[1]+roi[3],side)
+            self.assertGreater(begin[1],end[1])
+            bottom=self.nodes[f'TeamPreset{side}AtBottom']['recognition']['param']['custom_recognition_param']
+            self.assertEqual(bottom['regions'],[roi])
+            after=self.nodes[f'TeamPreset{side}AfterScroll']['next']
+            self.assertEqual(after[-3:],[f'TeamPreset{side}AtBottom',f'TeamPreset{side}Remember',f'TeamPreset{side}Missing'])
+            self.assertEqual(self.nodes[f'TeamPreset{side}Missing']['next'],['NativeFlowFailed'])
+
+    def test_solo_sorties_and_team_mode_closes_after_in_use(self):
+        # Solo needs 出战 to set the lineup; team mode only applies the preset mitama.
+        bounty='[JumpBack]CommonBountyInterrupt'
+        self.assertEqual(self.nodes['TeamPresetInUse']['next'],[bounty,'TeamPresetOut','TeamPresetShortTeam'])
+        self.assertEqual(self.nodes['TeamPresetCloseRetry']['next'],[bounty,'TeamPresetWindowClosed','TeamPresetOut'])
+        self.assertEqual(self.nodes['TeamPresetShortTeam']['next'],['NativeFlowFailed'])
+        # Blank area right of the window; the window's scrollbar sits at x 938.
+        x,y,w,h=self.nodes['SafeInput_TeamPresetClose']['action']['param']['target']
+        self.assertEqual([x,y,w,h],[969,424,284,120])
+        self.assertGreater(x,960)      # outside the window's right frame
+        self.assertLess(y+h,560)       # above the 组队/挑战 buttons
+        self.assertLessEqual(x+w,1280)
+        for rel,switch in (('Mitama','是否组队'),('Awakening','觉醒组队')):
+            cases={c['name']:c['pipeline_override'] for c in load_jsonc(ROOT/f'assets/tasks/{rel}.json')['option'][switch]['cases']}
+            self.assertEqual(cases['Yes']['TeamPresetInUse']['next'],[bounty,'TeamPresetClose'])
+            self.assertEqual(cases['Yes']['TeamPresetCloseRetry']['next'],[bounty,'TeamPresetWindowClosed','TeamPresetClose'])
+            self.assertNotIn('TeamPresetInUse',cases['No'])
+
+    def test_window_is_recognized_by_either_footer(self):
+        # Screenshot: a 4-shikigami team shows 预设队伍中式神数量必须满5人才能出战 where 出战 would be.
+        self.assertEqual(self.nodes['TeamPresetWindow']['recognition']['param']['all_of'],['TeamPresetContext','TeamPresetFrame','TeamPresetFooter'])
+        footer=self.nodes['TeamPresetFooter']['recognition']['param']
+        self.assertEqual(footer['expected'],['出战','必须满'])
+        x,y,w,h=footer['roi']; ox,oy,ow,oh=self.nodes['TeamPresetOut']['recognition']['param']['roi']
+        self.assertTrue(x<=578 and x+w>=890 and x<=ox and x+w>=ox+ow and y<=oy and y+h>=oy+oh)
+        self.assertIn('TeamPresetFooter',self.nodes['MitamaLockPresetWindow']['recognition']['param']['all_of'])
+        # RealmRaid's window sits 226 right and 21 lower; every new area moves with it.
+        raid=self.nodes['RealmRaidPreset']['action']['param']['custom_action_param']
+        dx,dy=226,21
+        self.assertEqual(raid['TeamPresetFooter']['recognition']['param']['roi'],[x+dx,y+dy,w,h])
+        for side in ('Group','Team'):
+            base=self.nodes[f'TeamPreset{side}AtBottom']['recognition']['param']['custom_recognition_param']['regions'][0]
+            moved=raid[f'TeamPreset{side}AtBottom']['recognition']['param']['custom_recognition_param']['regions'][0]
+            self.assertEqual(moved,[base[0]+dx,base[1]+dy,base[2],base[3]])
+            swipe=self.nodes[f'SafeInput_TeamPreset{side}Scroll']['action']['param']['custom_action_param']
+            raid_swipe=raid[f'SafeInput_TeamPreset{side}Scroll']['action']['param']['custom_action_param']
+            for key in ('begin','end'):
+                bx,by,bw,bh=swipe[key]
+                self.assertEqual(raid_swipe[key],[bx+dx,by+dy,bw,bh])
+            self.assertEqual({k:v for k,v in raid_swipe.items() if k not in ('begin','end')},
+                             {k:v for k,v in swipe.items() if k not in ('begin','end')})
+
+    def test_in_use_toast_is_inside_its_ocr_area(self):
+        # Log 2026-11-13 00:47: 全队正在使用预设御魂 at [502,237,273,19]; the old [440,160,400,55] missed it.
+        # Screenshot 2026-11-13 03:14: stacked with 替换阴阳师契灵成功 [519,222,241,31], it moves up to about (470,175,340,30).
+        x,y,w,h=self.nodes['TeamPresetInUse']['recognition']['param']['roi']
+        for bx,by,bw,bh in ((502,237,273,19),(470,175,340,30)):
+            self.assertTrue(x<=bx and x+w>=bx+bw and y<=by and y+h>=by+bh,(bx,by))
+        self.assertIn('全队正在使用',self.nodes['TeamPresetInUse']['recognition']['param']['expected'])
 

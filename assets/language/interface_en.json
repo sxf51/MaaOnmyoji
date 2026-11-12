@@ -12,7 +12,7 @@
     "shutdown_task": "Shutdown Game",
     "mitama_task": "Mitama",
     "team_member_task": "Team Member",
-    "team_member_task_doc": "Works for any dungeon: wait on any page for the named leader's invite, join the battle, then wait for the next invite. Fails on defeat or after 5 minutes without an invite.",
+    "team_member_task_doc": "Works for any dungeon: wait on any page for the named leader's invite, join the battle, then wait for the next invite. Fails on defeat or after 5 minutes without an invite. Pick your battle shikigami in the game beforehand; the task never changes your lineup.",
     "mitama_task_doc": "Enter Soul Zones from the courtyard and repeat until the configured count or insufficient AP",
     "common_activity_task": "Common Activity",
     "common_activity_task_doc": "Repeat the battle from the event screen until the configured count is reached",

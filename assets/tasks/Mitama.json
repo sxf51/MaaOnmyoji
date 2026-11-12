@@ -36,6 +36,15 @@
                                 }
                             }
                         },
+                        "MitamaRoomTargetLayer": {
+                            "recognition": {
+                                "param": {
+                                    "expected": [
+                                        "拾层"
+                                    ]
+                                }
+                            }
+                        },
                         "MitamaTask": {
                             "attach": {
                                 "stage_name": "魂十(拾层)"
@@ -47,6 +56,15 @@
                     "name": "魂土(悲鸣)",
                     "pipeline_override": {
                         "MitamaSelectBaqin": {
+                            "recognition": {
+                                "param": {
+                                    "expected": [
+                                        "悲鸣"
+                                    ]
+                                }
+                            }
+                        },
+                        "MitamaRoomTargetLayer": {
                             "recognition": {
                                 "param": {
                                     "expected": [
@@ -74,6 +92,15 @@
                                 }
                             }
                         },
+                        "MitamaRoomTargetLayer": {
+                            "recognition": {
+                                "param": {
+                                    "expected": [
+                                        "神罚"
+                                    ]
+                                }
+                            }
+                        },
                         "MitamaTask": {
                             "attach": {
                                 "stage_name": "魂王(神罚)"
@@ -85,6 +112,15 @@
                     "name": "魂B(虚无)",
                     "pipeline_override": {
                         "MitamaSelectBaqin": {
+                            "recognition": {
+                                "param": {
+                                    "expected": [
+                                        "虚无"
+                                    ]
+                                }
+                            }
+                        },
+                        "MitamaRoomTargetLayer": {
                             "recognition": {
                                 "param": {
                                     "expected": [
@@ -220,7 +256,7 @@
                     ]
                 }
             ],
-            "description": "开始挑战前完成分组、队伍、应用和出战确认；未找到入口或同款预设窗口时停止，不跳过换队。"
+            "description": "开始挑战前选好分组和队伍并应用预设御魂，看到“全队正在使用”后：单人模式点出战（队伍须满 5 人）；组队模式不点出战，关闭窗口后再建房；分组或队伍不在当前一屏时下滑列表查找；未找到入口或同款预设窗口时停止，不跳过换队。"
         },
         "御魂预设分组与队伍": {
             "type": "input",
@@ -359,6 +395,7 @@
         "是否组队": {
             "type": "switch",
             "label": "组队（作为队长）",
+            "description": "作为队长建房、邀请队友并开战。组队前请先在游戏里手动选好出战式神：任务不会在组队房间里更换阵容，队伍预设也只换预设御魂、不点出战。",
             "default_case": "No",
             "cases": [
                 {
@@ -375,6 +412,22 @@
                 {
                     "name": "Yes",
                     "pipeline_override": {
+                        "TeamPresetInUse": {
+                            "next": [
+                                "[JumpBack]CommonBountyInterrupt",
+                                "TeamPresetClose"
+                            ]
+                        },
+                        "TeamPresetCloseRetry": {
+                            "next": [
+                                "[JumpBack]CommonBountyInterrupt",
+                                "TeamPresetWindowClosed",
+                                "TeamPresetClose"
+                            ]
+                        },
+                        "MitamaTeamResume": {
+                            "enabled": true
+                        },
                         "MitamaBattleModeDestination": {
                             "next": [
                                 "[JumpBack]CommonBountyInterrupt",
@@ -397,14 +450,45 @@
                     "pipeline_type": "string",
                     "default": "",
                     "pattern_msg": "请输入队友昵称",
-                    "description": "请输入队友昵称",
-                    "verify": "^.+$"
+                    "description": "队友的完整昵称，名字含 + * ? ( ) [ ] { } | ^ $ 等符号时，把符号换成英文句点 . 即可（句点匹配任意一个字）",
+                    "verify": "^\\S(.*\\S)?$"
+                },
+                {
+                    "name": "第二个队友昵称",
+                    "pipeline_type": "string",
+                    "default": "",
+                    "pattern_msg": "三人组队时填写第二位队友的完整昵称，两人组队留空",
+                    "description": "三人组队时填写第二位队友的完整昵称，两人组队留空；名字含 + * ? ( ) [ ] { } | ^ $ 等符号时，把符号换成英文句点 . 即可（句点匹配任意一个字）",
+                    "verify": "^(\\S(.*\\S)?)?$"
                 }
             ],
             "pipeline_override": {
-                "MitamaTask": {
-                    "attach": {
-                        "teammate": "{队友昵称}"
+                "TeamLeaderTeammateName": {
+                    "recognition": {
+                        "param": {
+                            "expected": "^{队友昵称}$"
+                        }
+                    }
+                },
+                "TeamLeaderTeammate2Name": {
+                    "recognition": {
+                        "param": {
+                            "expected": "^{第二个队友昵称}$"
+                        }
+                    }
+                },
+                "TeamLeaderRoomTeammate": {
+                    "recognition": {
+                        "param": {
+                            "expected": "{队友昵称}"
+                        }
+                    }
+                },
+                "TeamLeaderRoomTeammate2": {
+                    "recognition": {
+                        "param": {
+                            "expected": "{第二个队友昵称}"
+                        }
                     }
                 }
             }

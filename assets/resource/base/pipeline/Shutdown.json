@@ -1,5 +1,28 @@
 {
     "ShutdownTask": {
+        "desc": "关闭游戏：先确定包名",
+        "doc": "按任务选项“游戏渠道”(attach.package) 和设备上已安装的包选出阴阳师包名，写进 ShutdownStop 的原生 StopApp。所选渠道没装或选“自动”时，匹配已安装的 com.netease.onmyoji 开头的包（多个时优先官服模拟器包、再网易官方包）。读设备包列表是动态数据，只有这一步用 Custom。",
+        "attach": {
+            "package": ""
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ResolveGamePackage",
+                "custom_action_param": {
+                    "target": "ShutdownStop",
+                    "action": "StopApp"
+                }
+            }
+        },
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "ShutdownStop"
+        ]
+    },
+    "ShutdownStop": {
+        "desc": "关闭游戏",
+        "doc": "原生 StopApp；包名由 ShutdownTask 写入，默认官服模拟器包。",
         "action": {
             "type": "StopApp",
             "param": {

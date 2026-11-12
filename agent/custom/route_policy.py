@@ -5,7 +5,7 @@ from typing import Any, Callable
 
 GUARD_PREFIX = ["[JumpBack]CommonBountyInterrupt"]
 _GUARDS = set(GUARD_PREFIX)
-_CONTROL_ACTIONS = {"ResetCount", "NodeOverride", "ConfigureTeamRecognition", "TargetCountDetermine", "TargetCountInit"}
+_CONTROL_ACTIONS = {"ResetCount", "NodeOverride", "TargetCountDetermine", "TargetCountInit", "ResolveGamePackage"}
 
 
 def is_control_node(node: Any) -> bool:

@@ -6,8 +6,8 @@ from custom.action import (  # noqa: F401
     bezier_swipe,
     drop_statistics,
     general,
+    game_package,
     target_count,
-    team_config,
 )
 from custom.action.drop_statistics import recover_pending_reports, shutdown_reporter
 from custom.reco import startup as startup_reco  # noqa: F401

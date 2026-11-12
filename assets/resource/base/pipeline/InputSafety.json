@@ -1590,10 +1590,10 @@
             "type": "Click",
             "param": {
                 "target": [
-                    949,
-                    410,
-                    294,
-                    132
+                    940,
+                    300,
+                    100,
+                    130
                 ]
             }
         },
@@ -1853,6 +1853,58 @@
         "pre_delay": 0,
         "pre_wait_freezes": 0
     },
+    "SafeInput_TeamLeaderOpenInviteMiddle": {
+        "desc": "组队：点中间空位打开邀请列表",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "TeamLeaderOpenInviteMiddle",
+                    {
+                        "sub_name": "SafeInput_TeamLeaderOpenInviteMiddle",
+                        "recognition": {
+                            "type": "Custom",
+                            "param": {
+                                "roi": "TeamLeaderOpenInviteMiddle",
+                                "custom_recognition": "InputTarget",
+                                "custom_recognition_param": {
+                                    "target_node": "TeamLeaderOpenInviteMiddle"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "box_index": 1
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    606,
+                    227,
+                    54,
+                    56
+                ]
+            }
+        },
+        "post_wait_freezes": {
+            "time": 500,
+            "target": [
+                346,
+                178,
+                590,
+                355
+            ],
+            "timeout": 3000
+        },
+        "post_delay": 0,
+        "next": [
+            "TeamLeaderFindTeammate"
+        ],
+        "pre_delay": 0,
+        "pre_wait_freezes": 0
+    },
     "SafeInput_TeamLeaderSendInvite": {
         "recognition": {
             "type": "And",
@@ -1883,7 +1935,7 @@
             }
         },
         "next": [
-            "TeamLeaderFight"
+            "TeamLeaderInviteNext"
         ],
         "pre_delay": 0,
         "pre_wait_freezes": 0
@@ -2024,6 +2076,38 @@
         "pre_delay": 0,
         "pre_wait_freezes": 0
     },
+    "SafeInput_TeamLeaderSelectTeammate2": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "TeamLeaderSelectTeammate2",
+                    {
+                        "sub_name": "SafeInput_TeamLeaderSelectTeammate2",
+                        "recognition": {
+                            "type": "Custom",
+                            "param": {
+                                "roi": "TeamLeaderSelectTeammate2",
+                                "custom_recognition": "InputTarget",
+                                "custom_recognition_param": {
+                                    "target_node": "TeamLeaderSelectTeammate2"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "box_index": 1
+            }
+        },
+        "action": "Click",
+        "post_delay": 1200,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_TeamLeaderSendInvite"
+        ],
+        "pre_delay": 0,
+        "pre_wait_freezes": 0
+    },
     "SafeInput_TeamLeaderInviteScroll": {
         "recognition": {
             "type": "And",
@@ -2113,6 +2197,41 @@
         "timeout": 5000,
         "pre_delay": 0,
         "pre_wait_freezes": 0
+    },
+    "SafeInput_TeamLeaderInviteOpenFriends": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "TeamLeaderInviteOpenFriends",
+                    {
+                        "sub_name": "SafeInput_TeamLeaderInviteOpenFriends",
+                        "recognition": {
+                            "type": "Custom",
+                            "param": {
+                                "roi": "TeamLeaderInviteOpenFriends",
+                                "custom_recognition": "InputTarget",
+                                "custom_recognition_param": {
+                                    "target_node": "TeamLeaderInviteOpenFriends"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "box_index": 1
+            }
+        },
+        "action": "Click",
+        "pre_delay": 0,
+        "pre_wait_freezes": 0,
+        "max_hit": 3,
+        "post_delay": 300,
+        "timeout": 5000,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "TeamLeaderInviteFriendsReady",
+            "SafeInput_TeamLeaderInviteOpenFriends"
+        ]
     },
     "SafeInput_TeamLeaderInviteOpenGuild": {
         "recognition": {
@@ -5188,10 +5307,10 @@
             "type": "Click",
             "param": {
                 "target": [
-                    1000,
-                    400,
-                    120,
-                    100
+                    940,
+                    300,
+                    100,
+                    130
                 ]
             }
         },
@@ -5496,38 +5615,6 @@
         "pre_delay": 0,
         "pre_wait_freezes": 0,
         "max_hit": 3
-    },
-    "SafeInput_TeamPresetOut": {
-        "desc": "队伍预设：预设队伍出战",
-        "recognition": {
-            "type": "And",
-            "param": {
-                "all_of": [
-                    "TeamPresetOut",
-                    {
-                        "sub_name": "SafeInput_TeamPresetOut",
-                        "recognition": {
-                            "type": "Custom",
-                            "param": {
-                                "roi": "TeamPresetOut",
-                                "custom_recognition": "InputTarget",
-                                "custom_recognition_param": {
-                                    "target_node": "TeamPresetOut"
-                                }
-                            }
-                        }
-                    }
-                ],
-                "box_index": 1
-            }
-        },
-        "action": "Click",
-        "post_delay": 1000,
-        "next": [
-            "TeamPresetVerifyClosed"
-        ],
-        "pre_delay": 0,
-        "pre_wait_freezes": 0
     },
     "SafeInput_RealmRaidSelect": {
         "recognition": {
@@ -6172,9 +6259,9 @@
         "pre_delay": 0,
         "pre_wait_freezes": 0,
         "max_hit": 5,
-        "post_delay": 1200,
+        "post_delay": 500,
         "next": [
-            "TeamMemberLoop"
+            "TeamMemberAfterAccept"
         ]
     },
     "SafeInput_TeamMemberAccept": {
@@ -6209,9 +6296,9 @@
         "pre_delay": 0,
         "pre_wait_freezes": 0,
         "max_hit": 5,
-        "post_delay": 1200,
+        "post_delay": 500,
         "next": [
-            "TeamMemberLoop"
+            "TeamMemberAfterAccept"
         ]
     },
     "SafeInput_TeamMemberBattleResult": {
@@ -6245,16 +6332,18 @@
         },
         "pre_delay": 0,
         "pre_wait_freezes": 0,
-        "max_hit": 5,
-        "post_delay": 1500,
+        "max_hit": 8,
+        "post_delay": 1000,
         "timeout": 30000,
         "next": [
             "[JumpBack]CommonBountyInterrupt",
             "TeamMemberBattleFailure",
             "[JumpBack]MitamaTreasurePopup",
             "[JumpBack]SafeInput_DailyRewardPopup",
+            "[JumpBack]CommonRewardOverflow",
             "SafeInput_TeamMemberBattleResult",
-            "TeamMemberWon"
+            "TeamMemberWon",
+            "TeamMemberResultCleared"
         ]
     },
     "SafeInput_TeamMemberFailedResult": {
@@ -6567,5 +6656,348 @@
         "post_delay": 2000,
         "next": [],
         "max_hit": 5
+    },
+    "SafeInput_TeamLeaderInviteTeammateMissing": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "TeamLeaderInviteTeammateMissing",
+                    {
+                        "sub_name": "SafeInput_TeamLeaderInviteTeammateMissing",
+                        "recognition": {
+                            "type": "Custom",
+                            "param": {
+                                "roi": "TeamLeaderInviteTeammateMissing",
+                                "custom_recognition": "InputTarget",
+                                "custom_recognition_param": {
+                                    "target_node": "TeamLeaderInviteTeammateMissing"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "box_index": 1
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "post_delay": 1200,
+        "pre_delay": 0,
+        "pre_wait_freezes": 0,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "TeamLeaderInviteClosed"
+        ]
+    },
+    "SafeInput_TeamMemberIdleEmote": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "TeamMemberIdleEmote",
+                    {
+                        "sub_name": "SafeInput_TeamMemberIdleEmote",
+                        "recognition": {
+                            "type": "Custom",
+                            "param": {
+                                "roi": "TeamMemberIdleEmote",
+                                "custom_recognition": "InputTarget",
+                                "custom_recognition_param": {
+                                    "target_node": "TeamMemberIdleEmote"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "box_index": 1
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true,
+                "target_offset": [
+                    0,
+                    -48,
+                    0,
+                    22
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "pre_wait_freezes": 0,
+        "max_hit": 20,
+        "post_delay": 500,
+        "next": []
+    },
+    "SafeInput_TeamPresetGroupScroll": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "TeamPresetGroupScroll",
+                    {
+                        "sub_name": "SafeInput_TeamPresetGroupScroll",
+                        "recognition": {
+                            "type": "Custom",
+                            "param": {
+                                "roi": "TeamPresetGroupScroll",
+                                "custom_recognition": "InputTarget",
+                                "custom_recognition_param": {
+                                    "target_node": "TeamPresetGroupScroll"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "box_index": 1
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "BezierSwipe",
+                "custom_action_param": {
+                    "begin": [
+                        455,
+                        460,
+                        24,
+                        24
+                    ],
+                    "end": [
+                        455,
+                        220,
+                        24,
+                        24
+                    ],
+                    "duration": 500,
+                    "duration_random": 80,
+                    "segments": 24,
+                    "deviation": 8,
+                    "easing": true
+                }
+            }
+        },
+        "post_delay": 1000,
+        "next": [
+            "TeamPresetGroupAfterScroll"
+        ],
+        "pre_delay": 0,
+        "pre_wait_freezes": 0
+    },
+    "SafeInput_TeamPresetTeamScroll": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "TeamPresetTeamScroll",
+                    {
+                        "sub_name": "SafeInput_TeamPresetTeamScroll",
+                        "recognition": {
+                            "type": "Custom",
+                            "param": {
+                                "roi": "TeamPresetTeamScroll",
+                                "custom_recognition": "InputTarget",
+                                "custom_recognition_param": {
+                                    "target_node": "TeamPresetTeamScroll"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "box_index": 1
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "BezierSwipe",
+                "custom_action_param": {
+                    "begin": [
+                        720,
+                        420,
+                        40,
+                        24
+                    ],
+                    "end": [
+                        720,
+                        200,
+                        40,
+                        24
+                    ],
+                    "duration": 500,
+                    "duration_random": 80,
+                    "segments": 24,
+                    "deviation": 8,
+                    "easing": true
+                }
+            }
+        },
+        "post_delay": 1000,
+        "next": [
+            "TeamPresetTeamAfterScroll"
+        ],
+        "pre_delay": 0,
+        "pre_wait_freezes": 0
+    },
+    "SafeInput_TeamPresetOut": {
+        "desc": "队伍预设：预设队伍出战",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "TeamPresetOut",
+                    {
+                        "sub_name": "SafeInput_TeamPresetOut",
+                        "recognition": {
+                            "type": "Custom",
+                            "param": {
+                                "roi": "TeamPresetOut",
+                                "custom_recognition": "InputTarget",
+                                "custom_recognition_param": {
+                                    "target_node": "TeamPresetOut"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "box_index": 1
+            }
+        },
+        "action": "Click",
+        "post_delay": 1000,
+        "next": [
+            "TeamPresetVerifyClosed"
+        ],
+        "pre_delay": 0,
+        "pre_wait_freezes": 0
+    },
+    "SafeInput_TeamPresetClose": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "TeamPresetClose",
+                    {
+                        "sub_name": "SafeInput_TeamPresetClose",
+                        "recognition": {
+                            "type": "Custom",
+                            "param": {
+                                "roi": "TeamPresetClose",
+                                "custom_recognition": "InputTarget",
+                                "custom_recognition_param": {
+                                    "target_node": "TeamPresetClose"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "box_index": 1
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    969,
+                    424,
+                    284,
+                    120
+                ]
+            }
+        },
+        "post_delay": 1000,
+        "next": [
+            "TeamPresetVerifyClosed"
+        ],
+        "pre_delay": 0,
+        "pre_wait_freezes": 0
+    },
+    "SafeInput_TeamMemberAutoReadyConfirm": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "TeamMemberAutoReadyConfirm",
+                    {
+                        "sub_name": "SafeInput_TeamMemberAutoReadyConfirm",
+                        "recognition": {
+                            "type": "Custom",
+                            "param": {
+                                "roi": "TeamMemberAutoReadyConfirm",
+                                "custom_recognition": "InputTarget",
+                                "custom_recognition_param": {
+                                    "target_node": "TeamMemberAutoReadyConfirm"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "box_index": 1
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "pre_delay": 0,
+        "pre_wait_freezes": 0,
+        "max_hit": 5,
+        "post_delay": 800,
+        "next": [
+            "TeamMemberLoop"
+        ]
+    },
+    "SafeInput_TeamMemberWinResult": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "TeamMemberWinResult",
+                    {
+                        "sub_name": "SafeInput_TeamMemberWinResult",
+                        "recognition": {
+                            "type": "Custom",
+                            "param": {
+                                "roi": "TeamMemberWinResult",
+                                "custom_recognition": "InputTarget",
+                                "custom_recognition_param": {
+                                    "target_node": "TeamMemberWinResult"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "box_index": 1
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "pre_delay": 0,
+        "pre_wait_freezes": 0,
+        "max_hit": 8,
+        "post_delay": 1000,
+        "timeout": 30000,
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "SafeInput_TeamMemberWinResult",
+            "[JumpBack]MitamaTreasurePopup",
+            "[JumpBack]SafeInput_DailyRewardPopup",
+            "[JumpBack]CommonRewardOverflow",
+            "SafeInput_TeamMemberBattleResult",
+            "TeamMemberWon",
+            "TeamMemberResultCleared"
+        ]
     }
 }

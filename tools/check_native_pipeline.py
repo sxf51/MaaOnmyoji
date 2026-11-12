@@ -253,7 +253,8 @@ def run_case(resource, controller, nodes, name, entry, flags, events=(), expecte
     assert resource.register_custom_recognition("SimInputTarget", LocalTarget(state))
     assert resource.register_custom_action("SimInput", Input(state))
     for kind in ("TargetCountInit", "TargetCountProgress", "TargetCountDetermine", "TargetCountFinish",
-                 "ResetCount", "ConfigureTeamRecognition", "RememberFrame", "RewardDropStatistics", "NodeOverride", "RunBattleSession"):
+                 "ResetCount", "RememberFrame", "RewardDropStatistics", "NodeOverride", "RunBattleSession",
+                 "ResolveGamePackage"):
         assert resource.register_custom_action(kind, Counter(state, kind))
     override = {}
     for key, original in nodes.items():
@@ -422,12 +423,44 @@ def main():
         case("leader battle never counts a waiting room", "TeamLeaderBattle", {"PageTeamRoom"}, succeeds=False)
         case("leader does not start for an unmatched teammate", "TeamLeaderFight", {"PageTeamRoom"}, succeeds=False)
         room_wait = {"TeamMemberRoomWait": {"max_hit": 3}}
-        invite = {"TeamMemberLeaderName", "TeamMemberAcceptIcon"}
+        invite = {"TeamMemberLeaderName", "TeamMemberInviteTarget", "TeamMemberAcceptIcon"}
         case("waiting room is not a victory", "TeamMemberTask", {"PageTeamRoom"}, succeeds=False, pipeline_override=room_wait)
+        # Anti-idle: about every 15 seconds in the room the member taps the speak button, then keeps waiting.
+        speak = {"PageTeamRoom", "TeamRoomSpeakButton"}
+        case("member taps the speak button while waiting and still joins the battle", "TeamMemberTask", speak, [
+            ("TeamMemberIdleEmote", speak | {"DailyBattleResult"}), ("TeamMemberBattleResult", set())], expected_count=1,
+            pipeline_override={"TeamMemberRoomTick": {"max_hit": 2}})
+        case("speak button never bypasses the local touch check", "TeamMemberTask", speak | {"TouchAreaRisk"}, succeeds=False,
+             pipeline_override={"TeamMemberRoomTick": {"max_hit": 1}, "TeamMemberIdleEmoteReady": {"max_hit": 1}, **room_wait})
         case("unmatched invitation is not accepted", "TeamMemberTask", {"TeamMemberAcceptIcon"}, succeeds=False)
         case("named invitation and team settlement", "TeamMemberTask", invite, [
             ("TeamMemberAccept", {"DailyBattleResult"}),
             ("TeamMemberBattleResult", set())], expected_count=1)
+        # Default accept (gear check) pops an auto-ready confirmation; confirm it before anything else.
+        default_invite = (invite - {"TeamMemberAcceptIcon"}) | {"TeamMemberAcceptDefaultIcon"}
+        auto_ready = default_invite | {"TeamMemberAutoReadyText", "TeamMemberAutoReadyButton"}
+        case("default accept confirms the auto-ready prompt", "TeamMemberTask", default_invite, [
+            ("TeamMemberAcceptDefault", auto_ready), ("TeamMemberAutoReadyConfirm", {"DailyBattleResult"}),
+            ("TeamMemberBattleResult", set())], expected_count=1)
+        # The prompt may not appear at all: the member lands straight in the room and waits for the leader.
+        case("default accept without a prompt goes straight to the room", "TeamMemberTask", default_invite, [
+            ("TeamMemberAcceptDefault", {"PageTeamRoom"}), ("TeamMemberBattleResult", set())], expected_count=1,
+            probe_events=[("PageTeamRoom", {"DailyBattleResult"})])
+        # One battle shows two result screens (win, then rewards); only the first counts, the next battle counts again.
+        case("member counts one win per battle despite a second result screen", "TeamMemberTask", {"DailyBattleResult"}, [
+            ("TeamMemberBattleResult", {"PageTeamRoom"}), ("TeamMemberBattleResult", {"PageTeamRoom"}),
+            ("TeamMemberBattleResult", {"PageTeamRoom"})], requested_count=2, expected_count=2,
+            probe_events=[("PageTeamRoom", {"DailyBattleResult"}), ("PageTeamRoom", {"PageBattle"}), ("PageBattle", {"DailyBattleResult"})])
+        # The next invite shows up right after the result: the short post-result route accepts it.
+        case("member accepts the next invite right after the result", "TeamMemberTask", {"DailyBattleResult"}, [
+            ("TeamMemberBattleResult", invite), ("TeamMemberAccept", {"PageBattle"}),
+            ("TeamMemberBattleResult", set())], requested_count=2, expected_count=2,
+            probe_events=[("PageBattle", {"DailyBattleResult"})])
+        # A win shows the red drum then the reward bag; both are clicked straight away and counted once.
+        case("member taps both win pages without the defeat check", "TeamMemberTask", {"DailyBattleResult", "CommonBattleWinDrum"}, [
+            ("TeamMemberWinResult", {"DailyBattleResult", "CommonBattleRewardBag"}), ("TeamMemberWinResult", set())],
+            expected_count=1)
+        case("auto-ready confirm respects the local touch check", "TeamMemberTask", auto_ready | {"TouchAreaRisk"}, succeeds=False)
         case("member accepts again for every battle", "TeamMemberTask", invite, [
             ("TeamMemberAccept", {"DailyBattleResult"}),
             ("TeamMemberBattleResult", invite),
@@ -438,6 +471,8 @@ def main():
             ("TeamMemberAcceptDefault", {"DailyBattleResult"}),
             ("TeamMemberBattleResult", set())], expected_count=1)
         case("unmatched invitation is not default accepted", "TeamMemberTask", {"TeamMemberAcceptDefaultIcon"}, succeeds=False)
+        case("invitation from the leader for another dungeon is not accepted", "TeamMemberTask",
+             (invite - {"TeamMemberInviteTarget"}) | {"TeamMemberAcceptDefaultIcon"}, succeeds=False)
         case("member stays joined after default accept across battles", "TeamMemberTask", invite | {"TeamMemberAcceptDefaultIcon"}, [
             ("TeamMemberAcceptDefault", {"DailyBattleResult"}),
             ("TeamMemberBattleResult", {"PageTeamRoom", "DailyBattleResult"}),
@@ -453,7 +488,7 @@ def main():
         case("member accept never bypasses the local touch check", "TeamMemberTask", invite | {"TouchAreaRisk"}, succeeds=False)
         case("frozen screen stops: member accept never joins", "TeamMemberTask", invite, [("TeamMemberAccept", invite)] * 5, succeeds=False)
         case("frozen screen stops: member settlement never closes", "TeamMemberTask", {"DailyBattleResult"},
-             [("TeamMemberBattleResult", {"DailyBattleResult"})] * 5, succeeds=False)
+             [("TeamMemberBattleResult", {"DailyBattleResult"})] * 8, succeeds=False)
         case("exploration counts after settlement", "ExplorationTask", {"PageChapterField", "ExplorationEnemyProbe"}, [
             ("ExplorationFindEnemy", {"DailyBattleResult"}),
             ("ExplorationBattleResult", {"PageChapterField"})], expected_count=1)
@@ -701,7 +736,7 @@ def main():
         case("explicit update context allows its own button", "StartupUpdateConfirm", {"StartupUpdateText", "StartupUpdateButton"}, [
             ("StartupUpdateConfirm", set())])
         case("desktop launch reaches server and verified home", "StartupTask", set(), [
-            ("StartupTask", {"startupMain", "StartupCheckServer", "StartupEnterGame"}),
+            ("StartupLaunch", {"startupMain", "StartupCheckServer", "StartupEnterGame"}),
             ("StartupEnterGame", {"StartupHome"})])
         stop_at_battle = {"MitamaPreparationDestination": {"next": []}}
         case("mitama confirms lock before preparation continues", "MitamaPreparation", {"PageMitamaStage", "MitamaUnlockTeam"}, [
@@ -760,7 +795,9 @@ def main():
         invite = {"PageTeamInvite", "TeamLeaderInviteTabRecent", "TeamLeaderInviteTabGuild", "TeamLeaderInviteTabCross"}
         friends, recent = invite | {"TeamLeaderInviteFriendsSelected"}, invite | {"TeamLeaderInviteRecentSelected"}
         guild, cross = invite | {"TeamLeaderInviteGuildSelected"}, invite | {"TeamLeaderInviteCrossSelected"}
-        stop_at_fight = {"SafeInput_TeamLeaderSendInvite": {"next": []}}
+        # Cases entering at the invite search never pass TeamLeaderRoomReady, which names the first teammate as the round target.
+        stop_at_fight = {"SafeInput_TeamLeaderSendInvite": {"next": []},
+                         "TeamLeaderFindTeammate": {"anchor": {"TeamLeaderSelectTarget": "SafeInput_TeamLeaderSelectTeammate"}}}
         found = [("TeamLeaderSelectTeammate", {"TeamLeaderSendInvite"}), ("TeamLeaderSendInvite", set())]
         def teammate(flags):
             return flags | {"TeamLeaderTeammateName"}
@@ -784,11 +821,13 @@ def main():
             (friends - {"TeamLeaderInviteTabGuild"}) | {"TeamLeaderInviteListFits"}, [
             ("TeamLeaderInviteOpenRecent", (recent - {"TeamLeaderInviteTabGuild"}) | {"TeamLeaderInviteListFits"}),
             ("TeamLeaderInviteOpenCross", teammate(cross - {"TeamLeaderInviteTabGuild"}))] + found, pipeline_override=stop_at_fight)
-        case("invite fails without inviting once every tab is searched", "TeamLeaderFindTeammate", cross | {"TeamLeaderInviteListFits"}, succeeds=False)
+        case("invite fails without inviting once every tab is searched", "TeamLeaderFindTeammate", cross | {"TeamLeaderInviteListFits"}, succeeds=False,
+             pipeline_override=stop_at_fight)
         case("invite stops when a tab never switches", "TeamLeaderFindTeammate", friends | {"TeamLeaderInviteListFits"},
-            [("TeamLeaderInviteOpenRecent", friends | {"TeamLeaderInviteListFits"})] * 3, succeeds=False)
+            [("TeamLeaderInviteOpenRecent", friends | {"TeamLeaderInviteListFits"})] * 3, succeeds=False,
+            pipeline_override=stop_at_fight)
         case("invite tab switch respects local touch safety", "TeamLeaderFindTeammate",
-            friends | {"TeamLeaderInviteListFits", "TouchAreaRisk"}, succeeds=False)
+            friends | {"TeamLeaderInviteListFits", "TouchAreaRisk"}, succeeds=False, pipeline_override=stop_at_fight)
         private = {"PageTeamCreate","TeamLeaderPrivacyText","TeamLeaderCreateButton","TeamLeaderPrivacySelected"}
         public = private - {"TeamLeaderPrivacySelected"}
         case("private room already selected skips toggling", "TeamLeaderVerifyPrivacy", private,
@@ -802,7 +841,7 @@ def main():
         case("created room must be seen before invite panel opens", "TeamLeaderWaitRoom", {"PageTeamRoom","TeamLeaderOpenInvite"},
             [("TeamLeaderOpenInvite",set())], stop_after_input="TeamLeaderOpenInvite")
         stage = {"PageMitamaStage", "TeamPresetEntryText"}
-        window = {"PageMitamaStage", "TeamPresetFrameTemplate", "TeamPresetOut", "TeamPresetGroupSelected", "TeamPresetSelectTeamConfigured"}
+        window = {"PageMitamaStage", "TeamPresetFrameTemplate", "TeamPresetOut", "TeamPresetFooter", "TeamPresetGroupSelected", "TeamPresetSelectTeamConfigured"}
         apply_steps = [
             ("TeamPresetSelectTeamConfigured", window | {"TeamPresetApplyIcon"}),
             ("TeamPresetApplyIcon", window | {"TeamPresetConfirm"}),
@@ -818,6 +857,48 @@ def main():
             ("TeamPresetOpen", window), *apply_steps,
             *[("TeamPresetOut", window | {"TeamPresetInUse"}) for _ in range(3)]],
              prepare_only=True, succeeds=False, expected_steps=[])
+        # The configured group or team may sit below the first screen: swipe the list and look again.
+        no_group = window - {"TeamPresetGroupSelected", "TeamPresetSelectTeamConfigured"}
+        case("preset swipes the group list to find the configured group", "MitamaPreset", stage, [
+            ("TeamPresetOpen", no_group), ("TeamPresetGroupScroll", no_group | {"TeamPresetSelectGroup"}),
+            ("TeamPresetSelectGroup", window), *apply_steps,
+            ("TeamPresetOut", {"PageMitamaStage"})], prepare_only=True, expected_steps=["MitamaPresetDone"])
+        case("preset stops when the group list bottoms out without the group", "MitamaPreset", stage, [
+            ("TeamPresetOpen", no_group), ("TeamPresetGroupScroll", no_group | {"TeamPresetGroupAtBottom"})],
+             prepare_only=True, succeeds=False, expected_steps=[])
+        no_team = window - {"TeamPresetSelectTeamConfigured"}
+        case("preset swipes the team list to find the configured team", "MitamaPreset", stage, [
+            ("TeamPresetOpen", no_team), ("TeamPresetTeamScroll", no_team), ("TeamPresetTeamScroll", window), *apply_steps,
+            ("TeamPresetOut", {"PageMitamaStage"})], prepare_only=True, expected_steps=["MitamaPresetDone"])
+        # Log 2026-11-13 00:21: the selected team has 4 shikigami, so the footer shows the 5-member hint instead of 出战.
+        short_no_team = window - {"TeamPresetSelectTeamConfigured", "TeamPresetOut"}
+        case("preset window with the 5-member hint still swipes to the configured team", "MitamaPreset", stage, [
+            ("TeamPresetOpen", short_no_team), ("TeamPresetTeamScroll", short_no_team | {"TeamPresetSelectTeamConfigured"}),
+            *apply_steps, ("TeamPresetOut", {"PageMitamaStage"})], prepare_only=True, expected_steps=["MitamaPresetDone"])
+        # Solo mode needs 出战: a preset team under 5 shikigami has none, so it stops instead of passing.
+        short = window - {"TeamPresetOut"}
+        case("solo preset stops when the applied team cannot sortie", "MitamaPreset", stage, [
+            ("TeamPresetOpen", short), ("TeamPresetSelectTeamConfigured", short | {"TeamPresetApplyIcon"}),
+            ("TeamPresetApplyIcon", short | {"TeamPresetConfirm"}), ("TeamPresetConfirm", short | {"TeamPresetInUse"})],
+             prepare_only=True, succeeds=False, expected_steps=[])
+        case("preset stops when the team list bottoms out without the team", "MitamaPreset", stage, [
+            ("TeamPresetOpen", no_team), ("TeamPresetTeamScroll", no_team | {"TeamPresetTeamAtBottom"})],
+             prepare_only=True, succeeds=False, expected_steps=[])
+        case("preset team swipes are bounded", "MitamaPreset", stage, [
+            ("TeamPresetOpen", no_team), *[("TeamPresetTeamScroll", no_team)] * 6],
+             prepare_only=True, succeeds=False, expected_steps=[])
+        # Team mode: 全队正在使用 means done; close the window and never press 出战 (a short team has none anyway).
+        team_preset = {"TeamPresetInUse": {"next": ["[JumpBack]CommonBountyInterrupt", "TeamPresetClose"]},
+                       "TeamPresetCloseRetry": {"next": ["[JumpBack]CommonBountyInterrupt", "TeamPresetWindowClosed", "TeamPresetClose"]}}
+        short = window - {"TeamPresetOut"}
+        case("team mode applies preset mitama and closes without sortie", "MitamaPreset", stage, [
+            ("TeamPresetOpen", short), ("TeamPresetSelectTeamConfigured", short | {"TeamPresetApplyIcon"}),
+            ("TeamPresetApplyIcon", short | {"TeamPresetConfirm"}), ("TeamPresetConfirm", short | {"TeamPresetInUse"}),
+            ("TeamPresetClose", short | {"TeamPresetInUse"}), ("TeamPresetClose", {"PageMitamaStage"})],
+            prepare_only=True, expected_steps=["MitamaPresetDone"], pipeline_override=team_preset)
+        case("team mode never falls back to sortie when the window stays open", "MitamaPreset", stage, [
+            ("TeamPresetOpen", window), *apply_steps, *[("TeamPresetClose", window | {"TeamPresetInUse"})] * 3],
+             prepare_only=True, succeeds=False, expected_steps=[], pipeline_override=team_preset)
         case("purchase risk while opening preset prevents dependent steps", "MitamaPreset", stage, [
             ("TeamPresetOpen", window | {"TouchAreaRisk"})],
              prepare_only=True, succeeds=False, expected_steps=[])
@@ -906,7 +987,7 @@ def main():
             ("DailyMailClaimConfirm", {"PageMail"})])
         case("mail illustration prompt is cancelled", "DailyMailIllustrationCancel", {"DailyMailIllustrationCancel"}, [
             ("DailyMailIllustrationCancel", {"PageMail"})])
-        room = {"PageTeamRoom", "TeamLeaderRoomTeammate", "TeamLeaderStartButton"}
+        room = {"PageTeamRoom", "TeamLeaderRoomTeammate", "TeamLeaderRoomTeammate2", "TeamLeaderStartButton"}
         case("leader retries missed start and handles team start confirmation", "TeamLeaderFight", room, [
             ("TeamLeaderStart", room),
             ("TeamLeaderStart", {"PageTeamRoom", "TeamLeaderStartConfirm"}),
@@ -924,7 +1005,7 @@ def main():
         case("leader confirms reinvite, never cancels it, and starts the next battle", "TeamLeaderFight", room, [
             ("TeamLeaderStart", {"DailyBattleResult"}),
             ("TeamLeaderBattleResult", popup),
-            ("TeamLeaderReinvite", {"PageTeamRoom"} | {"TeamLeaderRoomTeammate", "TeamLeaderStartButton"}),
+            ("TeamLeaderReinvite", {"PageTeamRoom"} | {"TeamLeaderRoomTeammate", "TeamLeaderRoomTeammate2", "TeamLeaderStartButton"}),
             ("TeamLeaderStart", {"DailyBattleResult"}),
             ("TeamLeaderBattleResult", {"PageTeamRoom"})], requested_count=2, expected_count=2)
         stale_options = {"MitamaCountDetermine": {"action": {"param": {"custom_action_param": {"continue_node": "TeamLeaderBattleEntry"}}}}}
@@ -986,13 +1067,101 @@ def main():
             ("MitamaOpenBuffMenu", {"PageMitamaStage", "MitamaBuffPanel", "MitamaCheckBuffStatusOpen"}),
             ("MitamaDisableBuffClick", {"PageMitamaStage", "MitamaBuffPanel", "MitamaCheckBuffStatusClose"}),
             ("MitamaFinishCloseBuffPanel", {"PageMitamaStage"})], pipeline_override=buff_on)
-        case("matching nickname alone does not authorize team start", "TeamLeaderFight", {"PageTeamRoom", "TeamLeaderRoomTeammate"}, succeeds=False)
+        pick = {"PageTeamInvite", "TeamLeaderTeammateName", "TeamLeaderInviteFriendsSelected", "TeamLeaderInviteTabFriends"}
+        both = {"PageTeamRoom", "TeamLeaderRoomTeammate", "TeamLeaderRoomTeammate2", "TeamLeaderStartButton"}
+        # Only the second teammate's name is on screen in round two, so picking the first one would stall.
+        pick2 = (pick - {"TeamLeaderTeammateName"}) | {"TeamLeaderTeammate2Name"}
+        first_only = {"PageTeamRoom", "TeamLeaderOpenInvite", "TeamLeaderRoomTeammate"}
+        case("leader invites two teammates in separate rounds and waits for both", "TeamLeaderRoomReady", {"PageTeamRoom", "TeamLeaderOpenInvite"}, [
+            ("TeamLeaderOpenInvite", pick), ("TeamLeaderSelectTeammate", {"TeamLeaderSendInvite"}),
+            ("TeamLeaderSendInvite", first_only),
+            ("TeamLeaderOpenInvite", pick2), ("TeamLeaderSelectTeammate2", {"TeamLeaderSendInvite"}),
+            ("TeamLeaderSendInvite", both), ("TeamLeaderStart", {"DailyBattleResult"}),
+            ("TeamLeaderBattleResult", {"PageTeamRoom"})], expected_count=1)
+        # An empty second nickname matches any text, so the room always "has" the second teammate.
+        case("one teammate gets a single invite round", "TeamLeaderRoomReady", {"PageTeamRoom", "TeamLeaderOpenInvite"}, [
+            ("TeamLeaderOpenInvite", pick), ("TeamLeaderSelectTeammate", {"TeamLeaderSendInvite"}),
+            ("TeamLeaderSendInvite", both),
+            ("TeamLeaderStart", {"DailyBattleResult"}), ("TeamLeaderBattleResult", {"PageTeamRoom"})], expected_count=1)
+        case("second invite round starts again from the friends tab", "TeamLeaderInviteAgain", first_only, [
+            ("TeamLeaderOpenInvite", {"PageTeamInvite", "TeamLeaderInviteCrossSelected", "TeamLeaderInviteTabFriends"}),
+            ("TeamLeaderInviteOpenFriends", pick2), ("TeamLeaderSelectTeammate2", {"TeamLeaderSendInvite"}),
+            ("TeamLeaderSendInvite", both), ("TeamLeaderStart", {"DailyBattleResult"}),
+            ("TeamLeaderBattleResult", {"PageTeamRoom"})], expected_count=1)
+        # About 15 seconds without the second teammate: only the missing one is invited again.
+        missing2 = {"PageTeamRoom", "TeamLeaderOpenInvite", "TeamLeaderRoomTeammate", "TeamLeaderStartButton"}
+        case("missing second teammate is invited again after the wait", "TeamLeaderFight", missing2, [
+            ("TeamLeaderOpenInvite", pick2), ("TeamLeaderSelectTeammate2", {"TeamLeaderSendInvite"}),
+            ("TeamLeaderSendInvite", both), ("TeamLeaderStart", {"DailyBattleResult"}),
+            ("TeamLeaderBattleResult", {"PageTeamRoom"})], expected_count=1)
+        # The first teammate is invited first; the second round then follows as usual.
+        nobody = {"PageTeamRoom", "TeamLeaderOpenInvite", "TeamLeaderStartButton"}
+        case("missing teammates are both invited again, first one first", "TeamLeaderFight", nobody, [
+            ("TeamLeaderOpenInvite", pick), ("TeamLeaderSelectTeammate", {"TeamLeaderSendInvite"}),
+            ("TeamLeaderSendInvite", nobody | {"TeamLeaderRoomTeammate"}),
+            ("TeamLeaderOpenInvite", pick2), ("TeamLeaderSelectTeammate2", {"TeamLeaderSendInvite"}),
+            ("TeamLeaderSendInvite", both), ("TeamLeaderStart", {"DailyBattleResult"}),
+            ("TeamLeaderBattleResult", {"PageTeamRoom"})], expected_count=1)
+        # The right slot is taken: the invite opens from the middle slot.
+        case("reinvite opens the panel from the middle slot when the right one is taken", "TeamLeaderFight",
+             missing2 | {"TeamLeaderInviteSlotRight", "TeamLeaderOpenInviteMiddle"}, [
+            ("TeamLeaderOpenInviteMiddle", pick2), ("TeamLeaderSelectTeammate2", {"TeamLeaderSendInvite"}),
+            ("TeamLeaderSendInvite", both), ("TeamLeaderStart", {"DailyBattleResult"}),
+            ("TeamLeaderBattleResult", {"PageTeamRoom"})], expected_count=1)
+        case("leader stops after three invite rounds nobody answers", "TeamLeaderFight", missing2,
+             [("TeamLeaderOpenInvite", pick2), ("TeamLeaderSelectTeammate2", {"TeamLeaderSendInvite"}),
+              ("TeamLeaderSendInvite", missing2)] * 3, succeeds=False)
+        case("leader never starts before the second teammate arrives", "TeamLeaderFight",
+             {"PageTeamRoom", "TeamLeaderRoomTeammate", "TeamLeaderStartButton"}, succeeds=False)
+        # A teammate may join after being judged missing: the room fills up, or they drop out of the invite lists.
+        case("teammate who joined meanwhile fills the room: no invite panel, start", "TeamLeaderInviteSlot",
+             both | {"TeamLeaderInviteSlotRight", "TeamLeaderInviteSlotMiddle", "TeamLeaderOpenInvite", "TeamLeaderOpenInviteMiddle"}, [
+            ("TeamLeaderStart", {"DailyBattleResult"}), ("TeamLeaderBattleResult", {"PageTeamRoom"})], expected_count=1)
+        # A teammate already in the room is still listed: the invite goes out but the panel may stay open.
+        case("panel left open after inviting a teammate already in the room is cancelled", "TeamLeaderFight", missing2, [
+            ("TeamLeaderOpenInvite", pick2), ("TeamLeaderSelectTeammate2", {"TeamLeaderSendInvite"}),
+            ("TeamLeaderSendInvite", {"PageTeamInvite", "NavCancelInvite"}), ("TeamLeaderInviteTeammateMissing", both),
+            ("TeamLeaderStart", {"DailyBattleResult"}), ("TeamLeaderBattleResult", {"PageTeamRoom"})], expected_count=1)
+        searched = {"PageTeamInvite", "TeamLeaderInviteCrossSelected", "TeamLeaderInviteListFits", "NavCancelInvite"}
+        case("teammate who joined meanwhile is not in the lists: close the panel and start", "TeamLeaderFindTeammate", searched, [
+            ("TeamLeaderInviteTeammateMissing", both), ("TeamLeaderStart", {"DailyBattleResult"}),
+            ("TeamLeaderBattleResult", {"PageTeamRoom"})], expected_count=1,
+            pipeline_override={"TeamLeaderFindTeammate": {"anchor": {"TeamLeaderSelectTarget": "SafeInput_TeamLeaderSelectTeammate"}}})
+        resume = {"PageTeamRoom", "MitamaRoomTargetDungeon", "MitamaRoomTargetLayer", "TeamLeaderRoomTeammate",
+                  "TeamLeaderRoomTeammate2", "TeamLeaderStartButton"}
+        team_mode = {"MitamaTeamResume": {"enabled": True},
+                     "MitamaBattleModeDestination": {"next": ["[JumpBack]CommonBountyInterrupt", "MitamaTeamEntry"]}}
+        case("mitama task already in the right room keeps it and starts", "MitamaNavigate", resume, [
+            ("TeamLeaderStart", {"DailyBattleResult"}), ("TeamLeaderBattleResult", {"PageTeamRoom"})],
+            expected_count=1, pipeline_override=team_mode)
+        # Without a match the task falls back to navigation; resuming would have clicked start, which no case allows.
+        for missing in ("MitamaRoomTargetLayer", "MitamaRoomTargetDungeon", "TeamLeaderRoomTeammate2"):
+            case("mitama room without " + missing + " is not resumed", "MitamaNavigate", resume - {missing},
+                 succeeds=False, pipeline_override=team_mode)
+        case("solo mitama never checks the room", "MitamaNavigate", resume, succeeds=False)
+        buff = {"MitamaEnableBuff": {"enabled": True}}
+        case("resumed room still turns the buff on from the room", "MitamaNavigate", resume | {"CommonBuffMenuIcon"}, [
+            ("MitamaOpenBuffMenu", resume | {"MitamaBuffPanel", "MitamaCheckBuffStatusClose"}),
+            ("MitamaEnableBuffClick", resume | {"MitamaBuffPanel", "MitamaCheckBuffStatusOpen"}),
+            ("MitamaCloseBuffPanel", resume),
+            ("TeamLeaderStart", {"DailyBattleResult"}), ("TeamLeaderBattleResult", {"PageTeamRoom"})],
+            expected_count=1, pipeline_override={**team_mode, **buff})
+        awakening_resume = {"PageTeamRoom", "AwakeningRoomTargetDungeon", "AwakeningRoomType", "AwakeningRoomLayer",
+                            "TeamLeaderRoomTeammate", "TeamLeaderRoomTeammate2", "TeamLeaderStartButton"}
+        awakening_mode = {"AwakeningTeamResume": {"enabled": True},
+                          "AwakeningBattleModeDestination": {"next": ["[JumpBack]CommonBountyInterrupt", "AwakeningTeamEntry"]}}
+        case("awakening task already in the right room keeps it and starts", "AwakeningNavigate", awakening_resume, [
+            ("TeamLeaderStart", {"DailyBattleResult"}), ("TeamLeaderBattleResult", {"PageTeamRoom"})],
+            expected_count=1, pipeline_override=awakening_mode)
+        case("awakening room for another layer is not resumed", "AwakeningNavigate", awakening_resume - {"AwakeningRoomLayer"},
+             succeeds=False, pipeline_override=awakening_mode)
+        case("matching nickname alone does not authorize team start", "TeamLeaderFight", {"PageTeamRoom", "TeamLeaderRoomTeammate", "TeamLeaderRoomTeammate2"}, succeeds=False)
         case("startup announcement closes before server entry", "StartupTask", set(), [
-            ("StartupTask", {"StartupCloseAnnouncement"}),
+            ("StartupLaunch", {"StartupCloseAnnouncement"}),
             ("StartupCloseAnnouncement", {"startupMain", "StartupCheckServer", "StartupEnterGame"}),
             ("StartupEnterGame", {"StartupHome"})])
         case("optional illustration download is cancelled during startup", "StartupTask", set(), [
-            ("StartupTask", {"StartupCancelIllustration"}),
+            ("StartupLaunch", {"StartupCancelIllustration"}),
             ("StartupCancelIllustration", {"startupMain", "StartupCheckServer", "StartupEnterGame"}),
             ("StartupEnterGame", {"StartupHome"})])
         for name in ("ExplorationOpenMainline", "DailyMailClaimConfirm", "DailyMailIllustrationCancel", "TeamLeaderStartConfirm",
@@ -1143,7 +1312,7 @@ def main():
         for name in ("AwakeningEnableBuffClick", "AwakeningDisableBuffClick", "AwakeningCloseBuffAfterEnable", "AwakeningCloseBuffAfterDisable"):
             case(name + " cannot bypass purchase stop", name, awake_buff_on | {name, "TouchAreaRisk"}, succeeds=False)
         def preset_events(stage):
-            window = stage | {"TeamPresetFrameTemplate", "TeamPresetOut", "TeamPresetGroupSelected", "TeamPresetSelectTeamConfigured"}
+            window = stage | {"TeamPresetFrameTemplate", "TeamPresetOut", "TeamPresetFooter", "TeamPresetGroupSelected", "TeamPresetSelectTeamConfigured"}
             return [
                 ("TeamPresetOpen", window),
                 ("TeamPresetSelectTeamConfigured", window | {"TeamPresetApplyIcon"}),
@@ -1187,7 +1356,7 @@ def main():
             steps_done = ["AwakeningLockedTeam"] if prefix == "Awakening" else []
             case(prefix + " preset missing window never starts challenge", prefix + "Task", stage,
                 [("TeamPresetOpen", stage)] * 3, succeeds=False, preset_task=prefix, expected_steps=steps_done)
-        window = awake_preset_stage | {"TeamPresetFrameTemplate", "TeamPresetOut", "TeamPresetGroupSelected", "TeamPresetSelectTeamConfigured"}
+        window = awake_preset_stage | {"TeamPresetFrameTemplate", "TeamPresetOut", "TeamPresetFooter", "TeamPresetGroupSelected", "TeamPresetSelectTeamConfigured"}
         events = preset_events(awake_preset_stage)
         case("preset out must actually close window before completing", "AwakeningTask", awake_preset_stage, [
             *events[:-1], *[("TeamPresetOut", window | {"TeamPresetInUse"}) for _ in range(3)]],

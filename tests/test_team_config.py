@@ -1,14 +1,10 @@
 import json
+import re
 import sys
 import unittest
 from pathlib import Path
-from types import SimpleNamespace
-from unittest.mock import Mock, patch
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "agent"))
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
-from custom.action.team_config import ConfigureTeamRecognition, teammate
-from custom.action.target_count import reset_state_for_test
 from validate_schema import load_jsonc
 
 
@@ -34,7 +30,8 @@ class TeamRouteTest(unittest.TestCase):
         self.assertEqual(cases["Yes"]["pipeline_override"]["AwakeningBattleModeDestination"]["next"][-1], "AwakeningTeamEntry")
         self.assertEqual(cases["No"]["pipeline_override"]["AwakeningBattleModeDestination"]["next"][-1], "AwakeningBattleEntry")
         self.assertIn("觉醒组队", awakening["task"][0]["option"])
-        self.assertEqual(awakening["option"]["觉醒队友"]["pipeline_override"]["AwakeningTask"]["attach"], {"teammate": "{觉醒队友昵称}"})
+        self.assertEqual(awakening["option"]["觉醒队友"]["pipeline_override"]["TeamLeaderTeammateName"]["recognition"]["param"]["expected"],
+                         "^{觉醒队友昵称}$")
         for path in (self.ROOT / "assets/tasks").glob("*.json"):
             if path.name != "TeamMember.json":
                 self.assertNotIn("TeamMember", path.read_text(encoding="utf-8"), path.name)
@@ -66,14 +63,15 @@ class TeamRouteTest(unittest.TestCase):
 
     def test_awakening_buff_cleanup_works_from_explore(self):
         nodes = self.nodes("Awakening.json")
-        self.assertEqual(nodes["AwakeningDisableBuff"]["next"][-1], "[JumpBack]NavigateExplore")
+        self.assertEqual(nodes["AwakeningDisableBuff"]["next"],
+                         ["[JumpBack]CommonBountyInterrupt", "AwakeningDisableBuffReady", "[JumpBack]NavigateExplore"])
+        self.assertEqual(nodes["AwakeningDisableBuffReady"]["recognition"]["param"]["all_of"], ["AwakeningBuffPage"])
         self.assertEqual(nodes["AwakeningBuffPage"]["recognition"]["param"]["any_of"], ["PageAwakeningStage", "PageExplore"])
-        for name in ("AwakeningOpenBuffMenu", "AwakeningBuffOff", "AwakeningBuffOn", "AwakeningCloseBuffAfterDisable"):
+        for name in ("AwakeningOpenBuffMenu", "AwakeningBuffOff", "AwakeningBuffOn", "AwakeningCloseBuffAfterDisable",
+                     "AwakeningCloseBuffAfterEnable"):
             items = nodes[name]["recognition"]["param"]["all_of"]
-            self.assertIn("AwakeningBuffPage", items, name)
+            self.assertIn("AwakeningBuffAnyPage", items, name)
             self.assertNotIn("PageAwakeningStage", items, name)
-        # Enabling still requires the stage page.
-        self.assertIn("PageAwakeningStage", nodes["AwakeningCloseBuffAfterEnable"]["recognition"]["param"]["all_of"])
 
     def test_room_creation_accepts_both_layouts(self):
         nodes = self.nodes("Mitama.json")
@@ -85,6 +83,45 @@ class TeamRouteTest(unittest.TestCase):
             self.assertTrue(x <= point[0] <= x + width and y <= point[1] <= y + height, point)
         self.assertEqual(nodes["TeamLeaderPrivacySelected"]["recognition"]["param"]["all_of"][2]["recognition"]["param"]["roi"],
                          "TeamLeaderPrivacyLabel")
+
+    def test_task_options_offer_an_optional_second_teammate_and_enable_resume(self):
+        for file, option, switch, resume in (("Mitama.json", "队友", "是否组队", "MitamaTeamResume"),
+                                             ("Awakening.json", "觉醒队友", "觉醒组队", "AwakeningTeamResume")):
+            task = load_jsonc(self.ROOT / "assets/tasks" / file)
+            inputs = task["option"][option]["inputs"]
+            self.assertEqual(len(inputs), 2)
+            self.assertRegex("", inputs[1]["verify"])
+            self.assertNotRegex("", inputs[0]["verify"])
+            # The nickname is used as typed, so edge spaces would break the exact invite match.
+            for verify in (inputs[0]["verify"], inputs[1]["verify"]):
+                self.assertRegex("甜奶酱 兔心", verify)
+                self.assertNotRegex(" 甜奶酱", verify)
+                self.assertNotRegex("甜奶酱 ", verify)
+            first, second = "{" + inputs[0]["name"] + "}", "{" + inputs[1]["name"] + "}"
+            expected = {node: value["recognition"]["param"]["expected"]
+                        for node, value in task["option"][option]["pipeline_override"].items()}
+            self.assertEqual(expected, {"TeamLeaderTeammateName": "^" + first + "$", "TeamLeaderTeammate2Name": "^" + second + "$",
+                                        "TeamLeaderRoomTeammate": first, "TeamLeaderRoomTeammate2": second})
+            cases = {case["name"]: case for case in task["option"][switch]["cases"]}
+            self.assertEqual(cases["Yes"]["pipeline_override"][resume], {"enabled": True})
+            self.assertNotIn(resume, cases["No"]["pipeline_override"])
+
+    def test_resume_requires_room_target_and_every_teammate(self):
+        mitama, awakening = self.nodes("Mitama.json"), self.nodes("Awakening.json")
+        self.assertEqual(mitama["MitamaTeamResume"]["recognition"]["param"]["all_of"],
+                         ["PageTeamRoom", "MitamaRoomTargetDungeon", "MitamaRoomTargetLayer", "TeamLeaderRoomTeammate", "TeamLeaderRoomTeammate2"])
+        self.assertEqual(awakening["AwakeningTeamResume"]["recognition"]["param"]["all_of"],
+                         ["PageTeamRoom", "AwakeningRoomTargetDungeon", "AwakeningRoomType", "AwakeningRoomLayer",
+                          "TeamLeaderRoomTeammate", "TeamLeaderRoomTeammate2"])
+        for nodes, prefix in ((mitama, "Mitama"), (awakening, "Awakening")):
+            resume = nodes[prefix + "TeamResume"]
+            self.assertFalse(resume["enabled"])
+            self.assertEqual(resume["max_hit"], 1)
+            self.assertNotIn(prefix + "TeamResumeConfigure", nodes)
+            self.assertEqual(nodes[prefix + "Navigate"]["next"][1], prefix + "TeamResume")
+            self.assertEqual(nodes[prefix + "TeamResume"]["anchor"], nodes[prefix + "TeamEntry"]["anchor"])
+        self.assertEqual(mitama["TeamLeaderStart"]["recognition"]["param"]["all_of"],
+                         ["PageTeamRoom", "TeamLeaderRoomTeammate", "TeamLeaderRoomTeammate2", "TeamLeaderStartButton"])
 
     def test_member_nodes_left_the_dungeon_pipeline(self):
         names = set(self.nodes("Mitama.json")) | set(self.nodes("InputSafety.json"))
@@ -98,8 +135,9 @@ class TeamRouteTest(unittest.TestCase):
         task = load_jsonc(self.ROOT / "assets/tasks/TeamMember.json")
         self.assertEqual(task["task"][0]["entry"], "TeamMemberTask")
         self.assertEqual(task["task"][0]["option"], ["队长昵称", "组队队员次数"])
-        attach = task["option"]["队长昵称"]["pipeline_override"]["TeamMemberTask"]["attach"]
-        self.assertEqual(attach, {"teammate": "{完整队长昵称}"})
+        self.assertEqual(task["option"]["队长昵称"]["pipeline_override"],
+                         {"TeamMemberLeaderName": {"recognition": {"param": {"expected": "^\\d*\\s*{完整队长昵称}$"}}},
+                          "TeamMemberInviteTarget": {"recognition": {"param": {"expected": "{邀请目标副本}"}}}})
         for language in ("zh", "en"):
             text = json.loads((self.ROOT / f"assets/language/interface_{language}.json").read_text(encoding="utf-8"))
             self.assertIn("team_member_task", text)
@@ -109,7 +147,8 @@ class TeamRouteTest(unittest.TestCase):
         nodes = json.loads((self.ROOT / "assets/resource/base/pipeline/TeamMember.json").read_text(encoding="utf-8"))
         routes = [item for node in nodes.values() for item in node.get("next", [])]
         self.assertFalse([item for item in routes if "Navigate" in item or "MitamaSelect" in item])
-        self.assertEqual(nodes["TeamMemberConfigure"]["action"]["param"]["custom_action_param"], {"nodes": ["TeamMemberLeaderName"]})
+        self.assertNotIn("TeamMemberConfigure", nodes)
+        self.assertEqual(nodes["TeamMemberTask"]["next"], ["TeamMemberBattleEntry"])
 
     def test_accept_icons_stay_in_their_own_columns(self):
         nodes = json.loads((self.ROOT / "assets/resource/base/pipeline/TeamMember.json").read_text(encoding="utf-8"))
@@ -122,9 +161,9 @@ class TeamRouteTest(unittest.TestCase):
     def test_member_prefers_default_accept_over_plain_accept(self):
         nodes = json.loads((self.ROOT / "assets/resource/base/pipeline/TeamMember.json").read_text(encoding="utf-8"))
         routes = nodes["TeamMemberLoop"]["next"]
-        self.assertLess(routes.index("SafeInput_TeamMemberAcceptDefault"), routes.index("SafeInput_TeamMemberAccept"))
+        self.assertLess(routes.index("TeamMemberAcceptDefault"), routes.index("TeamMemberAccept"))
         self.assertEqual(nodes["TeamMemberAcceptDefault"]["recognition"]["param"]["all_of"],
-                         ["TeamMemberLeaderName", "TeamMemberAcceptDefaultIcon"])
+                         ["TeamMemberLeaderName", "TeamMemberInviteTarget", "TeamMemberAcceptDefaultIcon"])
 
     def test_defeat_reports_and_never_reaches_the_next_battle(self):
         nodes = self.nodes("Mitama.json")
@@ -160,7 +199,7 @@ class TeamRouteTest(unittest.TestCase):
     def test_mitama_entry_navigates_once_and_never_rescans(self):
         nodes = self.nodes("Mitama.json")
         self.assertEqual(nodes["MitamaNavigate"]["next"],
-                         ["[JumpBack]CommonBountyInterrupt", "[JumpBack]MitamaNavigateOnce", "MitamaNavigateReady"])
+                         ["[JumpBack]CommonBountyInterrupt", "MitamaTeamResume", "[JumpBack]MitamaNavigateOnce", "MitamaNavigateReady"])
         self.assertEqual((nodes["MitamaNavigateOnce"]["max_hit"], nodes["MitamaNavigateOnce"]["next"]), (1, ["NavigateMitamaStage"]))
 
     def test_preparation_control_nodes_do_not_wait(self):
@@ -192,7 +231,7 @@ class TeamRouteTest(unittest.TestCase):
         nodes = self.nodes("Mitama.json")
 
         def references(name, seen):
-            if name == "MitamaBuffPage" or name in seen or name not in nodes:
+            if name in ("MitamaBuffPage", "MitamaBuffAnyPage") or name in seen or name not in nodes:
                 return seen
             seen.add(name)
             param = nodes[name].get("recognition", {}).get("param", {})
@@ -212,12 +251,15 @@ class TeamRouteTest(unittest.TestCase):
         nodes = self.nodes("Mitama.json")
         self.assertEqual(nodes["MitamaDisableBuff"]["next"][-1], "[JumpBack]NavigateExplore")
         self.assertEqual(nodes["MitamaBuffPage"]["recognition"]["param"]["any_of"], ["PageMitamaStage", "PageExplore"])
-        for name in ("MitamaOpenBuffMenu", "MitamaDisableBuffClick", "MitamaCheckBuffStatusClose", "MitamaFinishCloseBuffPanel", "MitamaDisableBuffReady"):
+        # Finishing decides where to close by MitamaBuffPage, so a room is left before closing.
+        self.assertEqual(nodes["MitamaDisableBuffReady"]["recognition"]["param"]["all_of"], ["MitamaBuffPage"])
+        self.assertEqual(nodes["MitamaBuffAnyPage"]["recognition"]["param"]["any_of"], ["PageMitamaStage", "PageExplore", "PageTeamRoom"])
+        for name in ("MitamaOpenBuffMenu", "MitamaDisableBuffClick", "MitamaCheckBuffStatusClose", "MitamaFinishCloseBuffPanel"):
             items = nodes[name]["recognition"]["param"]["all_of"]
-            self.assertIn("MitamaBuffPage", items, name)
+            self.assertIn("MitamaBuffAnyPage", items, name)
             self.assertNotIn("PageMitamaStage", items, name)
-        # Enabling still happens on the stage page, where the battle starts.
-        self.assertIn("PageMitamaStage", nodes["MitamaEnableBuffClick"]["recognition"]["param"]["all_of"])
+        # Enabling happens on the stage page, or in the room when an existing team is resumed.
+        self.assertIn("MitamaBuffAnyPage", nodes["MitamaEnableBuffClick"]["recognition"]["param"]["all_of"])
         support = self.nodes("BattleSupport.json")
         self.assertEqual(support["MitamaAbortRecover"]["next"][-1], "[JumpBack]NavigateExplore")
 
@@ -230,35 +272,311 @@ class TeamRouteTest(unittest.TestCase):
         self.assertEqual(nodes["TeamLeaderReinvite"]["recognition"]["param"]["box_index"], 1)
 
 
-class TeamConfigTest(unittest.TestCase):
-    @patch("custom.action.team_config.get_runtime_params", return_value={"teammate": "  队友.+[1]  "})
-    def test_exact_nickname_override_has_no_screen_input(self, runtime):
-        context = Mock()
-        context.override_pipeline.return_value = True
-        arg = SimpleNamespace(custom_action_param=json.dumps({"nodes": ["LeaderName", "RoomName"]}))
-        result = ConfigureTeamRecognition().run(context, arg)
-        self.assertTrue(result.success)
-        overrides = context.override_pipeline.call_args.args[0]
-        self.assertEqual(set(overrides), {"LeaderName", "RoomName"})
-        for node in overrides.values():
-            self.assertEqual(node["recognition"]["param"]["expected"], r"^队友\.\+\[1\]$")
-        context.run_recognition.assert_not_called()
-        context.tasker.controller.post_touch_down.assert_not_called()
+def substitute(text, values):
+    """Same as MaaPiCli: input values are pasted into the override text as typed."""
+    for name, value in values.items():
+        text = text.replace("{" + name + "}", value)
+    return text
 
-    @patch("custom.action.team_config.get_runtime_params", return_value={"teammate": " "})
-    def test_blank_nickname_rejected_without_override(self, runtime):
-        context = Mock()
-        arg = SimpleNamespace(custom_action_param=json.dumps({"nodes": ["LeaderName"]}))
-        self.assertFalse(ConfigureTeamRecognition().run(context, arg).success)
-        context.override_pipeline.assert_not_called()
 
-    @patch("custom.action.team_config.get_runtime_params", return_value={"teammate": "队友"})
-    def test_missing_node_list_is_rejected(self, runtime):
-        context = Mock()
-        self.assertFalse(ConfigureTeamRecognition().run(context, SimpleNamespace(custom_action_param="{}")).success)
-        context.override_pipeline.assert_not_called()
+class NativeTeamConfigTest(unittest.TestCase):
+    ROOT = Path(__file__).resolve().parents[1]
 
-    def test_missing_nickname_rejected(self):
-        reset_state_for_test()
-        with self.assertRaises(ValueError):
-            teammate()
+    def leader(self):
+        return json.loads((self.ROOT / "assets/resource/base/pipeline/TeamLeader.json").read_text(encoding="utf-8"))
+
+    def overrides(self, first, second=""):
+        option = load_jsonc(self.ROOT / "assets/tasks/Mitama.json")["option"]["队友"]
+        text = substitute(json.dumps(option["pipeline_override"], ensure_ascii=False), {"队友昵称": first, "第二个队友昵称": second})
+        return {node: value["recognition"]["param"]["expected"] for node, value in json.loads(text).items()}
+
+    def test_no_python_configures_team_recognition(self):
+        self.assertFalse((self.ROOT / "agent/custom/action/team_config.py").exists())
+        for path in list((self.ROOT / "assets").rglob("*.json")) + [self.ROOT / "agent/main.py", self.ROOT / "agent/custom/route_policy.py"]:
+            text = path.read_text(encoding="utf-8")
+            for name in ("ConfigureTeamRecognition", "TeamInviteNext", "team_config"):
+                self.assertNotIn(name, text, path.name)
+
+    def test_invite_picks_exactly_and_room_matches_by_containment(self):
+        expected = self.overrides("甜奶酱", "兔心")
+        self.assertRegex("甜奶酱", expected["TeamLeaderTeammateName"])
+        self.assertNotRegex("甜奶酱兔", expected["TeamLeaderTeammateName"])
+        self.assertRegex("兔心", expected["TeamLeaderTeammate2Name"])
+        self.assertRegex("甜奶酱 全球国际区", expected["TeamLeaderRoomTeammate"])
+        self.assertNotRegex("兔心", expected["TeamLeaderRoomTeammate"])
+        self.assertRegex("兔心60", expected["TeamLeaderRoomTeammate2"])
+
+    def test_missing_second_teammate_counts_as_present(self):
+        # MaaFramework OCR uses regex_search: an empty pattern hits any text in the room's name area.
+        expected = self.overrides("甜奶酱")
+        self.assertEqual(expected["TeamLeaderRoomTeammate2"], "")
+        self.assertIsNotNone(re.search(expected["TeamLeaderRoomTeammate2"], "任意文字"))
+
+    def test_period_stands_in_for_a_symbol_in_a_nickname(self):
+        expected = self.overrides("队友.1.")
+        self.assertRegex("队友+1]", expected["TeamLeaderTeammateName"])
+        self.assertRegex("队友(1)", expected["TeamLeaderRoomTeammate"])
+
+    def test_each_invite_round_selects_its_own_teammate(self):
+        nodes = self.leader()
+        search = nodes["TeamLeaderInviteSearch"]["next"]
+        self.assertIn("[Anchor]TeamLeaderSelectTarget", search)
+        self.assertNotIn("SafeInput_TeamLeaderSelectTeammate", search)
+        self.assertEqual(nodes["TeamLeaderRoomReady"]["anchor"], {"TeamLeaderSelectTarget": "SafeInput_TeamLeaderSelectTeammate"})
+        self.assertEqual(nodes["TeamLeaderInviteAgain"]["anchor"], {"TeamLeaderSelectTarget": "SafeInput_TeamLeaderSelectTeammate2"})
+        self.assertEqual(nodes["TeamLeaderSelectTeammate2"]["recognition"]["param"]["all_of"], ["PageTeamInvite", "TeamLeaderTeammate2Name"])
+        self.assertEqual(nodes["TeamLeaderTeammate2Name"]["recognition"]["param"]["roi"],
+                         nodes["TeamLeaderTeammateName"]["recognition"]["param"]["roi"])
+        safety = json.loads((self.ROOT / "assets/resource/base/pipeline/InputSafety.json").read_text(encoding="utf-8"))
+        guard = json.dumps(safety["SafeInput_TeamLeaderSelectTeammate2"])
+        self.assertEqual(guard.replace("TeamLeaderSelectTeammate2", "TeamLeaderSelectTeammate"),
+                         json.dumps(safety["SafeInput_TeamLeaderSelectTeammate"]))
+
+    def test_second_round_runs_only_while_the_second_teammate_is_missing(self):
+        nodes = self.leader()
+        again = nodes["TeamLeaderInviteAgain"]
+        self.assertNotIn("enabled", again)
+        self.assertTrue(again["inverse"])
+        self.assertEqual(again["recognition"]["param"]["all_of"], ["TeamLeaderRoomTeammate2"])
+        self.assertEqual(again["max_hit"], 1)
+        # A new room may invite again.
+        self.assertEqual(nodes["TeamLeaderRoomReady"]["action"]["param"]["custom_action_param"]["nodes"], ["TeamLeaderInviteAgain"])
+        # The name area is only read once the room is back; Fight is a direct hit and must not be reachable earlier.
+        self.assertEqual(nodes["TeamLeaderInviteNext"]["next"], ["[JumpBack]CommonBountyInterrupt", "TeamLeaderInviteRoundCheck", "TeamLeaderInviteStillOpen"])
+        check = nodes["TeamLeaderInviteRoundCheck"]
+        self.assertEqual(check["recognition"]["param"]["all_of"], ["PageTeamRoom"])
+        self.assertEqual(check["next"], ["[JumpBack]CommonBountyInterrupt", "TeamLeaderInviteAgain", "TeamLeaderFight"])
+
+    def test_room_target_follows_each_selected_layer(self):
+        mitama = load_jsonc(self.ROOT / "assets/tasks/Mitama.json")["option"]["选择关卡"]["cases"]
+        for case in mitama:
+            o = case["pipeline_override"]
+            self.assertEqual(o["MitamaRoomTargetLayer"], o["MitamaSelectBaqin"], case["name"])
+        options = load_jsonc(self.ROOT / "assets/tasks/Awakening.json")["option"]
+        pairs = {"AwakeningTargetType": "AwakeningRoomType", "AwakeningLayerText": "AwakeningRoomLayer"}
+        seen = set()
+        for option in options.values():
+            for case in option.get("cases", []):
+                o = case.get("pipeline_override", {})
+                for source, target in pairs.items():
+                    if source in o:
+                        seen.add(target)
+                        pattern = o[target]["recognition"]["param"]["expected"]
+                        self.assertEqual("^" + pattern + "$", o[source]["recognition"]["param"]["expected"], case["name"])
+        self.assertEqual(seen, set(pairs.values()))
+        layer = next(c for o in options.values() for c in o.get("cases", []) if c["name"] == "壹层")
+        self.assertTrue(re.search(layer["pipeline_override"]["AwakeningRoomLayer"]["recognition"]["param"]["expected"], "觉醒 火麒麟 一层"))
+
+    def test_room_name_area_covers_every_slot(self):
+        # Screenshot: own name at x 130-245 (left slot), leader at x 560-680 (middle), names on y 113-140.
+        nodes = self.leader()
+        for name in ("TeamLeaderRoomTeammate", "TeamLeaderRoomTeammate2"):
+            x, y, width, height = nodes[name]["recognition"]["param"]["roi"]
+            self.assertLessEqual(x, 130, name)
+            self.assertGreaterEqual(x + width, 1200, name)
+            self.assertLessEqual(y, 113, name)
+            self.assertGreaterEqual(y + height, 140, name)
+
+    def test_invite_panel_opens_from_an_empty_slot(self):
+        nodes = self.leader()
+        self.assertEqual(nodes["TeamLeaderInviteSlot"]["next"],
+                         ["[JumpBack]CommonBountyInterrupt", "TeamLeaderInviteSlotRight", "TeamLeaderInviteSlotMiddle",
+                          "TeamLeaderInviteSlotFull"])
+        for side, click in (("Right", "SafeInput_TeamLeaderOpenInvite"), ("Middle", "SafeInput_TeamLeaderOpenInviteMiddle")):
+            slot = nodes["TeamLeaderInviteSlot" + side]
+            self.assertTrue(slot["inverse"])
+            self.assertNotIn("expected", slot["recognition"]["param"])
+            self.assertEqual(slot["next"][-1], click)
+        for name in ("TeamLeaderRoomReady", "TeamLeaderInviteAgain", "TeamLeaderReinviteFirst"):
+            self.assertEqual(nodes[name]["next"][-1], "TeamLeaderInviteSlot", name)
+
+    def test_missing_teammates_are_invited_again_with_a_limit(self):
+        nodes = self.leader()
+        fight = nodes["TeamLeaderFight"]["next"]
+        self.assertEqual(fight[-3:], ["[JumpBack]TeamLeaderWaitTeammate", "TeamLeaderInviteMissing", "TeamLeaderTeammateNoShow"])
+        self.assertLess(fight.index("SafeInput_TeamLeaderStart"), fight.index("[JumpBack]TeamLeaderWaitTeammate"))
+        wait = nodes["TeamLeaderWaitTeammate"]
+        self.assertEqual((wait["max_hit"], wait["post_delay"]), (10, 1000))
+        missing = nodes["TeamLeaderInviteMissing"]
+        self.assertEqual(missing["max_hit"], 3)
+        self.assertEqual(missing["next"], ["[JumpBack]CommonBountyInterrupt", "TeamLeaderReinviteFirst", "TeamLeaderInviteAgain", "TeamLeaderFight"])
+        resets = missing["action"]["param"]["custom_action_param"]["nodes"]
+        for name in ("TeamLeaderWaitTeammate", "TeamLeaderInviteAgain", "SafeInput_TeamLeaderInviteOpenFriends"):
+            self.assertIn(name, resets)
+        first = nodes["TeamLeaderReinviteFirst"]
+        self.assertTrue(first["inverse"])
+        self.assertEqual(first["anchor"], {"TeamLeaderSelectTarget": "SafeInput_TeamLeaderSelectTeammate"})
+        entry = nodes["TeamLeaderBattleEntry"]["action"]["param"]["custom_action_param"]["nodes"]
+        self.assertIn("TeamLeaderWaitTeammate", entry)
+        self.assertIn("TeamLeaderInviteMissing", entry)
+        self.assertEqual(nodes["TeamLeaderTeammateNoShow"]["next"], ["NativeFlowFailed"])
+
+    def test_member_accepts_only_the_leader_for_the_chosen_dungeon(self):
+        task = load_jsonc(self.ROOT / "assets/tasks/TeamMember.json")["option"]["队长昵称"]
+        text = substitute(json.dumps(task["pipeline_override"], ensure_ascii=False),
+                          {"完整队长昵称": "阿离不离谱", "邀请目标副本": "御魂悲鸣"})
+        expected = {node: value["recognition"]["param"]["expected"] for node, value in json.loads(text).items()}
+        name, target = expected["TeamMemberLeaderName"], expected["TeamMemberInviteTarget"]
+        for text in ("阿离不离谱", "60阿离不离谱", "60 阿离不离谱"):
+            self.assertRegex(text, name)
+        self.assertNotRegex("阿离不离谱谱", name)
+        self.assertRegex("御魂悲鸣", target)
+        self.assertNotRegex("御魂神罚", target)
+        empty = substitute(json.dumps(task["pipeline_override"], ensure_ascii=False), {"完整队长昵称": "阿离", "邀请目标副本": ""})
+        self.assertEqual(json.loads(empty)["TeamMemberInviteTarget"]["recognition"]["param"]["expected"], "")
+        nodes = json.loads((self.ROOT / "assets/resource/base/pipeline/TeamMember.json").read_text(encoding="utf-8"))
+        # Screenshots: names start at x 230 (no gear) or 320 (gear) and run long; target line at y 258-285.
+        x, y, width, height = nodes["TeamMemberLeaderName"]["recognition"]["param"]["roi"]
+        self.assertTrue(x <= 230 and x + width >= 575 and y <= 225 and y + height >= 252)
+        x, y, width, height = nodes["TeamMemberInviteTarget"]["recognition"]["param"]["roi"]
+        self.assertTrue(x <= 230 and x + width >= 575 and y <= 258 and y + height >= 285)
+        for icon, center in (("TeamMemberAcceptIcon", (140, 255)), ("TeamMemberAcceptDefaultIcon", (240, 255))):
+            x, y, width, height = nodes[icon]["recognition"]["param"]["roi"]
+            self.assertTrue(x <= center[0] <= x + width and y <= center[1] <= y + height, icon)
+        plain = nodes["TeamMemberAcceptIcon"]["recognition"]["param"]["roi"]
+        self.assertLessEqual(plain[0] + plain[2], nodes["TeamMemberAcceptDefaultIcon"]["recognition"]["param"]["roi"][0])
+
+    def test_teammate_joining_after_being_judged_missing_does_not_stop(self):
+        nodes = self.leader()
+        self.assertEqual(nodes["TeamLeaderInviteSlot"]["next"][-1], "TeamLeaderInviteSlotFull")
+        self.assertEqual(nodes["TeamLeaderInviteSlotFull"]["next"][-1], "TeamLeaderFight")
+        missing = nodes["TeamLeaderInviteTeammateMissing"]
+        self.assertEqual(missing["recognition"]["param"]["all_of"], ["PageTeamInvite", "NavCancelInvite"])
+        self.assertEqual(missing["next"][-1], "SafeInput_TeamLeaderInviteTeammateMissing")
+        safety = json.loads((self.ROOT / "assets/resource/base/pipeline/InputSafety.json").read_text(encoding="utf-8"))
+        self.assertEqual(safety["SafeInput_TeamLeaderInviteTeammateMissing"]["next"][-1], "TeamLeaderInviteClosed")
+        self.assertEqual(nodes["TeamLeaderInviteClosed"]["next"][-1], "TeamLeaderInviteRoundCheck")
+        still_open = nodes["TeamLeaderInviteStillOpen"]
+        self.assertEqual(nodes["TeamLeaderInviteNext"]["next"][-2:], ["TeamLeaderInviteRoundCheck", "TeamLeaderInviteStillOpen"])
+        self.assertEqual(still_open["next"][-2:], ["TeamLeaderInviteRoundCheck", "SafeInput_TeamLeaderInviteTeammateMissing"])
+        self.assertEqual(still_open["max_hit"], 3)
+
+    def test_member_taps_speak_while_waiting_in_the_room(self):
+        nodes = json.loads((self.ROOT / "assets/resource/base/pipeline/TeamMember.json").read_text(encoding="utf-8"))
+        loop = nodes["TeamMemberLoop"]["next"]
+        self.assertEqual(loop[-3:], ["[JumpBack]TeamMemberRoomTick", "[JumpBack]TeamMemberIdleEmoteReady", "[JumpBack]TeamMemberRoomWait"])
+        self.assertEqual((nodes["TeamMemberRoomTick"]["max_hit"], nodes["TeamMemberRoomTick"]["post_delay"]), (15, 1000))
+        emote = nodes["TeamMemberIdleEmoteReady"]
+        self.assertEqual(emote["action"]["param"]["custom_action_param"]["nodes"], ["TeamMemberRoomTick"])
+        self.assertEqual(emote["next"][-1], "SafeInput_TeamMemberIdleEmote")
+        # Screenshot: the speak text sits at x 30-75, y 580-602 with its icon right above (OAS roi 27,526,55,51).
+        x, y, width, height = nodes["TeamRoomSpeakButton"]["recognition"]["param"]["roi"]
+        self.assertTrue(x <= 30 and x + width >= 75 and y <= 580 and y + height >= 602)
+        safety = json.loads((self.ROOT / "assets/resource/base/pipeline/InputSafety.json").read_text(encoding="utf-8"))
+        self.assertEqual(safety["SafeInput_TeamMemberIdleEmote"]["action"]["param"]["target_offset"], [0, -48, 0, 22])
+        self.assertEqual(safety["SafeInput_TeamMemberIdleEmote"]["next"], [])
+
+    def test_member_defaults_accept_any_chinese_leader_and_target(self):
+        option = load_jsonc(self.ROOT / "assets/tasks/TeamMember.json")["option"]["队长昵称"]
+        name_input = option["inputs"][0]
+        self.assertEqual(name_input["default"], "[一-龥]+")
+        self.assertRegex(name_input["default"], name_input["verify"])
+        target_input = option["inputs"][1]
+        self.assertEqual(target_input["default"], "[一-龥]+")
+        self.assertRegex(target_input["default"], target_input["verify"])
+        text = substitute(json.dumps(option["pipeline_override"], ensure_ascii=False),
+                          {"完整队长昵称": name_input["default"], "邀请目标副本": target_input["default"]})
+        expected = json.loads(text)
+        pattern = expected["TeamMemberLeaderName"]["recognition"]["param"]["expected"]
+        target = expected["TeamMemberInviteTarget"]["recognition"]["param"]["expected"]
+        for line in ("御魂悲鸣", "觉醒火麒麟", "目标：御魂 悲鸣"):
+            self.assertRegex(line, target)
+        for name in ("阿离不离谱", "60阿离不离谱", "60 潮生云雾"):
+            self.assertRegex(name, pattern)
+        for name in ("Alice", "阿离abc", "阿离_01"):
+            self.assertNotRegex(name, pattern)
+
+    def test_member_confirms_auto_ready_after_default_accept(self):
+        # Screenshot: prompt line 并在战前自动准备 at x 543-783, y 305-332; 确定 at x 665-842, y 408-470.
+        nodes = json.loads((self.ROOT / "assets/resource/base/pipeline/TeamMember.json").read_text(encoding="utf-8"))
+        loop = nodes["TeamMemberLoop"]["next"]
+        # Invites and the prompt expire in seconds, so they lead the loop.
+        self.assertEqual(loop[1:4], ["TeamMemberAutoReadyConfirm", "TeamMemberAcceptDefault", "TeamMemberAccept"])
+        self.assertEqual(nodes["TeamMemberAfterAccept"]["next"][1:], ["TeamMemberAutoReadyConfirm", "TeamMemberAcceptJoined"])
+        self.assertEqual(nodes["TeamMemberAfterAccept"]["on_error"], ["TeamMemberLoop"])
+        self.assertLessEqual(nodes["TeamMemberAfterAccept"]["timeout"], 5000)
+        x, y, w, h = nodes["TeamMemberAutoReadyText"]["recognition"]["param"]["roi"]
+        self.assertTrue(x <= 543 and x + w >= 783 and y <= 305 and y + h >= 332)
+        x, y, w, h = nodes["TeamMemberAutoReadyButton"]["recognition"]["param"]["roi"]
+        self.assertTrue(x <= 722 and x + w >= 785 and y <= 425 and y + h >= 452 and x >= 620)
+        self.assertEqual(nodes["TeamMemberAutoReadyConfirm"]["recognition"]["param"]["box_index"], 1)
+        safety = json.loads((self.ROOT / "assets/resource/base/pipeline/InputSafety.json").read_text(encoding="utf-8"))
+        self.assertEqual(safety["SafeInput_TeamMemberAutoReadyConfirm"]["next"], ["TeamMemberLoop"])
+        for name in ("SafeInput_TeamMemberAccept", "SafeInput_TeamMemberAcceptDefault"):
+            self.assertEqual(safety[name]["next"], ["TeamMemberAfterAccept"])
+            self.assertLessEqual(safety[name]["post_delay"], 500)
+
+    def test_member_counts_one_win_per_battle(self):
+        # Log 2026-11-13 01:45: the win and reward screens both counted (32.6s and 46.1s) for one battle.
+        nodes = json.loads((self.ROOT / "assets/resource/base/pipeline/TeamMember.json").read_text(encoding="utf-8"))
+        self.assertEqual(nodes["TeamMemberWon"]["max_hit"], 1)
+        in_battle = nodes["TeamMemberInBattle"]
+        self.assertEqual(in_battle["max_hit"], 1)
+        self.assertEqual(in_battle["action"]["param"]["custom_action_param"]["nodes"], ["TeamMemberWon"])
+        loop = nodes["TeamMemberLoop"]["next"]
+        self.assertLess(loop.index("[JumpBack]TeamMemberInBattle"), loop.index("[JumpBack]DailyPrepare"))
+        resets = nodes["TeamMemberBattleEntry"]["action"]["param"]["custom_action_param"]["nodes"]
+        self.assertIn("TeamMemberInBattle", resets)
+        self.assertNotIn("TeamMemberWon", resets)
+        safety = json.loads((self.ROOT / "assets/resource/base/pipeline/InputSafety.json").read_text(encoding="utf-8"))
+        self.assertEqual(safety["SafeInput_TeamMemberBattleResult"]["next"][-2:], ["TeamMemberWon", "TeamMemberResultCleared"])
+        self.assertEqual(nodes["TeamMemberResultCleared"]["next"], ["TeamMemberAfterResult"])
+
+    def test_member_after_result_short_route(self):
+        nodes = json.loads((self.ROOT / "assets/resource/base/pipeline/TeamMember.json").read_text(encoding="utf-8"))
+        self.assertEqual(nodes["TeamMemberBattleEntry"]["next"], ["TeamMemberAfterResult"])
+        after = nodes["TeamMemberAfterResult"]
+        self.assertEqual(after["next"][1:], ["TeamMemberAutoReadyConfirm", "TeamMemberAcceptDefault", "TeamMemberAccept",
+                                             "SafeInput_TeamMemberWinResult", "TeamMemberResultSeen", "TeamMemberAfterResultRoom"])
+        self.assertLess(len(after["next"]), len(nodes["TeamMemberLoop"]["next"]) // 2)
+        self.assertEqual(after["on_error"], ["TeamMemberLoop"])
+        self.assertLessEqual(after["timeout"], 8000)
+        self.assertEqual(nodes["TeamMemberAfterResultRoom"]["next"], ["TeamMemberLoop"])
+
+    def test_member_loop_drops_pure_waits_and_post_result_prompts(self):
+        nodes = json.loads((self.ROOT / "assets/resource/base/pipeline/TeamMember.json").read_text(encoding="utf-8"))
+        loop = nodes["TeamMemberLoop"]["next"]
+        self.assertNotIn("[JumpBack]CommonBattleEnteringWait", loop)
+        self.assertNotIn("[JumpBack]CommonRewardOverflow", loop)
+        safety = json.loads((self.ROOT / "assets/resource/base/pipeline/InputSafety.json").read_text(encoding="utf-8"))
+        self.assertIn("[JumpBack]CommonRewardOverflow", safety["SafeInput_TeamMemberBattleResult"]["next"])
+
+    def test_member_checks_defeat_only_on_a_result_screen(self):
+        # DailyBattleFailed reads 694x444; it runs only after the small result prompt is seen.
+        nodes = json.loads((self.ROOT / "assets/resource/base/pipeline/TeamMember.json").read_text(encoding="utf-8"))
+        for router in ("TeamMemberLoop", "TeamMemberAfterResult"):
+            self.assertNotIn("TeamMemberBattleFailure", nodes[router]["next"], router)
+            self.assertIn("TeamMemberResultSeen", nodes[router]["next"], router)
+        seen = nodes["TeamMemberResultSeen"]
+        self.assertEqual(seen["recognition"]["param"]["all_of"], ["DailyBattleResult"])
+        self.assertEqual(seen["next"][1:], ["TeamMemberBattleFailure", "SafeInput_TeamMemberBattleResult"])
+
+    def test_member_clicks_win_pages_without_the_defeat_check(self):
+        # Screenshots: page one shows 胜利 at (700,75), page two the reward bag at (560,470); both only on a win.
+        common = json.loads((self.ROOT / "assets/resource/base/pipeline/Common.json").read_text(encoding="utf-8"))
+        self.assertEqual(common["CommonBattleWinPage"]["recognition"]["param"]["any_of"], ["CommonBattleWinDrum", "CommonBattleRewardBag"])
+        drum = common["CommonBattleWinDrum"]["recognition"]["param"]
+        self.assertEqual(common["CommonBattleWinDrum"]["recognition"]["type"], "ColorMatch")
+        # Small drum early in the animation (445,175,70,60) and the settled big drum (395,95,175,180) both fit.
+        x, y, w, h = drum["roi"]
+        for x0, y0, w0, h0 in ((445, 175, 70, 60), (395, 95, 175, 180), (395, 120, 175, 170)):
+            self.assertTrue(x <= x0 and y <= y0 and x + w >= x0 + w0 and y + h >= y0 + h0)
+        # Bright-red pixel counts measured on screenshots: win 1111, early win 144, defeat 0.
+        self.assertTrue(0 < drum["count"] < 144)
+        for name, (x0, y0, w0, h0) in (("CommonBattleRewardBag", (560, 470, 180, 120)),):
+            param = common[name]["recognition"]["param"]
+            self.assertTrue((self.ROOT / "assets/resource/base/image" / param["template"]).is_file(), name)
+            x, y, w, h = param["roi"]
+            self.assertTrue(x <= x0 and y <= y0 and x + w >= x0 + w0 and y + h >= y0 + h0, name)
+            self.assertLessEqual(w * h, 400 * 230, name)
+        nodes = json.loads((self.ROOT / "assets/resource/base/pipeline/TeamMember.json").read_text(encoding="utf-8"))
+        self.assertEqual(nodes["TeamMemberWinResult"]["recognition"]["param"]["all_of"], ["DailyBattleResult", "CommonBattleWinPage"])
+        for router in ("TeamMemberLoop", "TeamMemberAfterResult"):
+            nxt = nodes[router]["next"]
+            self.assertLess(nxt.index("SafeInput_TeamMemberWinResult"), nxt.index("TeamMemberResultSeen"), router)
+        safety = json.loads((self.ROOT / "assets/resource/base/pipeline/InputSafety.json").read_text(encoding="utf-8"))
+        win_next = safety["SafeInput_TeamMemberWinResult"]["next"]
+        self.assertNotIn("TeamMemberBattleFailure", win_next)
+        self.assertEqual(win_next[1], "SafeInput_TeamMemberWinResult")
+        self.assertEqual(win_next[-2:], ["TeamMemberWon", "TeamMemberResultCleared"])
+

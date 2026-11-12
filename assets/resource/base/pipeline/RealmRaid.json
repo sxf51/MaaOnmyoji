@@ -233,18 +233,6 @@
                             }
                         }
                     },
-                    "TeamPresetOut": {
-                        "recognition": {
-                            "param": {
-                                "roi": [
-                                    894,
-                                    503,
-                                    120,
-                                    44
-                                ]
-                            }
-                        }
-                    },
                     "TeamPresetFrameTemplate": {
                         "recognition": {
                             "param": {
@@ -253,6 +241,118 @@
                                     161,
                                     155,
                                     30
+                                ]
+                            }
+                        }
+                    },
+                    "TeamPresetFooter": {
+                        "recognition": {
+                            "param": {
+                                "roi": [
+                                    771,
+                                    503,
+                                    380,
+                                    44
+                                ]
+                            }
+                        }
+                    },
+                    "TeamPresetGroupAtBottom": {
+                        "recognition": {
+                            "param": {
+                                "custom_recognition_param": {
+                                    "regions": [
+                                        [
+                                            637,
+                                            182,
+                                            112,
+                                            372
+                                        ]
+                                    ],
+                                    "max_changed_ratio": 0.15
+                                }
+                            }
+                        }
+                    },
+                    "TeamPresetTeamAtBottom": {
+                        "recognition": {
+                            "param": {
+                                "custom_recognition_param": {
+                                    "regions": [
+                                        [
+                                            770,
+                                            181,
+                                            376,
+                                            320
+                                        ]
+                                    ],
+                                    "max_changed_ratio": 0.15
+                                }
+                            }
+                        }
+                    },
+                    "SafeInput_TeamPresetGroupScroll": {
+                        "action": {
+                            "type": "Custom",
+                            "param": {
+                                "custom_action": "BezierSwipe",
+                                "custom_action_param": {
+                                    "begin": [
+                                        681,
+                                        481,
+                                        24,
+                                        24
+                                    ],
+                                    "end": [
+                                        681,
+                                        241,
+                                        24,
+                                        24
+                                    ],
+                                    "duration": 500,
+                                    "duration_random": 80,
+                                    "segments": 24,
+                                    "deviation": 8,
+                                    "easing": true
+                                }
+                            }
+                        }
+                    },
+                    "SafeInput_TeamPresetTeamScroll": {
+                        "action": {
+                            "type": "Custom",
+                            "param": {
+                                "custom_action": "BezierSwipe",
+                                "custom_action_param": {
+                                    "begin": [
+                                        946,
+                                        441,
+                                        40,
+                                        24
+                                    ],
+                                    "end": [
+                                        946,
+                                        221,
+                                        40,
+                                        24
+                                    ],
+                                    "duration": 500,
+                                    "duration_random": 80,
+                                    "segments": 24,
+                                    "deviation": 8,
+                                    "easing": true
+                                }
+                            }
+                        }
+                    },
+                    "TeamPresetOut": {
+                        "recognition": {
+                            "param": {
+                                "roi": [
+                                    894,
+                                    503,
+                                    120,
+                                    44
                                 ]
                             }
                         }
