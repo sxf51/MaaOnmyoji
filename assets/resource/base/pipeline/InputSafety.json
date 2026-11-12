@@ -180,13 +180,18 @@
                 "box_index": 1
             }
         },
-        "action": "Click",
-        "target": [
-            829,
-            493,
-            47,
-            51
-        ],
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true,
+                "target_offset": [
+                    -90,
+                    -15,
+                    95,
+                    30
+                ]
+            }
+        },
         "post_delay": 800,
         "pre_delay": 0,
         "pre_wait_freezes": 0,

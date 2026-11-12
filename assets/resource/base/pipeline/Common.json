@@ -240,17 +240,45 @@
     "CommonRefuseBounty": {
         "desc": "拒绝悬赏封印",
         "recognition": {
-            "type": "OCR",
+            "type": "And",
             "param": {
-                "roi": [
-                    556,
-                    146,
-                    145,
-                    55
+                "all_of": [
+                    {
+                        "sub_name": "CommonBountyTitle",
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "expected": [
+                                    "悬赏封印"
+                                ],
+                                "roi": [
+                                    480,
+                                    30,
+                                    340,
+                                    85
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "sub_name": "CommonBountyRefuseText",
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "expected": [
+                                    "^拒绝$"
+                                ],
+                                "roi": [
+                                    900,
+                                    550,
+                                    160,
+                                    70
+                                ]
+                            }
+                        }
+                    }
                 ],
-                "expected": [
-                    "悬赏封印"
-                ]
+                "box_index": 1
             }
         },
         "action": "DoNothing",
@@ -263,7 +291,7 @@
             "SafeInput_CommonRefuseBounty"
         ],
         "on_error": [],
-        "doc": "拒绝弹出的悬赏封印邀请。",
+        "doc": "拒绝弹出的协作悬赏封印邀请：顶部标题含“悬赏封印”（实测“协助悬赏封印”约 525,45,255,50），右下“拒绝”文字约 935,570,50,30，点“拒绝”这一行（红叉加文字）。注意“接受”就在它正上方约 836,460,70,65，点击区域不能往上扩。",
         "timeout": 3000
     },
     "CommonClickAuto": {

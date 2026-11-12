@@ -69,6 +69,7 @@
     },
     "import": [
         "tasks/preset/Daily.json",
+        "tasks/preset/Tools.json",
         "tasks/Startup.json",
         "tasks/Mitama.json",
         "tasks/TeamMember.json",

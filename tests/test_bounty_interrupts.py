@@ -85,3 +85,27 @@ class FreshTouchBountyTest(unittest.TestCase):
                     self.assertFalse(ensure_input_safe(context, old, 'SafeInput_TestSwipe', [[10,20,30,40]]))
                 context.tasker.post_stop.assert_called_once()
                 context.run_task.assert_called_once_with('CommonBountyInterrupt')
+
+class BountyRefuseGeometryTest(unittest.TestCase):
+    """Screenshot 2026-11-13: title 协助悬赏封印 ~(525,45,255,50), 接受 ~(836,460,70,65), 拒绝 text ~(935,570,50,30)."""
+
+    def test_refuse_click_stays_on_the_refuse_row(self):
+        import json as _json
+        root = Path(__file__).resolve().parents[1] / "assets/resource/base/pipeline"
+        common = _json.loads((root / "Common.json").read_text(encoding="utf-8"))
+        safety = _json.loads((root / "InputSafety.json").read_text(encoding="utf-8"))
+        title, refuse = common["CommonRefuseBounty"]["recognition"]["param"]["all_of"]
+        x, y, w, h = title["recognition"]["param"]["roi"]
+        self.assertTrue(x <= 525 and y <= 45 and x + w >= 780 and y + h >= 95)
+        x, y, w, h = refuse["recognition"]["param"]["roi"]
+        self.assertTrue(x <= 935 and y <= 570 and x + w >= 985 and y + h >= 600)
+        self.assertEqual(refuse["recognition"]["param"]["expected"], ["^拒绝$"])
+        action = safety["SafeInput_CommonRefuseBounty"]["action"]
+        self.assertNotIn("target", safety["SafeInput_CommonRefuseBounty"])
+        self.assertIs(action["param"]["target"], True)
+        ox, oy, ow, oh = action["param"]["target_offset"]
+        # Recognized 拒绝 box on the screenshot: [929,570,59,39].
+        cx, cy, cw, ch = 929 + ox, 570 + oy, 59 + ow, 39 + oh
+        self.assertGreater(cy, 525)                  # never reaches the 接受 button above
+        self.assertTrue(cx <= 840 and cx + cw >= 985)  # covers the red cross and the text
+
