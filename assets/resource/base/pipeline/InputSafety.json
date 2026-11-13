@@ -2197,7 +2197,8 @@
         "next": [
             "[JumpBack]CommonBountyInterrupt",
             "TeamLeaderInviteRecentReady",
-            "SafeInput_TeamLeaderInviteOpenRecent"
+            "SafeInput_TeamLeaderInviteOpenRecent",
+            "TeamLeaderInvitePanelGone"
         ],
         "timeout": 5000,
         "pre_delay": 0,
@@ -2235,7 +2236,8 @@
         "next": [
             "[JumpBack]CommonBountyInterrupt",
             "TeamLeaderInviteFriendsReady",
-            "SafeInput_TeamLeaderInviteOpenFriends"
+            "SafeInput_TeamLeaderInviteOpenFriends",
+            "TeamLeaderInvitePanelGone"
         ]
     },
     "SafeInput_TeamLeaderInviteOpenGuild": {
@@ -2267,7 +2269,8 @@
         "next": [
             "[JumpBack]CommonBountyInterrupt",
             "TeamLeaderInviteGuildReady",
-            "SafeInput_TeamLeaderInviteOpenGuild"
+            "SafeInput_TeamLeaderInviteOpenGuild",
+            "TeamLeaderInvitePanelGone"
         ],
         "timeout": 5000,
         "pre_delay": 0,
@@ -2302,7 +2305,8 @@
         "next": [
             "[JumpBack]CommonBountyInterrupt",
             "TeamLeaderInviteCrossReady",
-            "SafeInput_TeamLeaderInviteOpenCross"
+            "SafeInput_TeamLeaderInviteOpenCross",
+            "TeamLeaderInvitePanelGone"
         ],
         "timeout": 5000,
         "pre_delay": 0,

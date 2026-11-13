@@ -580,3 +580,27 @@ class NativeTeamConfigTest(unittest.TestCase):
         self.assertEqual(win_next[1], "SafeInput_TeamMemberWinResult")
         self.assertEqual(win_next[-2:], ["TeamMemberWon", "TeamMemberResultCleared"])
 
+    def test_empty_invite_tab_counts_as_fitting_one_page(self):
+        import re as _re
+        nodes = self.leader()
+        param = nodes["TeamLeaderInviteListFits"]["recognition"]["param"]
+        for text in ("在线：0", "在线:0", "在线 : 0", "在线：8"):
+            self.assertTrue(_re.search(param["expected"], text), text)
+        self.assertFalse(_re.search(param["expected"], "在线：12"))
+        # Screenshot: 在线：0 sits at about (848,108,82,24).
+        x, y, w, h = param["roi"]
+        self.assertTrue(x <= 848 and y <= 108 and x + w >= 930 and y + h >= 132)
+
+    def test_invite_search_recovers_when_the_game_closes_the_panel(self):
+        nodes = self.leader()
+        gone = nodes["TeamLeaderInvitePanelGone"]
+        self.assertTrue(gone["inverse"])
+        self.assertEqual(gone["recognition"]["param"]["all_of"], ["PageTeamInvite"])
+        self.assertEqual(gone["next"][-1], "TeamLeaderInviteClosed")
+        for name in ("TeamLeaderInviteSearch", "TeamLeaderInviteAdvance"):
+            nxt = nodes[name]["next"]
+            self.assertIn("TeamLeaderInvitePanelGone", nxt, name)
+        safety = json.loads((self.ROOT / "assets/resource/base/pipeline/InputSafety.json").read_text(encoding="utf-8"))
+        for tab in ("Friends", "Recent", "Guild", "Cross"):
+            self.assertEqual(safety["SafeInput_TeamLeaderInviteOpen" + tab]["next"][-1], "TeamLeaderInvitePanelGone", tab)
+

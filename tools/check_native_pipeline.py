@@ -1069,6 +1069,16 @@ def main():
             ("MitamaFinishCloseBuffPanel", {"PageMitamaStage"})], pipeline_override=buff_on)
         pick = {"PageTeamInvite", "TeamLeaderTeammateName", "TeamLeaderInviteFriendsSelected", "TeamLeaderInviteTabFriends"}
         both = {"PageTeamRoom", "TeamLeaderRoomTeammate", "TeamLeaderRoomTeammate2", "TeamLeaderStartButton"}
+        anchored_first = {"TeamLeaderInviteSearch": {"anchor": {"TeamLeaderSelectTarget": "SafeInput_TeamLeaderSelectTeammate"}}}
+        # Screenshot 2026-11-13: 寮友 tab selected, 在线：0, empty list -> no swipe, straight to 跨区.
+        case("empty guild list switches to cross without swiping", "TeamLeaderInviteSearch", guild | {"TeamLeaderInviteListFits"}, [
+            ("TeamLeaderInviteOpenCross", cross | {"TeamLeaderTeammateName"}), ("TeamLeaderSelectTeammate", {"TeamLeaderSendInvite"}),
+            ("TeamLeaderSendInvite", both), ("TeamLeaderStart", {"DailyBattleResult"}),
+            ("TeamLeaderBattleResult", {"PageTeamRoom"})], expected_count=1, pipeline_override=anchored_first)
+        # Log 2026-11-13 03:32: the teammate joined mid-search and the game closed the invite panel by itself.
+        case("teammate joins mid-search and the game closes the panel", "TeamLeaderInviteSearch", guild | {"TeamLeaderInviteListFits"}, [
+            ("TeamLeaderInviteOpenCross", both), ("TeamLeaderStart", {"DailyBattleResult"}),
+            ("TeamLeaderBattleResult", {"PageTeamRoom"})], expected_count=1, pipeline_override=anchored_first)
         # Only the second teammate's name is on screen in round two, so picking the first one would stall.
         pick2 = (pick - {"TeamLeaderTeammateName"}) | {"TeamLeaderTeammate2Name"}
         first_only = {"PageTeamRoom", "TeamLeaderOpenInvite", "TeamLeaderRoomTeammate"}

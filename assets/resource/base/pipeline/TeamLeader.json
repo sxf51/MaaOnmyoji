@@ -254,6 +254,7 @@
             "TeamLeaderInviteListFits",
             "TeamLeaderInviteListAtBottom",
             "TeamLeaderInviteRememberList",
+            "TeamLeaderInvitePanelGone",
             "TeamLeaderInviteAdvance"
         ],
         "timeout": 20000
@@ -321,6 +322,7 @@
             "SafeInput_TeamLeaderInviteOpenRecent",
             "SafeInput_TeamLeaderInviteOpenGuild",
             "SafeInput_TeamLeaderInviteOpenCross",
+            "TeamLeaderInvitePanelGone",
             "TeamLeaderInviteTeammateMissing"
         ],
         "timeout": 5000
@@ -343,6 +345,25 @@
         "next": [
             "[JumpBack]CommonBountyInterrupt",
             "SafeInput_TeamLeaderInviteTeammateMissing"
+        ]
+    },
+    "TeamLeaderInvitePanelGone": {
+        "doc": "找人过程中邀请面板不见了：队友在搜索期间进了房，游戏会自己关掉邀请面板（实测日志 2026-11-13 03:32，搜到跨区栏时面板消失，之后每一步都要求面板在而超时失败）。确认回到房间后照常判断还要不要邀请、能不能开战。房间标题“协战队伍”在面板打开时也看得到，所以用“面板不在”判断，不能只看房间。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageTeamInvite"
+                ]
+            }
+        },
+        "inverse": true,
+        "action": "DoNothing",
+        "next": [
+            "[JumpBack]CommonBountyInterrupt",
+            "TeamLeaderInviteClosed"
         ]
     },
     "TeamLeaderInviteClosed": {
