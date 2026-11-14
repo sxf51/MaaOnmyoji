@@ -10,6 +10,16 @@ from custom.action.bezier_swipe import build_track  # noqa: E402
 
 
 class BezierSwipeTest(unittest.TestCase):
+    def test_region_endpoints_stay_inside_the_rectangle(self):
+        import random
+        from custom.action.bezier_swipe import _point
+        rng = random.Random(7)
+        points = {_point([10, 20, 3, 2], "begin", rng) for _ in range(500)}
+        # [x, y, w, h] covers x..x+w-1, y..y+h-1: every pixel is reachable, none outside.
+        self.assertEqual(points, {(x, y) for x in (10, 11, 12) for y in (20, 21)})
+        with self.assertRaises(ValueError):
+            _point([10, 20, 0, 5], "begin", rng)
+
     def test_track_keeps_endpoints_and_segment_count(self) -> None:
         points = bezier_points([[10, 20], [50, 80], [100, 20]], segments=10)
         self.assertEqual(points[0], (10, 20))

@@ -44,9 +44,10 @@ def _point(value: Any, field: str, rng: random.Random) -> tuple[int, int]:
             x, y, width, height = map(int, value)
         except (TypeError, ValueError) as exc:
             raise ValueError(f"{field} 区域必须是 [x, y, width, height]") from exc
-        if width < 0 or height < 0:
-            raise ValueError(f"{field} 区域的 width 和 height 不能为负数")
-        return rng.randint(x, x + width), rng.randint(y, y + height)
+        if width <= 0 or height <= 0:
+            raise ValueError(f"{field} 区域的 width 和 height 必须是正数")
+        # [x, y, w, h] covers x..x+w-1 and y..y+h-1, the same convention as MaaFramework regions.
+        return rng.randint(x, x + width - 1), rng.randint(y, y + height - 1)
     return _fixed_point(value, field)
 
 
