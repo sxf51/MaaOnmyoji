@@ -1169,9 +1169,13 @@ def main():
             ("TeamLeaderStart", {"DailyBattleResult"}), ("TeamLeaderBattleResult", {"PageTeamRoom"})],
             expected_count=1, pipeline_override=team_mode)
         # Without a match the task falls back to navigation; resuming would have clicked start, which no case allows.
-        for missing in ("MitamaRoomTargetLayer", "MitamaRoomTargetDungeon", "TeamLeaderRoomTeammate2"):
+        for missing in ("MitamaRoomTargetLayer", "MitamaRoomTargetDungeon"):
             case("mitama room without " + missing + " is not resumed", "MitamaNavigate", resume - {missing},
                  succeeds=False, pipeline_override=team_mode)
+        # Right room and target but a teammate is missing: keep the room and invite from it (stops at the invite step).
+        invite_here = {**team_mode, "TeamLeaderRoomReady": {"next": []}}
+        case("mitama right room with a missing teammate invites from the room", "MitamaNavigate",
+             resume - {"TeamLeaderRoomTeammate2", "TeamLeaderStartButton"}, pipeline_override=invite_here)
         case("solo mitama never checks the room", "MitamaNavigate", resume, succeeds=False)
         buff = {"MitamaEnableBuff": {"enabled": True}}
         case("resumed room still turns the buff on from the room", "MitamaNavigate", resume | {"CommonBuffMenuIcon"}, [
@@ -1189,6 +1193,9 @@ def main():
             expected_count=1, pipeline_override=awakening_mode)
         case("awakening room for another layer is not resumed", "AwakeningNavigate", awakening_resume - {"AwakeningRoomLayer"},
              succeeds=False, pipeline_override=awakening_mode)
+        case("awakening right room with no teammates yet invites from the room", "AwakeningNavigate",
+             awakening_resume - {"TeamLeaderRoomTeammate", "TeamLeaderRoomTeammate2", "TeamLeaderStartButton"},
+             pipeline_override={**awakening_mode, "TeamLeaderRoomReady": {"next": []}})
         case("matching nickname alone does not authorize team start", "TeamLeaderFight", {"PageTeamRoom", "TeamLeaderRoomTeammate", "TeamLeaderRoomTeammate2"}, succeeds=False)
         case("startup announcement closes before server entry", "StartupTask", set(), [
             ("StartupLaunch", {"StartupCloseAnnouncement"}),

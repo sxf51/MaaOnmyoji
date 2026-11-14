@@ -62,7 +62,8 @@ class TeamRouteTest(unittest.TestCase):
         for name, nodes, scope, finish, no_resource in expected:
             entry = nodes[name]
             self.assertEqual(entry["anchor"], {"TeamLeaderFinishTarget": finish, "TeamLeaderNoResourceTarget": no_resource})
-            self.assertEqual(entry["next"][-3], "TeamLeaderOpen")
+            # Normal path first; already sitting in the room is the rare case.
+            self.assertEqual(entry["next"][:3], ["TeamLeaderOpen", "TeamLeaderResumeRoom", "TeamLeaderRoomReady"])
             statistics = entry["action"]["param"]["custom_action_param"]["TeamLeaderDropStatistics"]
             self.assertEqual(statistics["action"]["param"]["custom_action_param"]["scope"], scope)
 
@@ -116,19 +117,28 @@ class TeamRouteTest(unittest.TestCase):
             self.assertEqual(cases["Yes"]["pipeline_override"][resume], {"enabled": True})
             self.assertNotIn(resume, cases["No"]["pipeline_override"])
 
-    def test_resume_requires_room_target_and_every_teammate(self):
+    def test_resume_requires_room_and_target_then_invites_or_starts(self):
         mitama, awakening = self.nodes("Mitama.json"), self.nodes("Awakening.json")
+        # In the room with the right target: invite if teammates are missing, start if they are all there.
         self.assertEqual(mitama["MitamaTeamResume"]["recognition"]["param"]["all_of"],
-                         ["PageTeamRoom", "MitamaRoomTargetDungeon", "MitamaRoomTargetLayer", "TeamLeaderRoomTeammate", "TeamLeaderRoomTeammate2"])
+                         ["PageTeamRoom", "MitamaRoomTargetDungeon", "MitamaRoomTargetLayer"])
         self.assertEqual(awakening["AwakeningTeamResume"]["recognition"]["param"]["all_of"],
-                         ["PageTeamRoom", "AwakeningRoomTargetDungeon", "AwakeningRoomType", "AwakeningRoomLayer",
-                          "TeamLeaderRoomTeammate", "TeamLeaderRoomTeammate2"])
+                         ["PageTeamRoom", "AwakeningRoomTargetDungeon", "AwakeningRoomType", "AwakeningRoomLayer"])
+        self.assertEqual(mitama["TeamLeaderResumeRoom"]["recognition"]["param"]["all_of"],
+                         ["PageTeamRoom", "TeamLeaderRoomTeammate", "TeamLeaderRoomTeammate2"])
+        self.assertEqual(mitama["TeamLeaderRoomReady"]["recognition"]["param"]["all_of"], ["PageTeamRoom"])
+        # Awakening checks the rare room case after the normal navigation checks, before the navigating fallback.
+        nav = awakening["AwakeningNavigate"]["next"]
+        self.assertGreater(nav.index("AwakeningTeamResume"), nav.index("AwakeningNavigationReady"))
+        self.assertEqual(nav[nav.index("AwakeningTeamResume") + 1], "[JumpBack]NavigateAwakening")
         for nodes, prefix in ((mitama, "Mitama"), (awakening, "Awakening")):
             resume = nodes[prefix + "TeamResume"]
             self.assertFalse(resume["enabled"])
             self.assertEqual(resume["max_hit"], 1)
             self.assertNotIn(prefix + "TeamResumeConfigure", nodes)
-            self.assertEqual(nodes[prefix + "Navigate"]["next"][0], prefix + "TeamResume")
+            # Mitama's next step navigates unconditionally (and would leave the room), so the room check precedes it.
+            if prefix == "Mitama":
+                self.assertEqual(nodes[prefix + "Navigate"]["next"][:2], ["MitamaTeamResume", "[JumpBack]MitamaNavigateOnce"])
             self.assertEqual(nodes[prefix + "TeamResume"]["anchor"], nodes[prefix + "TeamEntry"]["anchor"])
         self.assertEqual(mitama["TeamLeaderStart"]["recognition"]["param"]["all_of"],
                          ["PageTeamRoom", "TeamLeaderRoomTeammate", "TeamLeaderRoomTeammate2", "TeamLeaderStartButton"])

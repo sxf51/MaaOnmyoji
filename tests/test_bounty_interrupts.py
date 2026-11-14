@@ -24,7 +24,7 @@ class BountyRoutingTest(unittest.TestCase):
             self.assertNotIn('[JumpBack]CommonBountyInterrupt', routes[:-2], routes)
 
     def test_all_production_continuations_put_bounty_and_popup_stop_last(self):
-        exempt = {'CommonBountyInterrupt', 'CommonRefuseBounty', 'CommonActivityInsufficientAP'}
+        exempt = {'CommonBountyInterrupt', 'CommonRefuseBounty', 'CommonActivityInsufficientAP', 'CommonUnknownPopupFailed'}
         for path in (ROOT / 'assets/resource/base/pipeline').glob('*.json'):
             if path.name == 'Example.json':
                 continue

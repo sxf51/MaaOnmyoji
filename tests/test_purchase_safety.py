@@ -48,18 +48,25 @@ class InputContractTest(unittest.TestCase):
                 self.assertEqual(node.get("repeat", 1), 1)
         self.assertGreater(count, 100)
 
-    def test_unknown_popup_stops_the_task(self):
+    def test_unknown_popup_fails_the_task(self):
         popup = self.nodes["CommonUnknownPopup"]
-        self.assertEqual(popup["action"], "StopTask")
+        # A failure, not StopTask: the task reports failure and buff cleanup still runs.
+        self.assertEqual(popup["action"], "DoNothing")
+        self.assertEqual(popup["next"], ["CommonUnknownPopupFailed"])
+        failed = self.nodes["CommonUnknownPopupFailed"]
+        self.assertEqual((failed["next"], failed["timeout"]), (["NativeNever"], 1))
         param = popup["recognition"]["param"]
         self.assertEqual(popup["recognition"]["type"], "OCR")
-        self.assertEqual(param["roi"], [240, 220, 800, 420])
         for text in ("确定", "确认", "取消"):
             self.assertTrue(any(re.fullmatch(p, text) for p in param["expected"]), text)
-        self.assertNotIn("next", popup)
+        # Dialog button band only. Log 2026-11-15 04:34: the invite panel's own 取消 (y 539-614) stopped the team flow.
+        x, y, w, h = param["roi"]
+        self.assertEqual((y, y + h), (300, 540))
+        for page_button in ("NavCancelInvite", "NavCancelCreate"):
+            self.assertGreaterEqual(self.nodes[page_button]["recognition"]["param"]["roi"][1], y + h - 5, page_button)
 
     def test_rare_checks_are_last_in_every_visual_list(self):
-        exempt = {"CommonBountyInterrupt", "CommonRefuseBounty", "CommonActivityInsufficientAP"}
+        exempt = {"CommonBountyInterrupt", "CommonRefuseBounty", "CommonActivityInsufficientAP", "CommonUnknownPopupFailed"}
         for name, node in self.nodes.items():
             routes = node.get("next")
             if not routes or name in exempt or is_control_route(routes, self.nodes.get):

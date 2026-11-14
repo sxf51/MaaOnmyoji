@@ -71,7 +71,7 @@
         }
     },
     "MitamaTeamResume": {
-        "doc": "组队开启时，任务开始先判断能否在当前房间续接：已在组队房间，房间下方目标与所选关卡一致，所有队友都在，就不退出房间。每个任务只判断一次。仍按选项确认加成后进入组队等待开战；锁阵容和预设只在选层页处理，这里跳过。",
+        "doc": "小概率：任务开始时已在御魂组队房间且房间目标正确，跳过锁定和预设（房间里做不了），开加成后进入组队入口；队友都在就直接开始，否则在当前房间邀请。",
         "enabled": false,
         "max_hit": 1,
         "pre_delay": 0,
@@ -82,9 +82,7 @@
                 "all_of": [
                     "PageTeamRoom",
                     "MitamaRoomTargetDungeon",
-                    "MitamaRoomTargetLayer",
-                    "TeamLeaderRoomTeammate",
-                    "TeamLeaderRoomTeammate2"
+                    "MitamaRoomTargetLayer"
                 ]
             }
         },
@@ -697,7 +695,7 @@
         ]
     },
     "MitamaTeamEntry": {
-        "doc": "Mitama 发起组队：设置共用流程的结束位置和掉落统计范围，再打开组队页。",
+        "doc": "Mitama 发起组队：设置共用流程的结束位置和掉落统计范围，再打开组队页。 正常流程（挑战页点组队→创建房间→邀请）在前；已在房间时（小概率）队友都在就直接开战，否则在当前房间邀请。",
         "pre_delay": 0,
         "post_delay": 0,
         "action": {
@@ -723,8 +721,9 @@
             "TeamLeaderNoResourceTarget": "MitamaFinish"
         },
         "next": [
-            "TeamLeaderResumeRoom",
             "TeamLeaderOpen",
+            "TeamLeaderResumeRoom",
+            "TeamLeaderRoomReady",
             "[JumpBack]CommonBountyInterrupt",
             "CommonUnknownPopup"
         ]
