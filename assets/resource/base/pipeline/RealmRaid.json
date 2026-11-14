@@ -426,8 +426,11 @@
             "RealmRaidRetreatRetry",
             "RealmRaidFailRetry",
             "RealmRaidBattleFailure",
+            "[JumpBack]CommonRewardItemDetail",
             "RealmRaidBattleResult",
             "[JumpBack]CommonBattleEnteringWait",
+            "[JumpBack]CommonSoulMismatchMute",
+            "[JumpBack]CommonSoulMismatch",
             "[JumpBack]DailyPrepare",
             "[JumpBack]DailyRewardPopup",
             "RealmRaidBattleResume",
@@ -711,7 +714,9 @@
                         "RealmRaidBattleFailedResult",
                         "CommonBattleEnteringWait",
                         "DailyRewardPopup",
-                        "RealmRaidBattleResume"
+                        "RealmRaidBattleResume",
+                        "CommonRewardItemDetail",
+                        "CommonSoulMismatch"
                     ],
                     "strict": true
                 }
@@ -1270,6 +1275,8 @@
     "RealmRaidWaitBattleStart": {
         "next": [
             "RealmRaidBattleStarted",
+            "[JumpBack]CommonSoulMismatchMute",
+            "[JumpBack]CommonSoulMismatch",
             "RealmRaidAttack",
             "[JumpBack]CommonBountyInterrupt",
             "CommonUnknownPopup"
@@ -1481,7 +1488,9 @@
                         "RealmRaidBattleFailedResult",
                         "CommonBattleEnteringWait",
                         "DailyRewardPopup",
-                        "RealmRaidBattleResume"
+                        "RealmRaidBattleResume",
+                        "CommonRewardItemDetail",
+                        "CommonSoulMismatch"
                     ],
                     "strict": true
                 }

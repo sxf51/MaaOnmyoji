@@ -1150,7 +1150,9 @@
                         "CommonBattleWait",
                         "CommonBattleEnteringWait",
                         "CommonCutscene",
-                        "DailyRewardPopup"
+                        "DailyRewardPopup",
+                        "CommonRewardItemDetail",
+                        "CommonSoulMismatch"
                     ],
                     "strict": true
                 }
@@ -1169,6 +1171,8 @@
         "next": [
             "MitamaInsufficientAP",
             "MitamaSoloBattleStarted",
+            "[JumpBack]CommonSoulMismatchMute",
+            "[JumpBack]CommonSoulMismatch",
             "MitamaChallenge",
             "[JumpBack]CommonBountyInterrupt",
             "CommonUnknownPopup"
@@ -1206,12 +1210,15 @@
             "[JumpBack]CommonBattleMark",
             "[JumpBack]CommonBattleWait",
             "[JumpBack]MitamaTreasurePopup",
+            "[JumpBack]CommonRewardItemDetail",
             "[JumpBack]CommonRewardOverflow",
             "MitamaInsufficientAP",
             "MitamaBattleFailure",
             "MitamaSoloDropStatistics",
             "MitamaBattleResult",
             "[JumpBack]CommonBattleEnteringWait",
+            "[JumpBack]CommonSoulMismatchMute",
+            "[JumpBack]CommonSoulMismatch",
             "[JumpBack]MitamaPrepare",
             "[JumpBack]DailyRewardPopup",
             "[JumpBack]CommonNetworkRetry",

@@ -617,7 +617,9 @@
                         "CommonBattleWait",
                         "CommonBattleEnteringWait",
                         "CommonCutscene",
-                        "DailyRewardPopup"
+                        "DailyRewardPopup",
+                        "CommonRewardItemDetail",
+                        "CommonSoulMismatch"
                     ]
                 }
             }
@@ -696,6 +698,8 @@
         "next": [
             "AwakeningNoResource",
             "AwakeningBattleStarted",
+            "[JumpBack]CommonSoulMismatchMute",
+            "[JumpBack]CommonSoulMismatch",
             "AwakeningChallenge",
             "[JumpBack]CommonBountyInterrupt",
             "CommonUnknownPopup"
@@ -734,10 +738,13 @@
             "AwakeningNoResource",
             "[JumpBack]MitamaTreasurePopup",
             "AwakeningBattleFailure",
+            "[JumpBack]CommonRewardItemDetail",
             "[JumpBack]CommonRewardOverflow",
             "AwakeningDropStatistics",
             "AwakeningBattleResult",
             "[JumpBack]CommonBattleEnteringWait",
+            "[JumpBack]CommonSoulMismatchMute",
+            "[JumpBack]CommonSoulMismatch",
             "[JumpBack]DailyPrepare",
             "[JumpBack]DailyRewardPopup",
             "[JumpBack]CommonNetworkRetry",

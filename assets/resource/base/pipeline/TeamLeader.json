@@ -1490,10 +1490,13 @@
             "[JumpBack]MitamaTreasurePopup",
             "TeamLeaderBattleNoResource",
             "TeamLeaderBattleFailure",
+            "[JumpBack]CommonRewardItemDetail",
             "[JumpBack]CommonRewardOverflow",
             "TeamLeaderDropStatistics",
             "TeamLeaderBattleResult",
             "[JumpBack]CommonBattleEnteringWait",
+            "[JumpBack]CommonSoulMismatchMute",
+            "[JumpBack]CommonSoulMismatch",
             "[JumpBack]DailyPrepare",
             "[JumpBack]DailyRewardPopup",
             "[JumpBack]CommonNetworkRetry",
@@ -1692,6 +1695,8 @@
         "next": [
             "TeamLeaderBattleNoResource",
             "TeamLeaderBattleStarted",
+            "[JumpBack]CommonSoulMismatchMute",
+            "[JumpBack]CommonSoulMismatch",
             "[JumpBack]TeamLeaderStartConfirm",
             "TeamLeaderStart",
             "[JumpBack]CommonBountyInterrupt",
@@ -1939,7 +1944,9 @@
                         "DailyRewardPopup",
                         "TeamLeaderWaitTeammate",
                         "TeamLeaderInviteMissing",
-                        "TeamLeaderInviteStillOpen"
+                        "TeamLeaderInviteStillOpen",
+                        "CommonRewardItemDetail",
+                        "CommonSoulMismatch"
                     ],
                     "strict": true
                 }

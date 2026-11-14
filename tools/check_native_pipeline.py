@@ -53,7 +53,6 @@ class Scenario:
         self.frame = 0
         self.probe_frames = {}
         self.touch_blocked = False
-        self.armed = False
 
 
 class CountingController(ScreenshotController):
@@ -188,15 +187,7 @@ class Counter(CustomAction):
             params.update(context.get_node_data(argv.node_name).get("attach") or {})
             self.state.target = int(params.get("target_count", 1))
             self.state.count = 0
-        elif self.kind == "TargetCountArm":
-            self.state.armed = True
         elif self.kind == "TargetCountProgress":
-            if params.get("require_armed") and not self.state.armed:
-                idle = params.get("idle_node") or params.get("continue_node")
-                if idle:
-                    context.override_next(argv.node_name, with_interrupts([idle], context))
-                return self.RunResult(success=True)
-            self.state.armed = False
             self.state.count += params.get("count", 1)
             if self.state.pending_statistics:
                 self.state.statistics += 1
@@ -234,7 +225,7 @@ def run_case(resource, controller, nodes, name, entry, flags, events=(), expecte
     assert resource.clear_custom_action()
     assert resource.register_custom_recognition("SimScreen", Screen(state))
     assert resource.register_custom_action("SimInput", Input(state))
-    for kind in ("TargetCountInit", "TargetCountArm", "TargetCountProgress", "TargetCountDetermine", "TargetCountFinish",
+    for kind in ("TargetCountInit", "TargetCountProgress", "TargetCountDetermine", "TargetCountFinish",
                  "ResetCount", "RememberFrame", "RewardDropStatistics", "NodeOverride", "RunBattleSession",
                  "ResolveGamePackage"):
         assert resource.register_custom_action(kind, Counter(state, kind))
@@ -652,7 +643,7 @@ def main():
             *[("NativeRewardsScroll", {"PageQuests"}) for _ in range(5)]])
         case("reward loop stops on an unknown popup after a claim", "NativeRewardsClaimLoop", {"PageQuests", "DailyRewardsClaimReward"}, [
             ("NativeRewardsClaim", {"TouchAreaRisk"})], succeeds=False, expect_popup_stop=True)
-        # CommonActivity counter FSM: a battle frame arms it, the next challenge page counts once.
+        # CommonActivity counter state lives in native anchors: a battle frame points the stage anchor at the counting node.
         ca_battle = [("PageBattle", {"CommonActivityBattleResult"})]
         case("CommonActivity merged loop counts two victories and stops", "CommonActivityTask", {"CommonActivityChallenge"}, [
             ("CommonActivityChallenge", {"CommonActivityChallenging"}),
@@ -693,6 +684,35 @@ def main():
             ("MitamaFailedBattleResult", {"MitamaFinishOnce"})], succeeds=False)
         case("Mitama resource handler finishes without input or count", "MitamaInsufficientAP",
              {"MitamaChallenge", "CommonInsufficientAP"})
+        case("CommonActivity unrecognized result screen is tapped through and still counts", "CommonActivityTask", {"CommonActivityChallenge"}, [
+            ("CommonActivityChallenge", {"CommonActivityChallenging"}),
+            ("CommonActivityAfterBattleTap", {"UnknownResultScreen"}),
+            ("CommonActivityAfterBattleTap", {"CommonActivityChallenge"})], expected_count=1,
+            probe_events=[("PageBattle", {"UnknownResultScreen"})])
+        case("CommonActivity fallback tap is bounded and never counts", "CommonActivityTask", {"CommonActivityChallenge"}, [
+            ("CommonActivityChallenge", {"CommonActivityChallenging"}),
+            *[("CommonActivityAfterBattleTap", {"UnknownResultScreen"})] * 5], succeeds=False,
+            probe_events=[("PageBattle", {"UnknownResultScreen"})])
+        case("CommonActivity never taps blindly before a battle", "CommonActivityTask", {"UnknownResultScreen"}, succeeds=False)
+        case("CommonActivity closes a reward item detail opened by a stray tap", "CommonActivityTask", {"CommonActivityChallenge"}, [
+            ("CommonActivityChallenge", {"CommonActivityChallenging"}),
+            ("CommonRewardItemDetail", {"CommonActivityBattleResult"}),
+            ("CommonActivityBattleResult", {"CommonActivityChallenge"})], expected_count=1,
+            probe_events=[("PageBattle", {"CommonRewardItemDetail", "CommonActivityBattleResult"})])
+        case("CommonActivity confirms the soul mismatch prompt instead of stopping", "CommonActivityTask", {"CommonActivityChallenge"}, [
+            ("CommonActivityChallenge", {"CommonSoulMismatch", "TouchAreaRisk"}),
+            ("CommonSoulMismatch", {"CommonActivityChallenging"}),
+            ("CommonActivityBattleResult", {"CommonActivityChallenge"})], expected_count=1, expect_popup_stop=False,
+            probe_events=ca_battle)
+        case("CommonActivity mutes the soul mismatch prompt once, then confirms", "CommonActivityTask", {"CommonActivityChallenge"}, [
+            ("CommonActivityChallenge", {"CommonSoulMismatchMute", "CommonSoulMismatch"}),
+            ("CommonSoulMismatchMute", {"CommonSoulMismatch"}),
+            ("CommonSoulMismatch", {"CommonActivityChallenging"}),
+            ("CommonActivityBattleResult", {"CommonActivityChallenge"})], expected_count=1, probe_events=ca_battle)
+        case("Mitama confirms the soul mismatch prompt before battle", "MitamaChallenge", {"MitamaChallenge"}, [
+            ("MitamaChallenge", {"CommonSoulMismatch", "TouchAreaRisk"}),
+            ("CommonSoulMismatch", {"MitamaBattleResult"}),
+            ("MitamaBattleResult", {"MitamaFinishOnce"})], expected_count=1, expect_popup_stop=False)
         # A confirm/cancel popup no rule handles stops the task once the frequent candidates miss.
         for entry in ("CommonActivityTask", "DailyRewardsTask", "ReturnMain", "TeamLeaderFindTeammate"):
             case(entry + " stops on an unknown popup", entry, {"TouchAreaRisk"}, succeeds=False, expect_popup_stop=True)

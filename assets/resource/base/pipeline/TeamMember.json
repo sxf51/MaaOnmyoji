@@ -43,7 +43,9 @@
                         "TeamMemberIdleEmoteReady",
                         "TeamMemberAutoReadyConfirm",
                         "TeamMemberInBattle",
-                        "TeamMemberWinResult"
+                        "TeamMemberWinResult",
+                        "CommonRewardItemDetail",
+                        "CommonSoulMismatch"
                     ],
                     "strict": true
                 }
@@ -515,6 +517,7 @@
             "TeamMemberBattleFailure",
             "[JumpBack]MitamaTreasurePopup",
             "[JumpBack]DailyRewardPopup",
+            "[JumpBack]CommonRewardItemDetail",
             "[JumpBack]CommonRewardOverflow",
             "TeamMemberBattleResult",
             "TeamMemberWon",
@@ -551,6 +554,7 @@
             "TeamMemberWinResult",
             "[JumpBack]MitamaTreasurePopup",
             "[JumpBack]DailyRewardPopup",
+            "[JumpBack]CommonRewardItemDetail",
             "[JumpBack]CommonRewardOverflow",
             "TeamMemberBattleResult",
             "TeamMemberWon",

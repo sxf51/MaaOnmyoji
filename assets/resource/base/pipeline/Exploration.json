@@ -280,7 +280,9 @@
                         "ExplorationBattleResult",
                         "ExplorationBattleFailedResult",
                         "DailyRewardPopup",
-                        "CommonBattleEnteringWait"
+                        "CommonBattleEnteringWait",
+                        "CommonRewardItemDetail",
+                        "CommonSoulMismatch"
                     ]
                 }
             }
@@ -428,7 +430,9 @@
                         "ExplorationBattleResult",
                         "ExplorationBattleFailedResult",
                         "DailyRewardPopup",
-                        "CommonBattleEnteringWait"
+                        "CommonBattleEnteringWait",
+                        "CommonRewardItemDetail",
+                        "CommonSoulMismatch"
                     ]
                 }
             }
@@ -570,7 +574,10 @@
         "next": [
             "ExplorationBattleNoResource",
             "ExplorationBattleFailure",
+            "[JumpBack]CommonRewardItemDetail",
             "ExplorationBattleResult",
+            "[JumpBack]CommonSoulMismatchMute",
+            "[JumpBack]CommonSoulMismatch",
             "[JumpBack]DailyPrepare",
             "[JumpBack]DailyRewardPopup",
             "[JumpBack]CommonBountyInterrupt",

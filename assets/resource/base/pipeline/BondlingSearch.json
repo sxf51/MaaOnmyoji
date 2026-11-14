@@ -233,7 +233,9 @@
                         "CommonBattleWait",
                         "CommonBattleEnteringWait",
                         "CommonCutscene",
-                        "DailyRewardPopup"
+                        "DailyRewardPopup",
+                        "CommonRewardItemDetail",
+                        "CommonSoulMismatch"
                     ]
                 }
             }
@@ -314,6 +316,8 @@
         "next": [
             "BondlingSearchNoResource",
             "BondlingSearchBattleStarted",
+            "[JumpBack]CommonSoulMismatchMute",
+            "[JumpBack]CommonSoulMismatch",
             "BondlingSearchStart",
             "[JumpBack]CommonBountyInterrupt",
             "CommonUnknownPopup"
@@ -372,9 +376,12 @@
             "[JumpBack]CommonBattleWait",
             "BondlingSearchNoResource",
             "BondlingSearchBattleFailure",
+            "[JumpBack]CommonRewardItemDetail",
             "[JumpBack]CommonRewardOverflow",
             "BondlingSearchBattleResult",
             "[JumpBack]CommonBattleEnteringWait",
+            "[JumpBack]CommonSoulMismatchMute",
+            "[JumpBack]CommonSoulMismatch",
             "[JumpBack]DailyPrepare",
             "[JumpBack]DailyRewardPopup",
             "[JumpBack]CommonNetworkRetry",

@@ -672,5 +672,139 @@
         "action": "StopTask",
         "pre_delay": 0,
         "post_delay": 0
+    },
+    "CommonSoulMismatchMute": {
+        "doc": "御魂与预设不一致提示（参考 OAS I_DISABLE_7DAYS_DIFF_SOUL）：先勾选“7天内不再提示”，每个任务最多一次。文字与位置未实机校准。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "roi": [
+                                    240,
+                                    160,
+                                    800,
+                                    420
+                                ],
+                                "expected": "御魂.*不一致|不一致.*御魂"
+                            }
+                        }
+                    },
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "roi": [
+                                    240,
+                                    160,
+                                    800,
+                                    420
+                                ],
+                                "expected": "不再提示|7\\s*天"
+                            }
+                        }
+                    }
+                ],
+                "box_index": 1
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true,
+                "target_offset": [
+                    -40,
+                    0,
+                    40,
+                    0
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 500,
+        "max_hit": 1,
+        "next": []
+    },
+    "CommonSoulMismatch": {
+        "doc": "御魂与预设不一致提示（参考 OAS I_CONFIRM_CLOSE_DIFF_SOUL）：确认后继续战斗，否则未知弹窗规则会停止任务。文字与位置未实机校准。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "roi": [
+                                    240,
+                                    160,
+                                    800,
+                                    420
+                                ],
+                                "expected": "御魂.*不一致|不一致.*御魂"
+                            }
+                        }
+                    },
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "roi": [
+                                    240,
+                                    220,
+                                    800,
+                                    420
+                                ],
+                                "expected": "^(确认|确定)$"
+                            }
+                        }
+                    }
+                ],
+                "box_index": 1
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 800,
+        "max_hit": 3,
+        "next": []
+    },
+    "CommonRewardItemDetail": {
+        "doc": "结算时误点到奖励物品会弹出物品详情，详情里必有“获取途径”（参考 OAS I_END_FIX_1/2 的搜索范围 119,66,1136,620）。点左侧空白（OAS C_REWARD_2）关闭。",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    119,
+                    66,
+                    1136,
+                    620
+                ],
+                "expected": "获取途径"
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    30,
+                    140,
+                    190,
+                    380
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 800,
+        "max_hit": 5,
+        "next": []
     }
 }

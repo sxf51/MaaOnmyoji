@@ -14,18 +14,29 @@
             "[JumpBack]CommonClickAuto",
             "[JumpBack]CommonActivityChallenging",
             "CommonActivityBattleFailure",
+            "[JumpBack]CommonRewardItemDetail",
+            "[JumpBack]CommonRewardOverflow",
             "CommonActivityBattleResult",
             "CommonActivityVictory",
             "CommonActivityInsufficientAP",
-            "CommonActivityFinishOnce",
+            "[Anchor]CommonActivityStage",
+            "[JumpBack]CommonSoulMismatchMute",
+            "[JumpBack]CommonSoulMismatch",
             "[JumpBack]CommonActivityPrepare",
             "[JumpBack]CommonBattleEnteringWait",
             "[JumpBack]CommonCutscene",
+            "[JumpBack]DailyRewardPopup",
+            "[JumpBack]CommonNetworkRetry",
+            "[Anchor]CommonActivityAfterBattle",
             "[JumpBack]CommonBountyInterrupt",
             "CommonUnknownPopup"
         ],
         "timeout": 180000,
-        "doc": "通用重复挑战入口：所有状态共用一个候选列表，按出现频率排序（战斗中 > 失败/结算 > 挑战页 > 准备/载入 > 协作邀请 > 未知弹窗）。"
+        "doc": "通用重复挑战入口：所有状态共用一个候选列表，按出现频率排序（战斗中 > 失败/结算 > 挑战页 > 准备/载入 > 协作邀请 > 未知弹窗）。计数用原生锚点表示状态：开局为“未战斗”。",
+        "anchor": {
+            "CommonActivityStage": "CommonActivityStageIdle",
+            "CommonActivityAfterBattle": "CommonActivityFallbackOff"
+        }
     },
     "CommonActivityChallenging": {
         "pre_delay": 0,
@@ -39,15 +50,14 @@
                 ]
             }
         },
-        "action": {
-            "type": "Custom",
-            "param": {
-                "custom_action": "TargetCountArm"
-            }
-        },
+        "action": "DoNothing",
         "next": [],
         "max_hit": 1800,
-        "doc": "识别到战斗中：计数器进入已战斗状态，之后回到挑战页时才计一次。JumpBack 返回共用列表继续等待。"
+        "doc": "识别到战斗中：把锚点切到“已战斗”——回到挑战页走计数节点，结算页认不出时启用兜底点击。JumpBack 返回共用列表继续等待。",
+        "anchor": {
+            "CommonActivityStage": "CommonActivityFinishOnce",
+            "CommonActivityAfterBattle": "CommonActivityAfterBattleTap"
+        }
     },
     "CommonActivityBattleFailure": {
         "desc": "识别战斗失败，进入独立收尾，不累计成功次数。",
@@ -140,13 +150,20 @@
             "[JumpBack]CommonClickAuto",
             "[JumpBack]CommonActivityChallenging",
             "CommonActivityBattleFailure",
+            "[JumpBack]CommonRewardItemDetail",
+            "[JumpBack]CommonRewardOverflow",
             "CommonActivityBattleResult",
             "CommonActivityVictory",
             "CommonActivityInsufficientAP",
-            "CommonActivityFinishOnce",
+            "[Anchor]CommonActivityStage",
+            "[JumpBack]CommonSoulMismatchMute",
+            "[JumpBack]CommonSoulMismatch",
             "[JumpBack]CommonActivityPrepare",
             "[JumpBack]CommonBattleEnteringWait",
             "[JumpBack]CommonCutscene",
+            "[JumpBack]DailyRewardPopup",
+            "[JumpBack]CommonNetworkRetry",
+            "[Anchor]CommonActivityAfterBattle",
             "[JumpBack]CommonBountyInterrupt",
             "CommonUnknownPopup"
         ],
@@ -160,17 +177,28 @@
     },
     "CommonActivityVictory": {
         "desc": "重复挑战：胜利结算（无继续提示）",
-        "doc": "部分挑战胜利后不出现“点击屏幕继续”，识别顶部胜利鼓（参考 OAS I_WIN，模板取自实机截图），点击右侧空白安全区（参考 OAS C_REWARD_3，避开下方奖励数字）。",
+        "doc": "胜利结算没有“点击屏幕继续”时：识别顶部胜利鼓（参考 OAS I_WIN，模板取自实机截图）或第二页“祝”字奖励袋（OAS I_REWARD），点击右侧空白安全区（OAS C_REWARD_3，避开下方奖励数字）。",
         "recognition": {
-            "type": "TemplateMatch",
+            "type": "Or",
             "param": {
-                "template": "Common/BattleWin.png",
-                "threshold": 0.8,
-                "roi": [
-                    296,
-                    33,
-                    414,
-                    224
+                "any_of": [
+                    {
+                        "sub_name": "CommonActivityWinDrum",
+                        "recognition": {
+                            "type": "TemplateMatch",
+                            "param": {
+                                "template": "Common/BattleWin.png",
+                                "threshold": 0.8,
+                                "roi": [
+                                    296,
+                                    33,
+                                    414,
+                                    224
+                                ]
+                            }
+                        }
+                    },
+                    "CommonBattleRewardBag"
                 ]
             }
         },
@@ -192,13 +220,20 @@
             "[JumpBack]CommonClickAuto",
             "[JumpBack]CommonActivityChallenging",
             "CommonActivityBattleFailure",
+            "[JumpBack]CommonRewardItemDetail",
+            "[JumpBack]CommonRewardOverflow",
             "CommonActivityBattleResult",
             "CommonActivityVictory",
             "CommonActivityInsufficientAP",
-            "CommonActivityFinishOnce",
+            "[Anchor]CommonActivityStage",
+            "[JumpBack]CommonSoulMismatchMute",
+            "[JumpBack]CommonSoulMismatch",
             "[JumpBack]CommonActivityPrepare",
             "[JumpBack]CommonBattleEnteringWait",
             "[JumpBack]CommonCutscene",
+            "[JumpBack]DailyRewardPopup",
+            "[JumpBack]CommonNetworkRetry",
+            "[Anchor]CommonActivityAfterBattle",
             "[JumpBack]CommonBountyInterrupt",
             "CommonUnknownPopup"
         ]
@@ -236,8 +271,7 @@
             "param": {
                 "custom_action": "TargetCountProgress",
                 "custom_action_param": {
-                    "require_armed": true,
-                    "idle_node": "CommonActivityChallenge",
+                    "count": 1,
                     "continue_node": "CommonActivityPreparation",
                     "finish_node": "CommonActivityFinish"
                 }
@@ -248,7 +282,11 @@
         ],
         "pre_delay": 0,
         "post_delay": 0,
-        "doc": "识别到挑战节点的按钮文字：之前识别过战斗才计一次（不依赖“点击屏幕继续”），达到次数结束，否则进入下一轮准备；未经过战斗（任务刚开始或点击挑战未生效）不计数，直接点击挑战。"
+        "doc": "只经由锚点 CommonActivityStage 在战斗之后到达：识别到挑战节点的按钮文字即计一次（不依赖“点击屏幕继续”），把锚点切回“未战斗”，达到次数结束，否则进入下一轮准备。",
+        "anchor": {
+            "CommonActivityStage": "CommonActivityStageIdle",
+            "CommonActivityAfterBattle": "CommonActivityFallbackOff"
+        }
     },
     "CommonActivityPreparation": {
         "doc": "每场挑战前经过此处，重置本轮点击与战斗节点计数后直接挑战。",
@@ -265,7 +303,13 @@
                         "CommonActivityChallenging",
                         "CommonClickAuto",
                         "CommonBattleEnteringWait",
-                        "CommonCutscene"
+                        "CommonCutscene",
+                        "CommonActivityAfterBattleTap",
+                        "CommonRewardItemDetail",
+                        "CommonSoulMismatch",
+                        "CommonRewardOverflow",
+                        "DailyRewardPopup",
+                        "CommonNetworkRetry"
                     ],
                     "strict": true
                 }
@@ -306,13 +350,20 @@
             "[JumpBack]CommonClickAuto",
             "[JumpBack]CommonActivityChallenging",
             "CommonActivityBattleFailure",
+            "[JumpBack]CommonRewardItemDetail",
+            "[JumpBack]CommonRewardOverflow",
             "CommonActivityBattleResult",
             "CommonActivityVictory",
             "CommonActivityInsufficientAP",
-            "CommonActivityFinishOnce",
+            "[Anchor]CommonActivityStage",
+            "[JumpBack]CommonSoulMismatchMute",
+            "[JumpBack]CommonSoulMismatch",
             "[JumpBack]CommonActivityPrepare",
             "[JumpBack]CommonBattleEnteringWait",
             "[JumpBack]CommonCutscene",
+            "[JumpBack]DailyRewardPopup",
+            "[JumpBack]CommonNetworkRetry",
+            "[Anchor]CommonActivityAfterBattle",
             "[JumpBack]CommonBountyInterrupt",
             "CommonUnknownPopup"
         ],
@@ -359,5 +410,78 @@
                 "custom_action": "TargetCountFinish"
             }
         }
+    },
+    "CommonActivityAfterBattleTap": {
+        "desc": "重复挑战：结算兜底点击",
+        "doc": "只经由锚点 CommonActivityAfterBattle 在战斗之后到达（参考 OAS completion 兜底）：结算文字、胜利鼓、奖励袋、准备、载入都没命中，且画面上没有未知弹窗、协作邀请或战斗时，每 3 秒点一次右侧空白安全区，每场最多 5 次；仍回不到挑战页则由任务超时失败，不计数。",
+        "recognition": {
+            "type": "Or",
+            "param": {
+                "any_of": [
+                    "CommonUnknownPopup",
+                    "CommonRefuseBounty",
+                    "PageBattle"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    1110,
+                    160,
+                    140,
+                    340
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 3000,
+        "max_hit": 5,
+        "next": [
+            "[JumpBack]CommonClickAuto",
+            "[JumpBack]CommonActivityChallenging",
+            "CommonActivityBattleFailure",
+            "[JumpBack]CommonRewardItemDetail",
+            "[JumpBack]CommonRewardOverflow",
+            "CommonActivityBattleResult",
+            "CommonActivityVictory",
+            "CommonActivityInsufficientAP",
+            "CommonActivityFinishOnce",
+            "[JumpBack]CommonSoulMismatchMute",
+            "[JumpBack]CommonSoulMismatch",
+            "[JumpBack]CommonActivityPrepare",
+            "[JumpBack]CommonBattleEnteringWait",
+            "[JumpBack]CommonCutscene",
+            "[JumpBack]DailyRewardPopup",
+            "[JumpBack]CommonNetworkRetry",
+            "CommonActivityAfterBattleTap",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ],
+        "inverse": true
+    },
+    "CommonActivityStageIdle": {
+        "doc": "锚点 CommonActivityStage 的“未战斗”状态（任务刚开始或刚计过数，或点击挑战未生效）：看到挑战页不计数，直接点击挑战；不经过准备节点，挑战的 max_hit 3 限制空点。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "CommonActivityChallenge"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "CommonActivityChallenge",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ]
+    },
+    "CommonActivityFallbackOff": {
+        "doc": "锚点 CommonActivityAfterBattle 的“未战斗”状态：节点禁用，列表里直接跳过，战斗前不会兜底点击。",
+        "enabled": false
     }
 }

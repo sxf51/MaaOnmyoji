@@ -8,8 +8,7 @@ from unittest.mock import Mock
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "agent"))
 
 from custom.action.target_count import (  # noqa: E402
-    TargetCountArm, TargetCountDetermine, TargetCountInit, TargetCountProgress, TargetCountState, _parse_params,
-    reset_state_for_test,
+    TargetCountDetermine, TargetCountInit, TargetCountProgress, TargetCountState, _parse_params, reset_state_for_test,
 )
 from custom.action import target_count  # noqa: E402
 from custom.sink.aspect_ratio import is_16_by_9  # noqa: E402
@@ -100,33 +99,6 @@ class TargetCountProgressRouteTest(unittest.TestCase):
         self.assertTrue(self.advance(context, params).success)
         context.override_next.assert_called_with("AfterResult", ["Finish", "[JumpBack]CommonBountyInterrupt", "CommonUnknownPopup"])
         self.assertEqual(target_count._state.completed_count, 2)
-
-    def test_challenge_page_counts_only_after_a_battle_was_seen(self):
-        reset_state_for_test()
-        target_count._state.reset(2)
-        context = Mock()
-        params = {"require_armed": True, "idle_node": "Challenge", "continue_node": "Prepare", "finish_node": "Finish"}
-        # Task start or a challenge tap that did not register: no battle yet, tap again without counting.
-        self.assertTrue(self.advance(context, params).success)
-        context.override_next.assert_called_with("AfterResult", ["Challenge", "[JumpBack]CommonBountyInterrupt", "CommonUnknownPopup"])
-        self.assertEqual(target_count._state.completed_count, 0)
-        arm = SimpleNamespace(node_name="Challenging", custom_action_param={})
-        self.assertTrue(TargetCountArm().run(context, arm).success)
-        self.assertTrue(TargetCountArm().run(context, arm).success)  # every battle poll re-arms; still one battle
-        self.assertTrue(self.advance(context, params).success)
-        context.override_next.assert_called_with("AfterResult", ["Prepare", "[JumpBack]CommonBountyInterrupt", "CommonUnknownPopup"])
-        self.assertEqual(target_count._state.completed_count, 1)
-        # Seeing the stage again without a new battle never counts twice.
-        self.assertTrue(self.advance(context, params).success)
-        self.assertEqual(target_count._state.completed_count, 1)
-        self.assertTrue(TargetCountArm().run(context, arm).success)
-        self.assertTrue(self.advance(context, params).success)
-        context.override_next.assert_called_with("AfterResult", ["Finish", "[JumpBack]CommonBountyInterrupt", "CommonUnknownPopup"])
-        self.assertEqual(target_count._state.completed_count, 2)
-
-    def test_arm_requires_initialized_counter(self):
-        reset_state_for_test()
-        self.assertFalse(TargetCountArm().run(Mock(), SimpleNamespace(node_name="Challenging", custom_action_param={})).success)
 
     def test_unlimited_run_keeps_continuing(self):
         reset_state_for_test()

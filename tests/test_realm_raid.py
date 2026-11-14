@@ -49,7 +49,7 @@ class RaidTest(unittest.TestCase):
                                          'RealmRaidFailRetry','DailyPrepare',
                                          'RealmRaidBattleResult','RealmRaidBattleFailedResult',
                                          'CommonBattleEnteringWait','DailyRewardPopup',
-                                         'RealmRaidBattleResume'],'strict':True})
+                                         'RealmRaidBattleResume','CommonRewardItemDetail','CommonSoulMismatch'],'strict':True})
 
     def test_no_target_finish_requires_confirmed_page(self):
         self.assertEqual(self.nodes['RealmRaidExhaustedPage']['recognition']['param']['all_of'],['PageRaid'])

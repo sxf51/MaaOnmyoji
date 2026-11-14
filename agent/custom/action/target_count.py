@@ -60,19 +60,11 @@ class TargetCountState:
     target_count: int = 0
     completed_count: int = 0
     initialized: bool = False
-    # FSM: a battle sighting arms the counter; the next return to the stage counts once.
-    armed: bool = False
 
     def reset(self, target_count: int) -> None:
         self.target_count = _target_count(target_count)
         self.completed_count = 0
         self.initialized = True
-        self.armed = False
-
-    def arm(self) -> None:
-        if not self.initialized:
-            raise RuntimeError("目标次数尚未初始化")
-        self.armed = True
 
     def progress(self, count: int = 1) -> None:
         if not self.initialized:
@@ -135,27 +127,9 @@ class TargetCountInit(CustomAction):
         return CustomAction.RunResult(success=True)
 
 
-@AgentServer.custom_action("TargetCountArm")
-class TargetCountArm(CustomAction):
-    """识别到战斗中：之后再回到挑战页才算完成一次。"""
-
-    def run(self, context: Context, argv: CustomAction.RunArg) -> CustomAction.RunResult:
-        del context, argv
-        try:
-            _state.arm()
-        except RuntimeError as exc:
-            logger.error("记录战斗状态失败：%s", exc)
-            return CustomAction.RunResult(success=False)
-        return CustomAction.RunResult(success=True)
-
-
 @AgentServer.custom_action("TargetCountProgress")
 class TargetCountProgress(CustomAction):
-    """战斗结算成功后累计进度；可同时按次数选择继续或完成节点。
-
-    require_armed=true 时只有之前识别到战斗（TargetCountArm）才计数，
-    否则不计数并路由到 idle_node（如重新点击挑战）。
-    """
+    """战斗结算成功后累计进度；可同时按次数选择继续或完成节点。"""
 
     def run(self, context: Context, argv: CustomAction.RunArg) -> CustomAction.RunResult:
         try:
@@ -165,17 +139,7 @@ class TargetCountProgress(CustomAction):
                 route = (params["continue_node"], params["finish_node"])
                 if not all(isinstance(node, str) and node.strip() for node in route):
                     raise ValueError("路由节点名必须是非空字符串")
-            if params.get("require_armed") and not _state.armed:
-                if not _state.initialized:
-                    raise RuntimeError("目标次数尚未初始化")
-                idle = params.get("idle_node") or (route[0] if route else None)
-                if idle is not None and not context.override_next(argv.node_name, with_interrupts([idle], context)):
-                    logger.error("更新路由失败：%s -> %s", argv.node_name, idle)
-                    return CustomAction.RunResult(success=False)
-                logger.debug("未经过战斗，不计数：%s -> %s", argv.node_name, idle)
-                return CustomAction.RunResult(success=True)
             _state.progress(params.get("count", 1))
-            _state.armed = False
             from .drop_statistics import commit_drop_statistics
 
             commit_drop_statistics()
