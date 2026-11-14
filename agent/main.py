@@ -11,7 +11,6 @@ from custom.action import (  # noqa: F401
 )
 from custom.action.drop_statistics import recover_pending_reports, shutdown_reporter
 from custom.reco import startup as startup_reco  # noqa: F401
-from custom.reco import input_target as input_target_reco  # noqa: F401
 from custom.reco import frame_unchanged as frame_unchanged_reco  # noqa: F401
 from custom.sink import (
     aspect_ratio,  # noqa: F401

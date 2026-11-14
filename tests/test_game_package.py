@@ -3,7 +3,9 @@ import json
 import unittest
 from pathlib import Path
 
+import sys
 from tools.validate_schema import load_jsonc
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'agent'))
 from custom.action.game_package import OFFICIAL, choose_package, matching_packages, parse_packages
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -47,7 +49,7 @@ class ChannelOptionTest(unittest.TestCase):
             self.assertEqual(param["custom_action"], "ResolveGamePackage")
             self.assertEqual(param["custom_action_param"], {"target": target, "action": action})
             self.assertEqual(nodes[entry]["attach"], {"package": ""})
-            self.assertEqual(nodes[entry]["next"][-1], target)
+            self.assertEqual(nodes[entry]["next"][-3:], [target, "[JumpBack]CommonBountyInterrupt", "CommonUnknownPopup"])
             self.assertEqual(nodes[target]["action"], {"type": action, "param": {"package": OFFICIAL}})
         self.assertEqual(startup["StartupLaunch"]["on_error"], ["StartupLaunchError"])
 

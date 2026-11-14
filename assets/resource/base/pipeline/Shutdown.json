@@ -16,8 +16,9 @@
             }
         },
         "next": [
+            "ShutdownStop",
             "[JumpBack]CommonBountyInterrupt",
-            "ShutdownStop"
+            "CommonUnknownPopup"
         ]
     },
     "ShutdownStop": {

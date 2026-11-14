@@ -256,7 +256,12 @@
                             "type": "OCR",
                             "param": {
                                 "expected": "^进攻$",
-                                "roi": [130, 270, 1020, 440]
+                                "roi": [
+                                    130,
+                                    270,
+                                    1020,
+                                    440
+                                ]
                             }
                         }
                     }
@@ -272,7 +277,12 @@
             "param": {
                 "template": "Navigation/PersonalTab.png",
                 "threshold": 0.9,
-                "roi": [1170, 235, 105, 140]
+                "roi": [
+                    1170,
+                    235,
+                    105,
+                    140
+                ]
             }
         }
     },
@@ -469,15 +479,17 @@
                 ]
             }
         },
-        "action": "DoNothing",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
         "pre_delay": 0,
         "post_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NavOpenExplore"
-        ],
+        "next": [],
         "on_error": [],
         "doc": "从庭院打开探索地图。"
     },
@@ -494,15 +506,17 @@
                 ]
             }
         },
-        "action": "DoNothing",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
         "pre_delay": 0,
         "post_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NavOpenRaid"
-        ],
+        "next": [],
         "on_error": [],
         "doc": "从探索地图打开结界突破。"
     },
@@ -519,15 +533,17 @@
                 ]
             }
         },
-        "action": "DoNothing",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
         "pre_delay": 0,
         "post_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NavOpenMitama"
-        ],
+        "next": [],
         "on_error": [],
         "doc": "从探索地图打开御魂入口。"
     },
@@ -544,15 +560,22 @@
                 ]
             }
         },
-        "action": "DoNothing",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    160,
+                    210,
+                    100,
+                    100
+                ]
+            }
+        },
         "pre_delay": 0,
         "post_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NavOpenBaqi"
-        ],
+        "next": [],
         "on_error": [],
         "doc": "从御魂入口进入八岐大蛇层数选择页。"
     },
@@ -570,15 +593,17 @@
                 "threshold": 0.78
             }
         },
-        "action": "DoNothing",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
         "pre_delay": 0,
         "post_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NavClose"
-        ],
+        "next": [],
         "on_error": [],
         "doc": "关闭当前面板。"
     },
@@ -620,15 +645,17 @@
                 ]
             }
         },
-        "action": "DoNothing",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
         "pre_delay": 0,
         "post_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NavBack"
-        ],
+        "next": [],
         "on_error": [],
         "doc": "返回当前页面的上一级。"
     },
@@ -645,15 +672,22 @@
                 ]
             }
         },
-        "action": "DoNothing",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    713,
+                    386,
+                    120,
+                    35
+                ]
+            }
+        },
         "pre_delay": 0,
         "post_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NavConfirmExitExplore"
-        ],
+        "next": [],
         "on_error": [],
         "doc": "确认退出当前探索章节。"
     },
@@ -661,18 +695,27 @@
         "recognition": {
             "type": "And",
             "param": {
-                "all_of": ["PageRaidTarget"]
+                "all_of": [
+                    "PageRaidTarget"
+                ]
             }
         },
-        "action": "DoNothing",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    450,
+                    10,
+                    280,
+                    45
+                ]
+            }
+        },
         "pre_delay": 0,
         "post_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NavDismissRaidTarget"
-        ],
+        "next": [],
         "on_error": [],
         "doc": "关闭结界突破目标详情。"
     },
@@ -690,15 +733,17 @@
                 "threshold": 0.78
             }
         },
-        "action": "DoNothing",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
         "pre_delay": 0,
         "post_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NavOpenMail"
-        ],
+        "next": [],
         "on_error": [],
         "doc": "从庭院打开邮件。"
     },
@@ -715,15 +760,17 @@
                 ]
             }
         },
-        "action": "DoNothing",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
         "pre_delay": 0,
         "post_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NavOpenQuests"
-        ],
+        "next": [],
         "on_error": [],
         "doc": "从庭院打开花合战。"
     },
@@ -741,15 +788,17 @@
                 "threshold": 0.78
             }
         },
-        "action": "DoNothing",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
         "pre_delay": 0,
         "post_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NavExpandHomeMenu"
-        ],
+        "next": [],
         "on_error": [],
         "doc": "展开庭院功能菜单。"
     },
@@ -766,15 +815,17 @@
                 ]
             }
         },
-        "action": "DoNothing",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
         "pre_delay": 0,
         "post_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NavQuestTasks"
-        ],
+        "next": [],
         "on_error": [],
         "doc": "切换到花合战任务页。"
     },
@@ -791,15 +842,17 @@
                 ]
             }
         },
-        "action": "DoNothing",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
         "pre_delay": 0,
         "post_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NavQuestRewards"
-        ],
+        "next": [],
         "on_error": [],
         "doc": "切换到花合战奖励页。"
     },
@@ -816,15 +869,17 @@
                 ]
             }
         },
-        "action": "DoNothing",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
         "pre_delay": 0,
         "post_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NavCancelCreate"
-        ],
+        "next": [],
         "on_error": [],
         "doc": "取消创建队伍，关闭创建窗口。"
     },
@@ -906,15 +961,17 @@
                 ]
             }
         },
-        "action": "DoNothing",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
         "pre_delay": 0,
         "post_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NavCancelInvite"
-        ],
+        "next": [],
         "on_error": [],
         "doc": "关闭组队邀请列表。"
     },
@@ -931,15 +988,22 @@
                 ]
             }
         },
-        "action": "DoNothing",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    690,
+                    423,
+                    125,
+                    30
+                ]
+            }
+        },
         "pre_delay": 0,
         "post_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NavConfirmExitTeam"
-        ],
+        "next": [],
         "on_error": [],
         "doc": "确认退出当前组队房间。"
     },
@@ -1018,15 +1082,12 @@
                 "box_index": 1
             }
         },
-        "action": "DoNothing",
+        "action": "Click",
         "pre_delay": 0,
         "post_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NavCancelNoResource"
-        ],
+        "next": [],
         "on_error": [],
         "doc": "取消资源不足提示。"
     },
@@ -1043,8 +1104,9 @@
             }
         },
         "next": [
+            "NativeNever",
             "[JumpBack]CommonBountyInterrupt",
-            "NativeNever"
+            "CommonUnknownPopup"
         ],
         "timeout": 1
     },
@@ -1067,8 +1129,9 @@
         },
         "action": "DoNothing",
         "next": [
+            "NativeNever",
             "[JumpBack]CommonBountyInterrupt",
-            "NativeNever"
+            "CommonUnknownPopup"
         ],
         "timeout": 1
     },
@@ -1081,17 +1144,23 @@
                 ]
             }
         },
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    713,
+                    386,
+                    120,
+                    35
+                ]
+            }
+        },
+        "post_delay": 1200,
         "max_hit": 30,
         "pre_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NativeNavConfirmExitExplore",
-            "NativeNavRetry"
-        ],
+        "next": [],
         "on_error": [],
         "doc": "确认退出当前探索章节。"
     },
@@ -1104,17 +1173,23 @@
                 ]
             }
         },
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    690,
+                    423,
+                    125,
+                    30
+                ]
+            }
+        },
+        "post_delay": 1200,
         "max_hit": 30,
         "pre_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NativeNavConfirmExitTeam",
-            "NativeNavRetry"
-        ],
+        "next": [],
         "on_error": [],
         "doc": "确认退出当前组队房间。"
     },
@@ -1127,17 +1202,23 @@
                 ]
             }
         },
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    450,
+                    10,
+                    280,
+                    45
+                ]
+            }
+        },
+        "post_delay": 1200,
         "max_hit": 30,
         "pre_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NativeNavDismissRaidTarget",
-            "NativeNavRetry"
-        ],
+        "next": [],
         "on_error": [],
         "doc": "关闭结界突破目标详情。"
     },
@@ -1152,17 +1233,18 @@
                 "box_index": 1
             }
         },
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "post_delay": 1200,
         "max_hit": 30,
         "pre_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NativeNavCancelInvite",
-            "NativeNavRetry"
-        ],
+        "next": [],
         "on_error": [],
         "doc": "关闭组队邀请列表。"
     },
@@ -1177,17 +1259,18 @@
                 "box_index": 1
             }
         },
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "post_delay": 1200,
         "max_hit": 30,
         "pre_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NativeNavCancelCreate",
-            "NativeNavRetry"
-        ],
+        "next": [],
         "on_error": [],
         "doc": "取消创建队伍，关闭创建窗口。"
     },
@@ -1200,17 +1283,13 @@
                 ]
             }
         },
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": "Click",
+        "post_delay": 1200,
         "max_hit": 30,
         "pre_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NativeNavCancelNoResource",
-            "NativeNavRetry"
-        ],
+        "next": [],
         "on_error": [],
         "doc": "取消资源不足提示。"
     },
@@ -1223,17 +1302,23 @@
                 ]
             }
         },
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    600,
+                    620,
+                    80,
+                    35
+                ]
+            }
+        },
+        "post_delay": 1200,
         "max_hit": 30,
         "pre_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NativeDailyRewardPopup",
-            "NativeNavRetry"
-        ],
+        "next": [],
         "on_error": [],
         "doc": "关闭奖励展示后返回页面导航流程。"
     },
@@ -1246,17 +1331,18 @@
                 ]
             }
         },
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "post_delay": 1200,
         "max_hit": 30,
         "pre_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NativeNavClose",
-            "NativeNavRetry"
-        ],
+        "next": [],
         "on_error": [],
         "doc": "关闭当前面板。"
     },
@@ -1269,17 +1355,18 @@
                 ]
             }
         },
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "post_delay": 1200,
         "max_hit": 30,
         "pre_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NativeNavBack",
-            "NativeNavRetry"
-        ],
+        "next": [],
         "on_error": [],
         "doc": "返回当前页面的上一级。"
     },
@@ -1292,17 +1379,13 @@
                 ]
             }
         },
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": "Click",
+        "post_delay": 1200,
         "max_hit": 30,
         "pre_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NativeReturnMainHomeButton",
-            "NativeNavRetry"
-        ],
+        "next": [],
         "on_error": [],
         "doc": "点击首页图标，返回庭院。"
     },
@@ -1315,17 +1398,13 @@
                 ]
             }
         },
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": "Click",
+        "post_delay": 1200,
         "max_hit": 30,
         "pre_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NativeExitXianTing",
-            "NativeNavRetry"
-        ],
+        "next": [],
         "on_error": [],
         "doc": "退出闲庭，返回庭院。"
     },
@@ -1358,7 +1437,6 @@
     "NavigateHome": {
         "doc": "原生导航：目标页优先；点击后回跳重新识别，战斗/结算中拒绝导航。",
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "NativeNavigationBlocked",
             "NativeResultBlocked",
             "[JumpBack]NativeDailyRewardPopup",
@@ -1369,13 +1447,15 @@
             "[JumpBack]NativeNavCancelInvite",
             "[JumpBack]NativeNavCancelCreate",
             "[JumpBack]NativeLoading",
-            "[JumpBack]SafeInput_StartupCloseAnnouncement",
-            "[JumpBack]SafeInput_StartupCancelIllustration",
+            "[JumpBack]StartupCloseAnnouncement",
+            "[JumpBack]StartupCancelIllustration",
             "NativeAtHome",
             "[JumpBack]NativeNavClose",
             "[JumpBack]NativeReturnMainHomeButton",
             "[JumpBack]NativeNavBack",
-            "[JumpBack]NativeExitXianTing"
+            "[JumpBack]NativeExitXianTing",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "timeout": 20000
     },
@@ -1403,24 +1483,24 @@
                 "box_index": 1
             }
         },
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "post_delay": 1200,
         "max_hit": 24,
         "pre_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NativeToExploreNavOpenExplore",
-            "NativeNavRetry"
-        ],
+        "next": [],
         "on_error": [],
         "doc": "从庭院打开探索地图。"
     },
     "NavigateExplore": {
         "doc": "原生导航：目标页优先；点击后回跳重新识别，战斗/结算中拒绝导航。",
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "NativeNavigationBlocked",
             "NativeResultBlocked",
             "[JumpBack]NativeDailyRewardPopup",
@@ -1431,14 +1511,16 @@
             "[JumpBack]NativeNavCancelInvite",
             "[JumpBack]NativeNavCancelCreate",
             "[JumpBack]NativeLoading",
-            "[JumpBack]SafeInput_StartupCloseAnnouncement",
-            "[JumpBack]SafeInput_StartupCancelIllustration",
+            "[JumpBack]StartupCloseAnnouncement",
+            "[JumpBack]StartupCancelIllustration",
             "NativeAtExplore",
             "[JumpBack]NativeToExploreNavOpenExplore",
             "[JumpBack]NativeNavClose",
             "[JumpBack]NativeNavBack",
             "[JumpBack]NativeReturnMainHomeButton",
-            "[JumpBack]NativeExitXianTing"
+            "[JumpBack]NativeExitXianTing",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "timeout": 20000
     },
@@ -1466,17 +1548,23 @@
                 "box_index": 1
             }
         },
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    160,
+                    210,
+                    100,
+                    100
+                ]
+            }
+        },
+        "post_delay": 1200,
         "max_hit": 24,
         "pre_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NativeToMitamaStageNavOpenBaqi",
-            "NativeNavRetry"
-        ],
+        "next": [],
         "on_error": [],
         "doc": "从御魂入口进入八岐大蛇层数选择页。"
     },
@@ -1491,17 +1579,18 @@
                 "box_index": 1
             }
         },
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "post_delay": 1200,
         "max_hit": 24,
         "pre_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NativeToMitamaStageNavOpenMitama",
-            "NativeNavRetry"
-        ],
+        "next": [],
         "on_error": [],
         "doc": "从探索地图打开御魂入口。"
     },
@@ -1516,24 +1605,24 @@
                 "box_index": 1
             }
         },
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "post_delay": 1200,
         "max_hit": 24,
         "pre_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NativeToMitamaStageNavOpenExplore",
-            "NativeNavRetry"
-        ],
+        "next": [],
         "on_error": [],
         "doc": "从庭院打开探索地图。"
     },
     "NavigateMitamaStage": {
         "doc": "原生导航：目标页优先；点击后回跳重新识别，战斗/结算中拒绝导航。",
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "NativeNavigationBlocked",
             "NativeResultBlocked",
             "[JumpBack]NativeDailyRewardPopup",
@@ -1544,8 +1633,8 @@
             "[JumpBack]NativeNavCancelInvite",
             "[JumpBack]NativeNavCancelCreate",
             "[JumpBack]NativeLoading",
-            "[JumpBack]SafeInput_StartupCloseAnnouncement",
-            "[JumpBack]SafeInput_StartupCancelIllustration",
+            "[JumpBack]StartupCloseAnnouncement",
+            "[JumpBack]StartupCancelIllustration",
             "NativeAtMitamaStage",
             "[JumpBack]NativeToMitamaStageNavOpenBaqi",
             "[JumpBack]NativeToMitamaStageNavOpenMitama",
@@ -1553,7 +1642,9 @@
             "[JumpBack]NativeNavClose",
             "[JumpBack]NativeNavBack",
             "[JumpBack]NativeReturnMainHomeButton",
-            "[JumpBack]NativeExitXianTing"
+            "[JumpBack]NativeExitXianTing",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "timeout": 20000
     },
@@ -1581,17 +1672,18 @@
                 "box_index": 1
             }
         },
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "post_delay": 1200,
         "max_hit": 24,
         "pre_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NativeToRaidNavOpenRaid",
-            "NativeNavRetry"
-        ],
+        "next": [],
         "on_error": [],
         "doc": "从探索地图打开结界突破。"
     },
@@ -1606,24 +1698,24 @@
                 "box_index": 1
             }
         },
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "post_delay": 1200,
         "max_hit": 24,
         "pre_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NativeToRaidNavOpenExplore",
-            "NativeNavRetry"
-        ],
+        "next": [],
         "on_error": [],
         "doc": "从庭院打开探索地图。"
     },
     "NavigateRaid": {
         "doc": "原生导航：目标页优先；点击后回跳重新识别，战斗/结算中拒绝导航。",
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "NativeNavigationBlocked",
             "NativeResultBlocked",
             "[JumpBack]NativeDailyRewardPopup",
@@ -1634,15 +1726,17 @@
             "[JumpBack]NativeNavCancelInvite",
             "[JumpBack]NativeNavCancelCreate",
             "[JumpBack]NativeLoading",
-            "[JumpBack]SafeInput_StartupCloseAnnouncement",
-            "[JumpBack]SafeInput_StartupCancelIllustration",
+            "[JumpBack]StartupCloseAnnouncement",
+            "[JumpBack]StartupCancelIllustration",
             "NativeAtRaid",
             "[JumpBack]NativeToRaidNavOpenRaid",
             "[JumpBack]NativeToRaidNavOpenExplore",
             "[JumpBack]NativeNavClose",
             "[JumpBack]NativeNavBack",
             "[JumpBack]NativeReturnMainHomeButton",
-            "[JumpBack]NativeExitXianTing"
+            "[JumpBack]NativeExitXianTing",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "timeout": 20000
     },
@@ -1668,24 +1762,24 @@
                 ]
             }
         },
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "post_delay": 1200,
         "max_hit": 24,
         "pre_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NativeToMailNavOpenMail",
-            "NativeNavRetry"
-        ],
+        "next": [],
         "on_error": [],
         "doc": "从庭院打开邮件。"
     },
     "NavigateMail": {
         "doc": "原生导航：目标页优先；点击后回跳重新识别，战斗/结算中拒绝导航。",
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "NativeNavigationBlocked",
             "NativeResultBlocked",
             "[JumpBack]NativeDailyRewardPopup",
@@ -1696,14 +1790,16 @@
             "[JumpBack]NativeNavCancelInvite",
             "[JumpBack]NativeNavCancelCreate",
             "[JumpBack]NativeLoading",
-            "[JumpBack]SafeInput_StartupCloseAnnouncement",
-            "[JumpBack]SafeInput_StartupCancelIllustration",
+            "[JumpBack]StartupCloseAnnouncement",
+            "[JumpBack]StartupCancelIllustration",
             "NativeAtMail",
             "[JumpBack]NativeToMailNavOpenMail",
             "[JumpBack]NativeNavClose",
             "[JumpBack]NativeNavBack",
             "[JumpBack]NativeReturnMainHomeButton",
-            "[JumpBack]NativeExitXianTing"
+            "[JumpBack]NativeExitXianTing",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "timeout": 20000
     },
@@ -1731,17 +1827,18 @@
                 "box_index": 1
             }
         },
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "post_delay": 1200,
         "max_hit": 24,
         "pre_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NativeToQuestTasksNavQuestTasks",
-            "NativeNavRetry"
-        ],
+        "next": [],
         "on_error": [],
         "doc": "切换到花合战任务页。"
     },
@@ -1756,17 +1853,18 @@
                 "box_index": 1
             }
         },
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "post_delay": 1200,
         "max_hit": 24,
         "pre_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NativeToQuestTasksNavOpenQuests",
-            "NativeNavRetry"
-        ],
+        "next": [],
         "on_error": [],
         "doc": "从庭院打开花合战。"
     },
@@ -1781,24 +1879,24 @@
                 "box_index": 1
             }
         },
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "post_delay": 1200,
         "max_hit": 24,
         "pre_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NativeToQuestTasksNavExpandHomeMenu",
-            "NativeNavRetry"
-        ],
+        "next": [],
         "on_error": [],
         "doc": "展开庭院功能菜单。"
     },
     "NavigateQuestTasks": {
         "doc": "原生导航：目标页优先；点击后回跳重新识别，战斗/结算中拒绝导航。",
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "NativeNavigationBlocked",
             "NativeResultBlocked",
             "[JumpBack]NativeDailyRewardPopup",
@@ -1809,8 +1907,8 @@
             "[JumpBack]NativeNavCancelInvite",
             "[JumpBack]NativeNavCancelCreate",
             "[JumpBack]NativeLoading",
-            "[JumpBack]SafeInput_StartupCloseAnnouncement",
-            "[JumpBack]SafeInput_StartupCancelIllustration",
+            "[JumpBack]StartupCloseAnnouncement",
+            "[JumpBack]StartupCancelIllustration",
             "NativeAtQuestTasks",
             "[JumpBack]NativeToQuestTasksNavQuestTasks",
             "[JumpBack]NativeToQuestTasksNavOpenQuests",
@@ -1818,7 +1916,9 @@
             "[JumpBack]NativeNavClose",
             "[JumpBack]NativeNavBack",
             "[JumpBack]NativeReturnMainHomeButton",
-            "[JumpBack]NativeExitXianTing"
+            "[JumpBack]NativeExitXianTing",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "timeout": 20000
     },
@@ -1846,17 +1946,18 @@
                 "box_index": 1
             }
         },
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "post_delay": 1200,
         "max_hit": 24,
         "pre_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NativeToQuestsNavQuestRewards",
-            "NativeNavRetry"
-        ],
+        "next": [],
         "on_error": [],
         "doc": "切换到花合战奖励页。"
     },
@@ -1871,17 +1972,18 @@
                 "box_index": 1
             }
         },
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "post_delay": 1200,
         "max_hit": 24,
         "pre_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NativeToQuestsNavOpenQuests",
-            "NativeNavRetry"
-        ],
+        "next": [],
         "on_error": [],
         "doc": "从庭院打开花合战。"
     },
@@ -1896,24 +1998,24 @@
                 "box_index": 1
             }
         },
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "post_delay": 1200,
         "max_hit": 24,
         "pre_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NativeToQuestsNavExpandHomeMenu",
-            "NativeNavRetry"
-        ],
+        "next": [],
         "on_error": [],
         "doc": "展开庭院功能菜单。"
     },
     "NavigateQuests": {
         "doc": "原生导航：目标页优先；点击后回跳重新识别，战斗/结算中拒绝导航。",
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "NativeNavigationBlocked",
             "NativeResultBlocked",
             "[JumpBack]NativeDailyRewardPopup",
@@ -1924,9 +2026,9 @@
             "[JumpBack]NativeNavCancelInvite",
             "[JumpBack]NativeNavCancelCreate",
             "[JumpBack]NativeLoading",
-            "[JumpBack]SafeInput_StartupCloseAnnouncement",
-            "[JumpBack]SafeInput_StartupCancelIllustration",
-            "SafeInput_NativeQuestRewardsSwitch",
+            "[JumpBack]StartupCloseAnnouncement",
+            "[JumpBack]StartupCancelIllustration",
+            "NativeQuestRewardsSwitch",
             "NativeAtQuests",
             "[JumpBack]NativeToQuestsNavQuestRewards",
             "[JumpBack]NativeToQuestsNavOpenQuests",
@@ -1934,7 +2036,9 @@
             "[JumpBack]NativeNavClose",
             "[JumpBack]NativeNavBack",
             "[JumpBack]NativeReturnMainHomeButton",
-            "[JumpBack]NativeExitXianTing"
+            "[JumpBack]NativeExitXianTing",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "timeout": 20000
     },
@@ -1962,24 +2066,24 @@
                 "box_index": 1
             }
         },
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "post_delay": 1200,
         "max_hit": 24,
         "pre_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NativeToChapterNavBack",
-            "NativeNavRetry"
-        ],
+        "next": [],
         "on_error": [],
         "doc": "返回当前页面的上一级。"
     },
     "NavigateChapter": {
         "doc": "原生导航：目标页优先；点击后回跳重新识别，战斗/结算中拒绝导航。",
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "NativeNavigationBlocked",
             "NativeResultBlocked",
             "[JumpBack]NativeDailyRewardPopup",
@@ -1990,14 +2094,16 @@
             "[JumpBack]NativeNavCancelInvite",
             "[JumpBack]NativeNavCancelCreate",
             "[JumpBack]NativeLoading",
-            "[JumpBack]SafeInput_StartupCloseAnnouncement",
-            "[JumpBack]SafeInput_StartupCancelIllustration",
+            "[JumpBack]StartupCloseAnnouncement",
+            "[JumpBack]StartupCancelIllustration",
             "NativeAtChapter",
             "[JumpBack]NativeToChapterNavBack",
             "[JumpBack]NativeNavClose",
             "[JumpBack]NativeNavBack",
             "[JumpBack]NativeReturnMainHomeButton",
-            "[JumpBack]NativeExitXianTing"
+            "[JumpBack]NativeExitXianTing",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "timeout": 20000
     },
@@ -2016,8 +2122,9 @@
         "post_delay": 0,
         "doc": "无法确认成功时明确失败，不累计次数。",
         "next": [
+            "NativeNever",
             "[JumpBack]CommonBountyInterrupt",
-            "NativeNever"
+            "CommonUnknownPopup"
         ],
         "timeout": 1
     },
@@ -2032,18 +2139,21 @@
                 "box_index": 1
             }
         },
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": "Click",
+        "post_delay": 1200,
         "next": [
+            "NativeQuestRewardsTabReadyWait",
+            "NativeQuestRewardsSwitch",
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NativeQuestRewardsSwitch"
+            "CommonUnknownPopup"
         ],
         "timeout": 10000,
         "pre_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
         "on_error": [],
-        "doc": "切换到花合战奖励页并检查目标页。"
+        "doc": "切换到花合战奖励页并检查目标页。",
+        "max_hit": 3
     },
     "NativeQuestRewardsTabReady": {
         "pre_delay": 0,
@@ -2059,8 +2169,9 @@
         },
         "action": "DoNothing",
         "next": [
+            "NativeAtQuests",
             "[JumpBack]CommonBountyInterrupt",
-            "NativeAtQuests"
+            "CommonUnknownPopup"
         ],
         "inverse": true
     },
@@ -2069,8 +2180,9 @@
         "post_delay": 0,
         "doc": "等待花合战页签切换，点击失败时重新点击，最多三次。",
         "next": [
+            "NativeQuestRewardsTabReady",
             "[JumpBack]CommonBountyInterrupt",
-            "NativeQuestRewardsTabReady"
+            "CommonUnknownPopup"
         ],
         "timeout": 3000,
         "on_error": [
@@ -2080,9 +2192,10 @@
     "NativeQuestRewardsTabRetry": {
         "action": "DoNothing",
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "NativeQuestRewardsTabReady",
-            "SafeInput_NativeQuestRewardsSwitch"
+            "NativeQuestRewardsSwitch",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ]
     },
     "PageAwakeningMenu": {
@@ -2161,13 +2274,20 @@
                 "box_index": 1
             }
         },
-        "action": "DoNothing",
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NavOpenAwakening"
-        ],
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    50,
+                    620,
+                    80,
+                    85
+                ]
+            }
+        },
+        "next": [],
         "pre_delay": 0,
-        "post_delay": 0,
+        "post_delay": 1000,
         "pre_wait_freezes": 0,
         "on_error": []
     },
@@ -2182,15 +2302,23 @@
                 "box_index": 0
             }
         },
-        "action": "DoNothing",
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NativeToAwakeningNavOpenAwakening"
-        ],
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    50,
+                    620,
+                    80,
+                    85
+                ]
+            }
+        },
+        "next": [],
         "pre_delay": 0,
-        "post_delay": 0,
+        "post_delay": 2000,
         "pre_wait_freezes": 0,
-        "on_error": []
+        "on_error": [],
+        "max_hit": 5
     },
     "NativeToAwakeningNavOpenExplore": {
         "doc": "从庭院进入探索地图，再前往觉醒。",
@@ -2204,15 +2332,18 @@
                 "box_index": 1
             }
         },
-        "action": "DoNothing",
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NativeToAwakeningNavOpenExplore"
-        ],
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "next": [],
         "pre_delay": 0,
-        "post_delay": 0,
+        "post_delay": 2000,
         "pre_wait_freezes": 0,
-        "on_error": []
+        "on_error": [],
+        "max_hit": 5
     },
     "NativeAtAwakening": {
         "pre_delay": 0,
@@ -2233,7 +2364,6 @@
     "NavigateAwakening": {
         "doc": "识别当前页并导航到觉醒，已在觉醒页面时直接返回。",
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "NativeNavigationBlocked",
             "NativeResultBlocked",
             "[JumpBack]NativeDailyRewardPopup",
@@ -2244,15 +2374,17 @@
             "[JumpBack]NativeNavCancelInvite",
             "[JumpBack]NativeNavCancelCreate",
             "[JumpBack]NativeLoading",
-            "[JumpBack]SafeInput_StartupCloseAnnouncement",
-            "[JumpBack]SafeInput_StartupCancelIllustration",
+            "[JumpBack]StartupCloseAnnouncement",
+            "[JumpBack]StartupCancelIllustration",
             "NativeAtAwakening",
-            "[JumpBack]SafeInput_NativeToAwakeningNavOpenAwakening",
-            "[JumpBack]SafeInput_NativeToAwakeningNavOpenExplore",
+            "[JumpBack]NativeToAwakeningNavOpenAwakening",
+            "[JumpBack]NativeToAwakeningNavOpenExplore",
             "[JumpBack]NativeNavClose",
             "[JumpBack]NativeNavBack",
             "[JumpBack]NativeReturnMainHomeButton",
-            "[JumpBack]NativeExitXianTing"
+            "[JumpBack]NativeExitXianTing",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "timeout": 60000
     },
@@ -2332,15 +2464,24 @@
                 "box_index": 1
             }
         },
-        "action": "DoNothing",
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NativeToBondlingNavOpenBondling"
-        ],
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true,
+                "target_offset": [
+                    0,
+                    -45,
+                    0,
+                    45
+                ]
+            }
+        },
+        "next": [],
         "pre_delay": 0,
-        "post_delay": 0,
+        "post_delay": 2000,
         "pre_wait_freezes": 0,
-        "on_error": []
+        "on_error": [],
+        "max_hit": 5
     },
     "NativeToBondlingNavOpenExplore": {
         "doc": "从庭院进入探索地图，再前往契灵之境。",
@@ -2354,15 +2495,18 @@
                 "box_index": 1
             }
         },
-        "action": "DoNothing",
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NativeToBondlingNavOpenExplore"
-        ],
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "next": [],
         "pre_delay": 0,
-        "post_delay": 0,
+        "post_delay": 2000,
         "pre_wait_freezes": 0,
-        "on_error": []
+        "on_error": [],
+        "max_hit": 5
     },
     "NativeAtBondling": {
         "pre_delay": 0,
@@ -2382,7 +2526,6 @@
     "NavigateBondling": {
         "doc": "识别当前页并导航到契灵之境探查页，已在探查页时直接返回。",
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "NativeNavigationBlocked",
             "NativeResultBlocked",
             "[JumpBack]NativeDailyRewardPopup",
@@ -2393,15 +2536,17 @@
             "[JumpBack]NativeNavCancelInvite",
             "[JumpBack]NativeNavCancelCreate",
             "[JumpBack]NativeLoading",
-            "[JumpBack]SafeInput_StartupCloseAnnouncement",
-            "[JumpBack]SafeInput_StartupCancelIllustration",
+            "[JumpBack]StartupCloseAnnouncement",
+            "[JumpBack]StartupCancelIllustration",
             "NativeAtBondling",
-            "[JumpBack]SafeInput_NativeToBondlingNavOpenBondling",
-            "[JumpBack]SafeInput_NativeToBondlingNavOpenExplore",
+            "[JumpBack]NativeToBondlingNavOpenBondling",
+            "[JumpBack]NativeToBondlingNavOpenExplore",
             "[JumpBack]NativeNavClose",
             "[JumpBack]NativeNavBack",
             "[JumpBack]NativeReturnMainHomeButton",
-            "[JumpBack]NativeExitXianTing"
+            "[JumpBack]NativeExitXianTing",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "timeout": 60000
     },

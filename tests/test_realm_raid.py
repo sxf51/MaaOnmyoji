@@ -8,7 +8,7 @@ ROOT=Path(__file__).resolve().parents[1]
 class RaidTest(unittest.TestCase):
     def setUp(self):
         self.nodes=load_jsonc(ROOT/'assets/resource/base/pipeline/RealmRaid.json')
-        self.safe=load_jsonc(ROOT/'assets/resource/base/pipeline/InputSafety.json')
+        self.safe=self.nodes  # clicks now live on the recognized nodes themselves
 
     def test_card_uses_masked_native_template(self):
         reco=self.nodes['RealmRaidCard']['recognition']
@@ -39,16 +39,16 @@ class RaidTest(unittest.TestCase):
         for name in ('RealmRaidSelectedCard','RealmRaidBroken'):
             self.assertEqual(self.nodes[name]['recognition']['param']['roi'],'RealmRaidChoose')
         self.assertIn('RealmRaidBroken',self.nodes['RealmRaidSuccess']['recognition']['param']['all_of'])
-        offset=self.safe['SafeInput_RealmRaidSelect']['action']['param']['target_offset']
+        offset=self.safe['RealmRaidSelect']['action']['param']['target_offset']
         self.assertEqual(offset,[90,30,-157,-85])
 
     def test_each_choice_resets_only_click_budgets(self):
         param=self.nodes['RealmRaidValidateChoice']['action']['param']['custom_action_param']
-        self.assertEqual(param,{'nodes':['SafeInput_RealmRaidSelect','SafeInput_RealmRaidAttack',
-                                         'RealmRaidBattleMark','SafeInput_RealmRaidBattleMark',
-                                         'RealmRaidFailRetry','SafeInput_DailyPrepare',
-                                         'SafeInput_RealmRaidBattleResult','SafeInput_RealmRaidBattleFailedResult',
-                                         'CommonBattleEnteringWait','SafeInput_DailyRewardPopup',
+        self.assertEqual(param,{'nodes':['RealmRaidSelect','RealmRaidAttack',
+                                         'RealmRaidBattleMark',
+                                         'RealmRaidFailRetry','DailyPrepare',
+                                         'RealmRaidBattleResult','RealmRaidBattleFailedResult',
+                                         'CommonBattleEnteringWait','DailyRewardPopup',
                                          'RealmRaidBattleResume'],'strict':True})
 
     def test_no_target_finish_requires_confirmed_page(self):
@@ -71,14 +71,14 @@ class RaidTest(unittest.TestCase):
     def test_retreat_order_in_battle_loop(self):
         battle=self.nodes['RealmRaidBattle']['next']
         # The exit button only exists after the battle starts and strong teams win in ~5s: check it first.
-        self.assertEqual(battle[:3],['[JumpBack]CommonBountyInterrupt','RealmRaidRetreatBegin','[JumpBack]RealmRaidBattleMark'])
+        self.assertEqual(battle[:2],['RealmRaidRetreatBegin','[JumpBack]RealmRaidBattleMark'])
         # MaaFW batches every OCR in a next list (~1.2s here): while the exit button shows, only templates run.
-        self.assertEqual(battle,['[JumpBack]CommonBountyInterrupt','RealmRaidRetreatBegin',
-                                 '[JumpBack]RealmRaidBattleMark','RealmRaidBattleSettle'])
+        self.assertEqual(battle,['RealmRaidRetreatBegin','[JumpBack]RealmRaidBattleMark','RealmRaidBattleSettle',
+                                 '[JumpBack]CommonBountyInterrupt','CommonUnknownPopup'])
         settle=self.nodes['RealmRaidBattleSettle']
         self.assertTrue(settle['inverse'])
         self.assertEqual(settle['recognition']['param']['all_of'],['RealmRaidBattleExitIcon'])
-        self.assertEqual(settle['next'][-1],'RealmRaidBattleResume')
+        self.assertEqual(settle['next'][-3],'RealmRaidBattleResume')
         self.assertEqual(self.nodes['RealmRaidBattleResume']['next'],['RealmRaidBattle'])
         slow=settle['next']
         self.assertLess(slow.index('RealmRaidRetreatRetry'),slow.index('RealmRaidBattleFailure'))
@@ -88,15 +88,15 @@ class RaidTest(unittest.TestCase):
             self.assertEqual(self.nodes[name]['recognition']['param']['all_of'],['RealmRaidBattleExitIcon'])
         self.assertEqual(self.nodes['RealmRaidRetreatBegin']['pre_delay'],0)
         self.assertEqual(self.nodes['RealmRaidRetreatBegin']['post_delay'],0)
-        self.assertEqual(self.safe['SafeInput_RealmRaidRetreatExit']['post_delay'],0)
+        self.assertEqual(self.safe['RealmRaidRetreatExit']['post_delay'],0)
         templates=self.nodes['RealmRaidBattleExitIcon']['recognition']['param']['template']
         # One template per button skin, named BattleExit_<n>.png.
         self.assertEqual(templates,[f'RealmRaid/BattleExit_{i}.png' for i in range(1,7)])
         # The confirm dialog animates in for ~1.3s: wait for it before clicking the exit again.
         wait=self.nodes['RealmRaidRetreatExitWait']
-        self.assertNotIn('SafeInput_RealmRaidRetreatExit',wait['next'])
+        self.assertNotIn('RealmRaidRetreatExit',wait['next'])
         self.assertEqual(wait['on_error'],['RealmRaidRetreatExitRetry'])
-        self.assertIn('SafeInput_RealmRaidRetreatExit',self.nodes['RealmRaidRetreatExitRetry']['next'])
+        self.assertIn('RealmRaidRetreatExit',self.nodes['RealmRaidRetreatExitRetry']['next'])
         # A failure page that is still visible must not count as a restarted battle.
         self.assertNotIn('DailyBattleFailed',self.nodes['RealmRaidRetreatRestarted']['recognition']['param']['any_of'])
 
@@ -122,22 +122,22 @@ class RaidTest(unittest.TestCase):
         cases=options['结界突破绿标站位']['cases']
         self.assertEqual({c['name'] for c in cases},{'左一','左二','左三','左四','左五','阴阳师'})
         for case in cases:
-            self.assertEqual(list(case['pipeline_override']),['SafeInput_RealmRaidBattleMark'])
+            self.assertEqual(list(case['pipeline_override']),['RealmRaidBattleMark'])
 
     def test_preset_runs_on_raid_page_before_scanning(self):
-        self.assertEqual(self.nodes['RealmRaidReady']['next'],['[JumpBack]CommonBountyInterrupt','RealmRaidPreset','RealmRaidScan'])
+        self.assertEqual(self.nodes['RealmRaidReady']['next'],['RealmRaidPreset','RealmRaidScan', '[JumpBack]CommonBountyInterrupt', 'CommonUnknownPopup'])
         preset=self.nodes['RealmRaidPreset']
         self.assertFalse(preset['enabled'])
         self.assertEqual(preset['anchor'],{'TeamPresetReturn':'RealmRaidPresetDone'})
         override=preset['action']['param']['custom_action_param']
         self.assertEqual(override['TeamPresetContext']['recognition']['param']['all_of'],['PageRaid'])
-        self.assertEqual(self.nodes['RealmRaidPresetDone']['next'][-1],'RealmRaidScan')
+        self.assertEqual(self.nodes['RealmRaidPresetDone']['next'][-3],'RealmRaidScan')
         selected=load_jsonc(ROOT/'assets/tasks/RealmRaid.json')['option']['结界突破预设分组与队伍']['pipeline_override']
         # The raid window is the Mitama window moved by (+226,+21).
         self.assertEqual(selected['TeamPresetSelectGroup']['recognition']['param']['roi'],[637,182,112,372])
         self.assertEqual(selected['TeamPresetApplyIcon']['recognition']['param']['all_of'][0]['recognition']['param']['roi'],[770,181,376,320])
         self.assertEqual(override['TeamPresetOut']['recognition']['param']['roi'],[894,503,120,44])
-        self.assertNotIn('SafeInput_TeamPresetClose',override)
+        self.assertNotIn('TeamPresetClose',override)
 
     def test_defeat_retry_is_per_card_and_after_retreat(self):
         battle=self.nodes['RealmRaidBattleSettle']['next']
@@ -154,15 +154,15 @@ class RaidTest(unittest.TestCase):
 
     def test_refresh_mode_also_refreshes_an_exhausted_board(self):
         self.assertEqual(self.nodes['RealmRaidExhaustedConfirmed']['next'],
-                         ['[JumpBack]CommonBountyInterrupt','RealmRaidExhaustedRefresh','RealmRaidFinish'])
+                         ['RealmRaidExhaustedRefresh','RealmRaidFinish', '[JumpBack]CommonBountyInterrupt', 'CommonUnknownPopup'])
         option=load_jsonc(ROOT/'assets/tasks/RealmRaid.json')['option']['结界突破战斗失败处理']
         enabled={c['name']:c['pipeline_override']['RealmRaidExhaustedRefresh']['enabled'] for c in option['cases']}
         self.assertEqual(enabled,{'跳过失败目标':False,'刷新后继续':True,'结束本轮':False})
 
     def test_real_defeat_option_selects_one_route(self):
         self.assertEqual(self.nodes['RealmRaidBattleFailedReturn']['next'],[
-            '[JumpBack]CommonBountyInterrupt','RealmRaidFailStop','RealmRaidFailRefresh',
-            'RealmRaidFailRefreshUnavailable','RealmRaidScan'])
+            'RealmRaidFailStop','RealmRaidFailRefresh',
+            'RealmRaidFailRefreshUnavailable','RealmRaidScan','[JumpBack]CommonBountyInterrupt','CommonUnknownPopup'])
         gates=('RealmRaidFailStop','RealmRaidFailRefresh','RealmRaidFailRefreshUnavailable','RealmRaidExhaustedRefresh')
         for name in gates:
             self.assertFalse(self.nodes[name]['enabled'])
@@ -173,12 +173,12 @@ class RaidTest(unittest.TestCase):
         prompt,button=self.nodes['RealmRaidRefreshConfirm']['recognition']['param']['all_of']
         self.assertTrue(re.search(prompt['recognition']['param']['expected'],'刷新后攻破记录进度将重置，确定吗?'))
         self.assertFalse(re.search(prompt['recognition']['param']['expected'],'确认购买'))
-        self.assertEqual(self.safe['SafeInput_RealmRaidRefresh']['max_hit'],3)
-        self.assertEqual(self.safe['SafeInput_RealmRaidRefreshConfirm']['max_hit'],3)
+        self.assertEqual(self.safe['RealmRaidRefresh']['max_hit'],3)
+        self.assertEqual(self.safe['RealmRaidRefreshConfirm']['max_hit'],3)
 
     def test_retreat_resets_click_budgets_and_confirms_with_prompt(self):
-        for gate,clicks in (('RealmRaidRetreatBegin',['SafeInput_RealmRaidRetreatExit','SafeInput_RealmRaidRetreatConfirm']),
-                            ('RealmRaidRetreatRetry',['SafeInput_RealmRaidRetreatAgain','SafeInput_RealmRaidRetreatAgainConfirm'])):
+        for gate,clicks in (('RealmRaidRetreatBegin',['RealmRaidRetreatExit','RealmRaidRetreatConfirm']),
+                            ('RealmRaidRetreatRetry',['RealmRaidRetreatAgain','RealmRaidRetreatAgainConfirm'])):
             self.assertEqual(self.nodes[gate]['action']['param']['custom_action_param'],{'nodes':clicks,'strict':True})
             for click in clicks:
                 self.assertEqual(self.safe[click]['max_hit'],3)
@@ -195,7 +195,7 @@ class RaidTest(unittest.TestCase):
         self.assertLess(scan.index('RealmRaidNoTicket'),scan.index('RealmRaidChoose'))
         node=self.nodes['RealmRaidNoTicket']
         self.assertEqual(node['recognition']['param']['all_of'],['PageRaid','RealmRaidTicketEmpty'])
-        self.assertEqual(node['next'][-1],'RealmRaidFinish')
+        self.assertEqual(node['next'][-3],'RealmRaidFinish')
         pattern=re.compile(self.nodes['RealmRaidTicketEmpty']['recognition']['param']['expected'])
         for text,empty in [('0/30',True),('0 / 30',True),('30/30',False),('10/30',False),('突破券',False)]:
             self.assertEqual(bool(pattern.search(text)),empty,text)

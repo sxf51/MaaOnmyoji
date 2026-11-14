@@ -13,8 +13,9 @@
             }
         },
         "next": [
+            "MitamaSession",
             "[JumpBack]CommonBountyInterrupt",
-            "MitamaSession"
+            "CommonUnknownPopup"
         ]
     },
     "MitamaNavigate": {
@@ -23,10 +24,11 @@
         "post_delay": 0,
         "action": "DoNothing",
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "MitamaTeamResume",
             "[JumpBack]MitamaNavigateOnce",
-            "MitamaNavigateReady"
+            "MitamaNavigateReady",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ]
     },
     "MitamaNavigateOnce": {
@@ -109,9 +111,10 @@
             "TeamLeaderNoResourceTarget": "MitamaFinish"
         },
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "MitamaEnableBuff",
-            "MitamaPreparationDestination"
+            "MitamaPreparationDestination",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ]
     },
     "MitamaOpenExplore": {
@@ -132,17 +135,20 @@
                 ]
             }
         },
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": "Click",
+        "post_delay": 1500,
         "next": [
+            "MitamaOpenZone",
+            "MitamaOpenExplore",
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_MitamaOpenExplore"
+            "CommonUnknownPopup"
         ],
         "pre_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
         "on_error": [],
-        "doc": "庭院：进入探索地图。"
+        "doc": "庭院：进入探索地图。",
+        "max_hit": 3
     },
     "MitamaOpenZone": {
         "desc": "探索地图：进入御魂入口",
@@ -161,25 +167,41 @@
                 ]
             }
         },
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": "Click",
+        "post_delay": 1200,
         "next": [
+            "MitamaOpenBaqin",
+            "MitamaOpenZone",
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_MitamaOpenZone"
+            "CommonUnknownPopup"
         ],
         "pre_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
         "on_error": [],
-        "doc": "探索地图：进入御魂入口。"
+        "doc": "探索地图：进入御魂入口。",
+        "max_hit": 3
     },
     "MitamaOpenBaqin": {
         "desc": "御魂：进入八岐大蛇入口",
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    86,
+                    109,
+                    251,
+                    319
+                ]
+            }
+        },
+        "post_delay": 1400,
         "next": [
+            "MitamaSelectBaqin",
+            "[JumpBack]MitamaSwipeBaqin",
+            "MitamaOpenBaqin",
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_MitamaOpenBaqin"
+            "CommonUnknownPopup"
         ],
         "pre_delay": 0,
         "pre_wait_freezes": 0,
@@ -193,16 +215,38 @@
                     "PageMitamaMenu"
                 ]
             }
-        }
+        },
+        "max_hit": 3
     },
     "MitamaSwipeBaqin": {
         "desc": "御魂：向上滑动以寻找八岐大蛇层数",
-        "action": "DoNothing",
-        "post_delay": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_MitamaSwipeBaqin"
-        ],
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "BezierSwipe",
+                "custom_action_param": {
+                    "begin": [
+                        96,
+                        500,
+                        90,
+                        150
+                    ],
+                    "end": [
+                        95,
+                        139,
+                        92,
+                        100
+                    ],
+                    "duration": 300,
+                    "duration_random": 73,
+                    "segments": 24,
+                    "deviation": 42,
+                    "easing": true
+                }
+            }
+        },
+        "post_delay": 1800,
+        "next": [],
         "pre_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
@@ -215,7 +259,8 @@
                     "PageMitamaStage"
                 ]
             }
-        }
+        },
+        "max_hit": 8
     },
     "MitamaSelectBaqin": {
         "desc": "御魂：选择八岐大蛇层数",
@@ -233,17 +278,17 @@
                 ]
             }
         },
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": "Click",
+        "post_delay": 350,
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_MitamaSelectBaqin"
+            "MitamaVerifyLayer"
         ],
         "pre_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
         "on_error": [],
-        "doc": "御魂：选择八岐大蛇层数。"
+        "doc": "御魂：选择八岐大蛇层数。",
+        "max_hit": 3
     },
     "MitamaPreparation": {
         "pre_delay": 0,
@@ -251,11 +296,12 @@
         "desc": "御魂：按顺序执行 UI 启用的准备子任务",
         "action": "DoNothing",
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "MitamaLockTeam",
             "MitamaPreset",
             "MitamaEnableBuff",
-            "MitamaPreparationDestination"
+            "MitamaPreparationDestination",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "doc": "按顺序进入首个启用的准备步骤；每步完成后直接接后续步骤，选项关闭的步骤由 enabled 原生跳过。"
     },
@@ -264,10 +310,11 @@
         "doc": "确认阵容锁定；未锁定时点击锁图标，点后回到本列表重新确认已锁定。由任务选项“御魂锁定阵容”控制 enabled，关闭时原生跳过，与觉醒 AwakeningLockTeam 一致。检查逻辑参考 runhey/OnmyojiAutoScript@2d2f6d8962a5af17c95670c5d0fb2e384b247162 tasks/Component/GeneralBattle/general_battle.py::check_lock 的启用分支（见锁定即止、见未锁定则点击）。预设窗口挡住锁图标时先关闭窗口。",
         "action": "DoNothing",
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "[JumpBack]MitamaClosePresetForLock",
             "MitamaLockedTeam",
-            "[JumpBack]SafeInput_MitamaUnlockTeam"
+            "[JumpBack]MitamaUnlockTeam",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "pre_delay": 0,
         "post_delay": 0
@@ -293,10 +340,11 @@
         },
         "action": "DoNothing",
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "MitamaPreset",
             "MitamaEnableBuff",
-            "MitamaPreparationDestination"
+            "MitamaPreparationDestination",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ]
     },
     "MitamaUnlockTeam": {
@@ -316,17 +364,15 @@
                 "threshold": 0.9
             }
         },
-        "action": "DoNothing",
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_MitamaUnlockTeam"
-        ],
+        "action": "Click",
+        "next": [],
         "pre_delay": 0,
-        "post_delay": 0,
+        "post_delay": 1000,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
         "on_error": [],
-        "doc": "点击未锁定的阵容图标，将当前阵容锁定。"
+        "doc": "点击未锁定的阵容图标，将当前阵容锁定。",
+        "max_hit": 3
     },
     "MitamaEnableBuff": {
         "desc": "御魂：加成分支入口",
@@ -334,10 +380,11 @@
         "action": "DoNothing",
         "post_delay": 0,
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "MitamaCheckBuffStatusOpen",
-            "[JumpBack]SafeInput_MitamaEnableBuffClick",
-            "[JumpBack]SafeInput_MitamaOpenBuffMenu"
+            "[JumpBack]MitamaEnableBuffClick",
+            "[JumpBack]MitamaOpenBuffMenu",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "pre_delay": 0
     },
@@ -378,17 +425,15 @@
                 "box_index": 1
             }
         },
-        "action": "DoNothing",
-        "post_delay": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_MitamaOpenBuffMenu"
-        ],
+        "action": "Click",
+        "post_delay": 800,
+        "next": [],
         "pre_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
         "on_error": [],
-        "doc": "御魂：打开加成面板。"
+        "doc": "御魂：打开加成面板。",
+        "max_hit": 4
     },
     "MitamaCheckBuffStatusOpen": {
         "desc": "御魂：检查加成已开启并完成该分支",
@@ -422,19 +467,29 @@
         },
         "action": "DoNothing",
         "next": [
+            "MitamaCloseBuffPanel",
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_MitamaCloseBuffPanel"
+            "CommonUnknownPopup"
         ],
         "pre_delay": 0,
         "post_delay": 0
     },
     "MitamaCloseBuffPanel": {
         "desc": "御魂：关闭加成菜单 (safe click)",
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    940,
+                    300,
+                    100,
+                    130
+                ]
+            }
+        },
+        "post_delay": 500,
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_MitamaCloseBuffPanel"
+            "MitamaCloseBuffPanelVerify"
         ],
         "pre_delay": 0,
         "pre_wait_freezes": 0,
@@ -449,14 +504,14 @@
                     "MitamaBuffPanel"
                 ]
             }
-        }
+        },
+        "max_hit": 3
     },
     "MitamaDisableBuff": {
         "desc": "御魂：加成分支入口",
         "enabled": false,
         "action": "DoNothing",
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "NativeNavigationBlocked",
             "NativeResultBlocked",
             "[JumpBack]NativeDailyRewardPopup",
@@ -467,10 +522,12 @@
             "[JumpBack]NativeNavCancelInvite",
             "[JumpBack]NativeNavCancelCreate",
             "[JumpBack]NativeLoading",
-            "[JumpBack]SafeInput_StartupCloseAnnouncement",
-            "[JumpBack]SafeInput_StartupCancelIllustration",
+            "[JumpBack]StartupCloseAnnouncement",
+            "[JumpBack]StartupCancelIllustration",
             "MitamaDisableBuffReady",
-            "[JumpBack]NavigateExplore"
+            "[JumpBack]NavigateExplore",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "doc": "收尾关闭加成：已在选层页或探索页就地关闭，其他页面（如组队房间）先回探索页，不再进入御魂。",
         "pre_delay": 0,
@@ -508,19 +565,29 @@
         },
         "action": "DoNothing",
         "next": [
+            "MitamaFinishCloseBuffPanel",
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_MitamaFinishCloseBuffPanel"
+            "CommonUnknownPopup"
         ],
         "pre_delay": 0,
         "post_delay": 0
     },
     "MitamaFinishCloseBuffPanel": {
         "desc": "御魂：任务完成后关闭加成菜单",
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    940,
+                    300,
+                    100,
+                    130
+                ]
+            }
+        },
+        "post_delay": 500,
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_MitamaFinishCloseBuffPanel"
+            "MitamaFinishCloseBuffPanelVerify"
         ],
         "pre_delay": 0,
         "pre_wait_freezes": 0,
@@ -535,7 +602,8 @@
                     "MitamaBuffPanel"
                 ]
             }
-        }
+        },
+        "max_hit": 3
     },
     "MitamaPreset": {
         "pre_delay": 0,
@@ -570,7 +638,7 @@
                             }
                         }
                     },
-                    "SafeInput_TeamPresetOpen": {
+                    "TeamPresetOpen": {
                         "action": {
                             "param": {
                                 "target": [
@@ -598,9 +666,10 @@
         "desc": "御魂：预设队伍已应用，继续后续准备步骤",
         "action": "DoNothing",
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "MitamaEnableBuff",
-            "MitamaPreparationDestination"
+            "MitamaPreparationDestination",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "recognition": {
             "type": "And",
@@ -624,8 +693,9 @@
         "desc": "御魂：路由到单人、队长或队员分支",
         "action": "DoNothing",
         "next": [
+            "MitamaBattleEntry",
             "[JumpBack]CommonBountyInterrupt",
-            "MitamaBattleEntry"
+            "CommonUnknownPopup"
         ]
     },
     "MitamaTeamEntry": {
@@ -655,9 +725,10 @@
             "TeamLeaderNoResourceTarget": "MitamaFinish"
         },
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "TeamLeaderResumeRoom",
-            "SafeInput_TeamLeaderOpen"
+            "TeamLeaderOpen",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ]
     },
     "MitamaChallenge": {
@@ -673,17 +744,17 @@
                 "box_index": 1
             }
         },
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": "Click",
+        "post_delay": 500,
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_MitamaChallenge"
+            "MitamaWaitSoloBattleStart"
         ],
         "pre_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
         "on_error": [],
-        "doc": "御魂：挑战当前选择的层数。"
+        "doc": "御魂：挑战当前选择的层数。",
+        "max_hit": 3
     },
     "MitamaInsufficientAP": {
         "pre_delay": 0,
@@ -699,8 +770,9 @@
         },
         "action": "DoNothing",
         "next": [
+            "MitamaFinish",
             "[JumpBack]CommonBountyInterrupt",
-            "MitamaFinish"
+            "CommonUnknownPopup"
         ]
     },
     "MitamaPrepare": {
@@ -719,36 +791,15 @@
                 ]
             }
         },
-        "action": "DoNothing",
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "MitamaPreparationPassed",
-            "[JumpBack]CommonBattleEnteringWait",
-            "SafeInput_MitamaPrepare"
-        ],
+        "action": "Click",
+        "next": [],
         "pre_delay": 0,
         "post_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
         "on_error": [],
-        "doc": "御魂：仅点击仍存在的准备按钮；自动准备进入战斗或结算后直接返回。"
-    },
-    "MitamaPreparationPassed": {
-        "pre_delay": 0,
-        "post_delay": 0,
-        "desc": "御魂：按钮复核期间已自动进入战斗或结算，结束准备分支并返回调用处",
-        "recognition": {
-            "type": "Or",
-            "param": {
-                "any_of": [
-                    "MitamaChallenging",
-                    "MitamaBattleResult",
-                    "DailyBattleFailed"
-                ]
-            }
-        },
-        "action": "DoNothing",
-        "next": []
+        "doc": "御魂：仅点击仍存在的准备按钮；自动准备进入战斗或结算后直接返回。",
+        "max_hit": 5
     },
     "MitamaChallenging": {
         "pre_delay": 0,
@@ -782,19 +833,24 @@
                 ]
             }
         },
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": "Click",
+        "post_delay": 600,
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "[JumpBack]MitamaTreasurePopup",
+            "MitamaBattleFailure",
             "MitamaSoloDropStatistics",
-            "SafeInput_MitamaBattleResult"
+            "MitamaBattleResult",
+            "[JumpBack]CommonCutscene",
+            "MitamaFinishOnce",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "pre_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
         "on_error": [],
-        "doc": "结算点击的识别目标；战斗循环直接调用 SafeInput 节点，同一轮完成识别和点击，不经过这里。"
+        "doc": "点击结算页的继续提示；点击后若仍停在结算页由自身重试，max_hit 限次。",
+        "max_hit": 5
     },
     "MitamaFinishOnce": {
         "desc": "御魂：确认返回挑战页，累计一次成功并决定继续或结束",
@@ -823,8 +879,9 @@
         "pre_delay": 0,
         "post_delay": 0,
         "next": [
+            "MitamaBattleEntry",
             "[JumpBack]CommonBountyInterrupt",
-            "MitamaBattleEntry"
+            "CommonUnknownPopup"
         ]
     },
     "MitamaFinish": {
@@ -847,9 +904,10 @@
         "desc": "御魂：任务完成后执行已启用的收尾子任务",
         "action": "DoNothing",
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "MitamaDisableBuff",
-            "MitamaFinishDone"
+            "MitamaFinishDone",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "doc": "收尾：加成关闭步骤启用时先执行，否则直接结束。"
     },
@@ -861,10 +919,11 @@
     },
     "MitamaNavigateReady": {
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "MitamaLayerReady",
-            "SafeInput_MitamaSelectBaqin",
-            "[JumpBack]MitamaSwipeBaqin"
+            "MitamaSelectBaqin",
+            "[JumpBack]MitamaSwipeBaqin",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "recognition": {
             "type": "And",
@@ -879,10 +938,11 @@
     },
     "MitamaDisableBuffReady": {
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "MitamaCheckBuffStatusClose",
-            "[JumpBack]SafeInput_MitamaDisableBuffClick",
-            "[JumpBack]SafeInput_MitamaOpenBuffMenu"
+            "[JumpBack]MitamaDisableBuffClick",
+            "[JumpBack]MitamaOpenBuffMenu",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "recognition": {
             "type": "And",
@@ -906,8 +966,9 @@
             }
         },
         "next": [
+            "MitamaFailedBattleResult",
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_MitamaFailedBattleResult"
+            "CommonUnknownPopup"
         ],
         "timeout": 30000,
         "focus": {
@@ -923,18 +984,22 @@
                 ]
             }
         },
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": "Click",
+        "post_delay": 1200,
         "next": [
+            "MitamaFailedBattleResult",
+            "[JumpBack]CommonCutscene",
+            "MitamaFailedReturn",
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_MitamaFailedBattleResult"
+            "CommonUnknownPopup"
         ],
         "timeout": 30000,
         "pre_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
         "on_error": [],
-        "doc": "关闭御魂失败结算，返回挑战页后停止任务。"
+        "doc": "关闭御魂失败结算，返回挑战页后停止任务。",
+        "max_hit": 5
     },
     "MitamaFailedReturn": {
         "pre_delay": 0,
@@ -965,15 +1030,24 @@
                 "expected": "^(发现|获得)宝藏$"
             }
         },
-        "action": "DoNothing",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    1040,
+                    420,
+                    120,
+                    110
+                ]
+            }
+        },
         "pre_delay": 0,
-        "post_delay": 0,
+        "post_delay": 800,
         "pre_wait_freezes": 0,
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "MitamaTreasureClosed",
-            "SafeInput_MitamaTreasurePopup"
-        ]
+            "MitamaTreasureVerifyClosed"
+        ],
+        "max_hit": 3
     },
     "MitamaTreasureClosed": {
         "pre_delay": 0,
@@ -994,9 +1068,10 @@
     "MitamaTreasureVerifyClosed": {
         "doc": "检查宝藏提示是否关闭；仍存在时最多点击三次，关闭失败则停止。",
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "MitamaTreasureClosed",
-            "MitamaTreasurePopup"
+            "MitamaTreasurePopup",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "timeout": 5000
     },
@@ -1010,15 +1085,23 @@
                 "box_index": 0
             }
         },
-        "action": "DoNothing",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    970,
+                    480,
+                    55,
+                    40
+                ]
+            }
+        },
         "max_hit": 3,
         "pre_delay": 0,
-        "post_delay": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_MitamaClosePresetForLock"
-        ],
-        "on_error": []
+        "post_delay": 800,
+        "next": [],
+        "on_error": [],
+        "pre_wait_freezes": 0
     },
     "MitamaSoloDropStatistics": {
         "doc": "奖励入场至少等待2秒；由统计动作确认图标区域持续稳定后，读取最新画面并暂存一次。",
@@ -1042,8 +1125,9 @@
             }
         },
         "next": [
+            "MitamaBattleResult",
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_MitamaBattleResult"
+            "CommonUnknownPopup"
         ],
         "pre_delay": 2000
     },
@@ -1055,38 +1139,39 @@
                 "custom_action": "ResetCount",
                 "custom_action_param": {
                     "nodes": [
-                        "SafeInput_MitamaChallenge",
-                        "SafeInput_CommonBattleEnableAuto",
-                        "SafeInput_CommonNetworkRetry",
-                        "SafeInput_CommonRewardOverflow",
-                        "SafeInput_MitamaTreasurePopup",
+                        "MitamaChallenge",
+                        "CommonBattleEnableAuto",
+                        "CommonNetworkRetry",
+                        "CommonRewardOverflow",
+                        "MitamaTreasurePopup",
                         "CommonBattleMark",
-                        "SafeInput_CommonBattleMark",
-                        "SafeInput_MitamaPrepare",
-                        "SafeInput_MitamaBattleResult",
+                        "MitamaPrepare",
+                        "MitamaBattleResult",
                         "CommonBattleWait",
                         "CommonBattleEnteringWait",
                         "CommonCutscene",
-                        "SafeInput_DailyRewardPopup"
+                        "DailyRewardPopup"
                     ],
                     "strict": true
                 }
             }
         },
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "MitamaInsufficientAP",
-            "SafeInput_MitamaChallenge"
+            "MitamaChallenge",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "pre_delay": 0,
         "post_delay": 0
     },
     "MitamaWaitSoloBattleStart": {
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "MitamaInsufficientAP",
             "MitamaSoloBattleStarted",
-            "SafeInput_MitamaChallenge"
+            "MitamaChallenge",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "timeout": 15000,
         "pre_delay": 0,
@@ -1117,20 +1202,21 @@
     "MitamaBattle": {
         "doc": "单人御魂的准备、战斗、结算及异常候选；返回挑战页后才计数。",
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
+            "[JumpBack]CommonBattleEnableAuto",
+            "[JumpBack]CommonBattleMark",
+            "[JumpBack]CommonBattleWait",
             "[JumpBack]MitamaTreasurePopup",
             "[JumpBack]CommonRewardOverflow",
             "MitamaInsufficientAP",
             "MitamaBattleFailure",
             "MitamaSoloDropStatistics",
-            "SafeInput_MitamaBattleResult",
+            "MitamaBattleResult",
             "[JumpBack]CommonBattleEnteringWait",
             "[JumpBack]MitamaPrepare",
-            "[JumpBack]CommonBattleEnableAuto",
-            "[JumpBack]CommonBattleMark",
-            "[JumpBack]CommonBattleWait",
-            "[JumpBack]SafeInput_DailyRewardPopup",
-            "[JumpBack]CommonNetworkRetry"
+            "[JumpBack]DailyRewardPopup",
+            "[JumpBack]CommonNetworkRetry",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "timeout": 180000,
         "pre_delay": 0,
@@ -1165,9 +1251,10 @@
     },
     "MitamaCloseBuffPanelVerify": {
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "MitamaCloseBuffPanelClosed",
-            "SafeInput_MitamaCloseBuffPanel"
+            "MitamaCloseBuffPanel",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "timeout": 5000
     },
@@ -1185,15 +1272,17 @@
         },
         "inverse": true,
         "next": [
+            "MitamaPreparationDestination",
             "[JumpBack]CommonBountyInterrupt",
-            "MitamaPreparationDestination"
+            "CommonUnknownPopup"
         ]
     },
     "MitamaFinishCloseBuffPanelVerify": {
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "MitamaFinishCloseBuffPanelClosed",
-            "SafeInput_MitamaFinishCloseBuffPanel"
+            "MitamaFinishCloseBuffPanel",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "timeout": 5000
     },
@@ -1211,8 +1300,9 @@
         },
         "inverse": true,
         "next": [
+            "MitamaFinishDone",
             "[JumpBack]CommonBountyInterrupt",
-            "MitamaFinishDone"
+            "CommonUnknownPopup"
         ]
     },
     "MitamaEnableBuffClick": {
@@ -1228,17 +1318,25 @@
                 "box_index": 1
             }
         },
-        "action": "DoNothing",
-        "post_delay": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_MitamaEnableBuffClick"
-        ],
+        "action": {
+            "type": "Click",
+            "param": {
+                "target_offset": [
+                    354,
+                    4,
+                    -251,
+                    0
+                ]
+            }
+        },
+        "post_delay": 2000,
+        "next": [],
         "pre_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
         "on_error": [],
-        "doc": "只在御魂专属加成行确认当前状态后切换。"
+        "doc": "只在御魂专属加成行确认当前状态后切换。",
+        "max_hit": 3
     },
     "MitamaDisableBuffClick": {
         "desc": "御魂：开启/关闭御魂掉落加成",
@@ -1253,17 +1351,25 @@
                 "box_index": 1
             }
         },
-        "action": "DoNothing",
-        "post_delay": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_MitamaDisableBuffClick"
-        ],
+        "action": {
+            "type": "Click",
+            "param": {
+                "target_offset": [
+                    354,
+                    4,
+                    -251,
+                    0
+                ]
+            }
+        },
+        "post_delay": 2000,
+        "next": [],
         "pre_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
         "on_error": [],
-        "doc": "只在御魂专属加成行确认当前状态后切换。"
+        "doc": "只在御魂专属加成行确认当前状态后切换。",
+        "max_hit": 3
     },
     "MitamaLayerSelected": {
         "doc": "目标层数文字和其红色选中背景同时命中；未选中时禁止准备及挑战。",
@@ -1318,9 +1424,10 @@
     "MitamaVerifyLayer": {
         "doc": "选层后复核红色选中状态；漏点最多重试三次，失败不进入准备。",
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "MitamaLayerReady",
-            "SafeInput_MitamaSelectBaqin"
+            "MitamaSelectBaqin",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "timeout": 8000
     },
@@ -1367,25 +1474,25 @@
                 "custom_action_param": {
                     "scope": "Mitama",
                     "cleanup_override": {
-                        "SafeInput_MitamaOpenBuffMenu": {
+                        "MitamaOpenBuffMenu": {
                             "max_hit": 3
                         },
-                        "SafeInput_MitamaCloseBuffPanel": {
+                        "MitamaCloseBuffPanel": {
                             "max_hit": 3
                         },
-                        "SafeInput_MitamaFinishCloseBuffPanel": {
+                        "MitamaFinishCloseBuffPanel": {
                             "max_hit": 3
                         },
-                        "SafeInput_MitamaEnableBuffClick": {
+                        "MitamaEnableBuffClick": {
                             "max_hit": 3
                         },
-                        "SafeInput_MitamaDisableBuffClick": {
+                        "MitamaDisableBuffClick": {
                             "max_hit": 3
                         },
-                        "SafeInput_BattleCleanupResult": {
+                        "BattleCleanupResult": {
                             "max_hit": 3
                         },
-                        "SafeInput_MitamaTreasurePopup": {
+                        "MitamaTreasurePopup": {
                             "max_hit": 3
                         },
                         "NavigateMitamaStage": {
@@ -1406,16 +1513,7 @@
                         "DailyRewardPopup": {
                             "max_hit": 3
                         },
-                        "SafeInput_NativeNavCancelNoResource": {
-                            "max_hit": 3
-                        },
-                        "SafeInput_DailyPrepare": {
-                            "max_hit": 3
-                        },
-                        "SafeInput_DailyRewardPopup": {
-                            "max_hit": 3
-                        },
-                        "SafeInput_CommonBattleEnableAuto": {
+                        "CommonBattleEnableAuto": {
                             "max_hit": 3
                         },
                         "NavigateExplore": {

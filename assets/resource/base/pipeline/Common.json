@@ -53,17 +53,15 @@
                 ]
             }
         },
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": "Click",
+        "post_delay": 800,
         "pre_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_CommonConfirm"
-        ],
+        "next": [],
         "on_error": [],
-        "doc": "关闭带有取消按钮的普通弹窗。"
+        "doc": "关闭带有取消按钮的普通弹窗。",
+        "max_hit": 5
     },
     "CommonClose": {
         "desc": "通用关闭按钮；坐标需按 1280x720 基准实测",
@@ -110,15 +108,12 @@
                 ]
             }
         },
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": "Click",
+        "post_delay": 500,
         "pre_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_CommonClose"
-        ],
+        "next": [],
         "on_error": [],
         "doc": "点击关闭图标，关闭当前面板。"
     },
@@ -136,15 +131,22 @@
                 ]
             }
         },
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    600,
+                    625,
+                    80,
+                    45
+                ]
+            }
+        },
+        "post_delay": 800,
         "pre_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_CommonRewardPopup"
-        ],
+        "next": [],
         "on_error": [],
         "doc": "关闭奖励展示弹窗。"
     },
@@ -185,15 +187,12 @@
                 ]
             }
         },
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": "Click",
+        "post_delay": 1000,
         "pre_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_CommonBattleFailed"
-        ],
+        "next": [],
         "on_error": [],
         "doc": "退出战斗失败结算，返回调用流程。"
     },
@@ -225,17 +224,15 @@
                 "box_index": 1
             }
         },
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": "Click",
+        "post_delay": 2000,
         "pre_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_CommonNetworkRetry"
-        ],
+        "next": [],
         "on_error": [],
-        "doc": "点击网络异常提示中的重试按钮。 按钮范围参考 OAS（I_NETWORK_ABNORMAL 约 583,330,221,67），未实机校准。"
+        "doc": "点击网络异常提示中的重试按钮。 按钮范围参考 OAS（I_NETWORK_ABNORMAL 约 583,330,221,67），未实机校准。",
+        "max_hit": 3
     },
     "CommonRefuseBounty": {
         "desc": "拒绝悬赏封印",
@@ -281,18 +278,30 @@
                 "box_index": 1
             }
         },
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true,
+                "target_offset": [
+                    -90,
+                    -15,
+                    95,
+                    30
+                ]
+            }
+        },
+        "post_delay": 800,
         "pre_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
         "next": [
             "CommonBountyClosed",
-            "SafeInput_CommonRefuseBounty"
+            "CommonRefuseBounty"
         ],
         "on_error": [],
         "doc": "拒绝弹出的协作悬赏封印邀请：顶部标题含“悬赏封印”（实测“协助悬赏封印”约 525,45,255,50），右下“拒绝”文字约 935,570,50,30，点“拒绝”这一行（红叉加文字）。注意“接受”就在它正上方约 836,460,70,65，点击区域不能往上扩。",
-        "timeout": 3000
+        "timeout": 3000,
+        "max_hit": 3
     },
     "CommonClickAuto": {
         "desc": "点击自动战斗",
@@ -311,17 +320,15 @@
                 ]
             }
         },
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": "Click",
+        "post_delay": 800,
         "pre_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_CommonClickAuto"
-        ],
+        "next": [],
         "on_error": [],
-        "doc": "将手动战斗切换为自动战斗。"
+        "doc": "将手动战斗切换为自动战斗。",
+        "max_hit": 3
     },
     "CommonBountyInterrupt": {
         "doc": "识别任意页面上弹出的协作悬赏邀请，重置本次拒绝重试预算；关闭后回到被打断的流程。",
@@ -339,7 +346,7 @@
                 "custom_action": "ResetCount",
                 "custom_action_param": {
                     "nodes": [
-                        "SafeInput_CommonRefuseBounty"
+                        "CommonRefuseBounty"
                     ],
                     "strict": true
                 }
@@ -393,8 +400,9 @@
         },
         "action": "DoNothing",
         "next": [
+            "CommonBattleEnteringGone",
             "[JumpBack]CommonBountyInterrupt",
-            "CommonBattleEnteringGone"
+            "CommonUnknownPopup"
         ],
         "timeout": 60000,
         "rate_limit": 250,
@@ -458,15 +466,18 @@
                 "box_index": 1
             }
         },
-        "action": "DoNothing",
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_CommonBattleEnableAuto"
-        ],
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "next": [],
         "pre_delay": 0,
-        "post_delay": 0,
+        "post_delay": 300,
         "pre_wait_freezes": 0,
-        "on_error": []
+        "on_error": [],
+        "max_hit": 3
     },
     "CommonRewardOverflow": {
         "doc": "只处理明确的御魂容量已满提示中的知道了按钮。",
@@ -506,21 +517,27 @@
                 "box_index": 1
             }
         },
-        "action": "DoNothing",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_CommonRewardOverflow"
+            "CommonRewardOverflowVerify"
         ],
         "pre_delay": 0,
-        "post_delay": 0,
+        "post_delay": 500,
         "pre_wait_freezes": 0,
-        "on_error": []
+        "on_error": [],
+        "max_hit": 3
     },
     "CommonRewardOverflowVerify": {
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "CommonRewardOverflowGone",
-            "CommonRewardOverflow"
+            "CommonRewardOverflow",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "timeout": 5000
     },
@@ -633,5 +650,27 @@
                 ]
             }
         }
+    },
+    "CommonUnknownPopup": {
+        "doc": "屏幕中央出现带 确定/确认/取消 按钮、且当前列表没有对应规则的弹窗时直接停止任务；放在每个列表最后，只在高频节点都没命中时检查。",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    240,
+                    220,
+                    800,
+                    420
+                ],
+                "expected": [
+                    "^确定$",
+                    "^确认$",
+                    "^取消$"
+                ]
+            }
+        },
+        "action": "StopTask",
+        "pre_delay": 0,
+        "post_delay": 0
     }
 }

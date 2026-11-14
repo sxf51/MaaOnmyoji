@@ -27,25 +27,23 @@
                 "custom_action": "ResetCount",
                 "custom_action_param": {
                     "nodes": [
-                        "SafeInput_TeamMemberAcceptDefault",
-                        "SafeInput_TeamMemberAccept",
-                        "SafeInput_TeamMemberBattleResult",
-                        "SafeInput_DailyPrepare",
+                        "TeamMemberAcceptDefault",
+                        "TeamMemberAccept",
+                        "TeamMemberBattleResult",
+                        "DailyPrepare",
                         "TeamMemberRoomWait",
                         "CommonBattleWait",
                         "CommonBattleEnteringWait",
-                        "SafeInput_DailyRewardPopup",
-                        "SafeInput_CommonBattleEnableAuto",
-                        "SafeInput_CommonNetworkRetry",
-                        "SafeInput_CommonRewardOverflow",
-                        "SafeInput_MitamaTreasurePopup",
+                        "DailyRewardPopup",
+                        "CommonBattleEnableAuto",
+                        "CommonNetworkRetry",
+                        "CommonRewardOverflow",
+                        "MitamaTreasurePopup",
                         "TeamMemberRoomTick",
                         "TeamMemberIdleEmoteReady",
-                        "SafeInput_TeamMemberAutoReadyConfirm",
+                        "TeamMemberAutoReadyConfirm",
                         "TeamMemberInBattle",
-                        "TeamMemberAccept",
-                        "TeamMemberAcceptDefault",
-                        "SafeInput_TeamMemberWinResult"
+                        "TeamMemberWinResult"
                     ],
                     "strict": true
                 }
@@ -61,23 +59,24 @@
         "post_delay": 0,
         "action": "DoNothing",
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "TeamMemberAutoReadyConfirm",
             "TeamMemberAcceptDefault",
             "TeamMemberAccept",
-            "SafeInput_TeamMemberWinResult",
+            "TeamMemberWinResult",
             "TeamMemberResultSeen",
             "[JumpBack]MitamaTreasurePopup",
             "[JumpBack]TeamMemberInBattle",
             "[JumpBack]DailyPrepare",
-            "[JumpBack]SafeInput_DailyRewardPopup",
+            "[JumpBack]DailyRewardPopup",
             "[JumpBack]CommonBattleEnableAuto",
             "[JumpBack]CommonBattleWait",
             "[JumpBack]CommonNetworkRetry",
             "TeamMemberBecameLeader",
             "[JumpBack]TeamMemberRoomTick",
             "[JumpBack]TeamMemberIdleEmoteReady",
-            "[JumpBack]TeamMemberRoomWait"
+            "[JumpBack]TeamMemberRoomWait",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "timeout": 300000
     },
@@ -177,29 +176,27 @@
                 "box_index": 2
             }
         },
-        "action": "DoNothing",
-        "pre_delay": 0,
-        "post_delay": 0,
-        "pre_wait_freezes": {
-            "time": 300,
-            "target": [
-                0,
-                200,
-                620,
-                110
-            ],
-            "timeout": 2000
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
         },
+        "pre_delay": 0,
+        "post_delay": 500,
+        "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
         "next": [
+            "TeamMemberAfterAccept",
+            "TeamMemberAccept",
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_TeamMemberAccept"
+            "CommonUnknownPopup"
         ],
         "on_error": [
             "TeamMemberLoop"
         ],
-        "doc": "昵称和目标副本都对上、但没有齿轮对勾时点普通对勾。 邀请条会从左侧滑入，滑动中识别到的位置不准、按钮也可能还不响应（实测日志 2026-11-13 02:23 第一次点击没生效），所以先等这一块画面静止 300ms，再由 SafeInput 重新识别后点击；邀请已消失（2 秒内重新识别不到）就回主循环。",
-        "max_hit": 10,
+        "doc": "昵称和目标副本都对上、但没有齿轮对勾时点普通对勾。 邀请条会从左侧滑入，滑动中识别到的位置不准、按钮也可能还不响应（实测日志 2026-11-13 02:23 第一次点击没生效），所以先等这一块画面静止 300ms，再点击；邀请已消失（2 秒内重新识别不到）就回主循环。",
+        "max_hit": 5,
         "timeout": 2000
     },
     "TeamMemberAcceptDefault": {
@@ -214,35 +211,33 @@
                 "box_index": 2
             }
         },
-        "action": "DoNothing",
-        "pre_delay": 0,
-        "post_delay": 0,
-        "pre_wait_freezes": {
-            "time": 300,
-            "target": [
-                0,
-                200,
-                620,
-                110
-            ],
-            "timeout": 2000
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
         },
+        "pre_delay": 0,
+        "post_delay": 500,
+        "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
         "next": [
+            "TeamMemberAfterAccept",
+            "TeamMemberAcceptDefault",
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_TeamMemberAcceptDefault"
+            "CommonUnknownPopup"
         ],
         "on_error": [
             "TeamMemberLoop"
         ],
-        "doc": "昵称和目标副本都对上时优先点带齿轮的对勾（默认接受），之后不用每场再接受。 邀请条会从左侧滑入，滑动中识别到的位置不准、按钮也可能还不响应（实测日志 2026-11-13 02:23 第一次点击没生效），所以先等这一块画面静止 300ms，再由 SafeInput 重新识别后点击；邀请已消失（2 秒内重新识别不到）就回主循环。",
-        "max_hit": 10,
+        "doc": "昵称和目标副本都对上时优先点带齿轮的对勾（默认接受），之后不用每场再接受。 邀请条会从左侧滑入，滑动中识别到的位置不准、按钮也可能还不响应（实测日志 2026-11-13 02:23 第一次点击没生效），所以先等这一块画面静止 300ms，再点击；邀请已消失（2 秒内重新识别不到）就回主循环。",
+        "max_hit": 5,
         "timeout": 2000
     },
     "TeamMemberAutoReadyConfirm": {
         "doc": "点带齿轮的对勾（默认接受）后可能弹出“…并在战前自动准备”确认框，点“确定”后回主循环。接受后先在 TeamMemberAfterAccept 里找，主循环最前面也会找一次，晚出现也能点掉。不勾“不再提示”。",
         "pre_delay": 0,
-        "post_delay": 0,
+        "post_delay": 800,
         "recognition": {
             "type": "And",
             "param": {
@@ -253,11 +248,17 @@
                 "box_index": 1
             }
         },
-        "action": "DoNothing",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_TeamMemberAutoReadyConfirm"
-        ]
+            "TeamMemberLoop"
+        ],
+        "pre_wait_freezes": 0,
+        "max_hit": 5
     },
     "TeamMemberAutoReadyText": {
         "doc": "确认框正文第二行“并在战前自动准备”（第一行可能被左侧邀请条挡住）。",
@@ -296,9 +297,10 @@
         "timeout": 4000,
         "action": "DoNothing",
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "TeamMemberAutoReadyConfirm",
-            "TeamMemberAcceptJoined"
+            "TeamMemberAcceptJoined",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "on_error": [
             "TeamMemberLoop"
@@ -311,13 +313,14 @@
         "timeout": 6000,
         "action": "DoNothing",
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "TeamMemberAutoReadyConfirm",
             "TeamMemberAcceptDefault",
             "TeamMemberAccept",
-            "SafeInput_TeamMemberWinResult",
+            "TeamMemberWinResult",
             "TeamMemberResultSeen",
-            "TeamMemberAfterResultRoom"
+            "TeamMemberAfterResultRoom",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "on_error": [
             "TeamMemberLoop"
@@ -401,14 +404,15 @@
             }
         },
         "next": [
+            "TeamMemberIdleEmote",
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_TeamMemberIdleEmote"
+            "CommonUnknownPopup"
         ]
     },
     "TeamMemberIdleEmote": {
         "doc": "左下角“发言”按钮的点击目标，由 TeamMemberIdleEmoteReady 进入。",
         "pre_delay": 0,
-        "post_delay": 0,
+        "post_delay": 500,
         "recognition": {
             "type": "And",
             "param": {
@@ -419,11 +423,21 @@
                 "box_index": 1
             }
         },
-        "action": "DoNothing",
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_TeamMemberIdleEmote"
-        ]
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true,
+                "target_offset": [
+                    0,
+                    -48,
+                    0,
+                    22
+                ]
+            }
+        },
+        "next": [],
+        "pre_wait_freezes": 0,
+        "max_hit": 20
     },
     "TeamRoomSpeakButton": {
         "doc": "组队房间左下角“发言”按钮的文字（图标在文字正上方）；房间布局不同时按钮可能更低，所以范围向下放宽。",
@@ -487,22 +501,36 @@
                 ]
             }
         },
-        "action": "DoNothing",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
         "pre_delay": 0,
-        "post_delay": 0,
+        "post_delay": 1000,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
         "next": [
+            "TeamMemberBattleFailure",
+            "[JumpBack]MitamaTreasurePopup",
+            "[JumpBack]DailyRewardPopup",
+            "[JumpBack]CommonRewardOverflow",
+            "TeamMemberBattleResult",
+            "TeamMemberWon",
+            "TeamMemberResultCleared",
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_TeamMemberBattleResult"
+            "CommonUnknownPopup"
         ],
         "on_error": [],
-        "doc": "点掉成功结算，结算消失后才计次。"
+        "doc": "点掉成功结算，结算消失后才计次。",
+        "timeout": 30000,
+        "max_hit": 8
     },
     "TeamMemberWinResult": {
         "doc": "胜利结算两页（“胜利”页、奖励袋页）的“点击屏幕继续”：认出胜利页就在同一轮直接点，不经过失败判断，提示一出现就点（实测日志 2026-11-13 02:41 先判失败再点慢了约 2 秒）。",
         "pre_delay": 0,
-        "post_delay": 0,
+        "post_delay": 1000,
         "recognition": {
             "type": "And",
             "param": {
@@ -513,11 +541,26 @@
                 "box_index": 0
             }
         },
-        "action": "DoNothing",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
         "next": [
+            "TeamMemberWinResult",
+            "[JumpBack]MitamaTreasurePopup",
+            "[JumpBack]DailyRewardPopup",
+            "[JumpBack]CommonRewardOverflow",
+            "TeamMemberBattleResult",
+            "TeamMemberWon",
+            "TeamMemberResultCleared",
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_TeamMemberWinResult"
-        ]
+            "CommonUnknownPopup"
+        ],
+        "pre_wait_freezes": 0,
+        "timeout": 30000,
+        "max_hit": 8
     },
     "TeamMemberResultSeen": {
         "doc": "看到结算页的“点击屏幕继续”后才判断胜负：失败画面同样有这行提示，所以大范围的失败识别不必每轮都做，只在这里做一次，再决定停止还是点结算。",
@@ -533,9 +576,10 @@
         },
         "action": "DoNothing",
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "TeamMemberBattleFailure",
-            "SafeInput_TeamMemberBattleResult"
+            "TeamMemberBattleResult",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ]
     },
     "TeamMemberWon": {
@@ -631,8 +675,9 @@
         },
         "action": "DoNothing",
         "next": [
+            "TeamMemberFailedResult",
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_TeamMemberFailedResult"
+            "CommonUnknownPopup"
         ],
         "timeout": 30000
     },
@@ -645,17 +690,27 @@
                 ]
             }
         },
-        "action": "DoNothing",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
         "pre_delay": 0,
-        "post_delay": 0,
+        "post_delay": 1200,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
         "next": [
+            "TeamMemberFailedResult",
+            "[JumpBack]DailyRewardPopup",
+            "TeamMemberFailedClosed",
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_TeamMemberFailedResult"
+            "CommonUnknownPopup"
         ],
         "on_error": [],
-        "doc": "关闭失败结算。"
+        "doc": "关闭失败结算。",
+        "timeout": 30000,
+        "max_hit": 5
     },
     "TeamMemberFailedClosed": {
         "pre_delay": 0,

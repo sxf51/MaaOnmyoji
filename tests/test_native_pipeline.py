@@ -20,8 +20,9 @@ class NativePipelineTests(unittest.TestCase):
         for name in ("ReturnMain", "MitamaDisableBuff", "RealmRaidTask",
                      "DailyRewardsTask", "NativeRewardsToTasks", "NativeRewardsToRewards"):
             choices = self.nodes[name]["next"]
-            self.assertTrue(choices[-1].startswith("[JumpBack]Navigate"), name)
-            self.assertIn("recognition", self.nodes[choices[1]], name)
+            self.assertEqual(choices[-2:], ["[JumpBack]CommonBountyInterrupt", "CommonUnknownPopup"], name)
+            self.assertTrue(choices[-3].startswith("[JumpBack]Navigate"), name)
+            self.assertIn("recognition", self.nodes[choices[0]], name)
 
     def test_battle_never_counts_waiting_room_without_settlement(self):
         # The raid loop checks settlement only once the battle exit button is gone.
@@ -30,20 +31,20 @@ class NativePipelineTests(unittest.TestCase):
         for prefix, loop in loops.items():
             after = prefix + "AfterResult"
             self.assertNotIn(after, self.nodes[loop]["next"])
-            self.assertIn(after, self.nodes["SafeInput_" + prefix + "Result"]["next"])
+            self.assertIn(after, self.nodes[prefix + "Result"]["next"])
             self.assertIn(prefix + "Failure", self.nodes[loop]["next"])
 
     def test_raid_verifies_stamp_and_limits_each_card(self):
-        self.assertEqual(self.nodes['SafeInput_RealmRaidSelect']['max_hit'], 3)
+        self.assertEqual(self.nodes['RealmRaidSelect']['max_hit'], 3)
         self.assertIn('RealmRaidBroken', self.nodes['RealmRaidSuccess']['recognition']['param']['all_of'])
 
     def test_raid_attack_uses_detected_button_and_dismiss_stays_above_popup_buttons(self):
         param=self.nodes['PageRaidTarget']['recognition']['param']
         self.assertEqual(param['all_of'][0],'RealmRaidPersonalTab')
         button_roi=param['all_of'][param['box_index']]['recognition']['param']['roi']
-        self.assertIs(self.nodes['SafeInput_RealmRaidAttack']['action']['param']['target'], True)
-        self.assertIs(self.nodes['SafeInput_RealmRaidSelect']['action']['param']['target'], True)
-        for name in ('SafeInput_NavDismissRaidTarget','SafeInput_NativeNavDismissRaidTarget'):
+        self.assertIs(self.nodes['RealmRaidAttack']['action']['param']['target'], True)
+        self.assertIs(self.nodes['RealmRaidSelect']['action']['param']['target'], True)
+        for name in ('NavDismissRaidTarget','NativeNavDismissRaidTarget'):
             target=self.nodes[name]['action']['param']['target']
             self.assertLess(target[1]+target[3],button_roi[1])
 
@@ -55,12 +56,10 @@ class NativePipelineTests(unittest.TestCase):
     def test_mitama_prepare_accepts_automatic_battle_transition(self):
         prepare = self.nodes["MitamaPrepare"]
         self.assertEqual(prepare["recognition"]["param"]["expected"], ["^准备$"])
-        self.assertLess(prepare["next"].index("MitamaPreparationPassed"),
-                        prepare["next"].index("SafeInput_MitamaPrepare"))
-        passed = self.nodes["MitamaPreparationPassed"]
-        self.assertEqual(passed["action"], "DoNothing")
-        self.assertEqual(passed["next"], [])
-        self.assertIn("MitamaChallenging", passed["recognition"]["param"]["any_of"])
+        # Click and return; the battle loop sees the automatic transition on its next poll.
+        self.assertEqual(prepare["action"], "Click")
+        self.assertEqual(prepare["next"], [])
+        self.assertIn("[JumpBack]MitamaPrepare", self.nodes["MitamaBattle"]["next"])
         self.assertIn("[JumpBack]DailyPrepare", self.nodes["TeamLeaderBattle"]["next"])
 
     def test_mitama_treasure_supports_both_reference_titles(self):
@@ -85,7 +84,7 @@ class NativePipelineTests(unittest.TestCase):
     def test_team_start_uses_verified_button_box(self):
         param = self.nodes["TeamLeaderStart"]["recognition"]["param"]
         self.assertEqual(param["all_of"][param["box_index"]], "TeamLeaderStartButton")
-        self.assertIs(self.nodes["SafeInput_TeamLeaderStart"]["action"]["param"]["target"], True)
+        self.assertIs(self.nodes["TeamLeaderStart"]["action"]["param"]["target"], True)
 
     def test_settlement_labels_cover_screen_and_blank_area_variants(self):
         for name in ("DailyBattleResult", "PageResult", "MitamaBattleResult", "CommonActivityBattleResult"):

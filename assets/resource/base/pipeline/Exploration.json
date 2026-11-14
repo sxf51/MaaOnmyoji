@@ -18,7 +18,6 @@
     },
     "ExplorationRun": {
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "NativeNavigationBlocked",
             "NativeResultBlocked",
             "[JumpBack]NativeDailyRewardPopup",
@@ -29,13 +28,15 @@
             "[JumpBack]NativeNavCancelInvite",
             "[JumpBack]NativeNavCancelCreate",
             "[JumpBack]NativeLoading",
-            "[JumpBack]SafeInput_StartupCloseAnnouncement",
-            "[JumpBack]SafeInput_StartupCancelIllustration",
+            "[JumpBack]StartupCloseAnnouncement",
+            "[JumpBack]StartupCancelIllustration",
             "ExplorationTicketThreshold",
             "ExplorationFieldReady",
             "ExplorationChapterReady",
             "ExplorationMapReady",
-            "[JumpBack]NavigateExplore"
+            "[JumpBack]NavigateExplore",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ]
     },
     "ExplorationTicketThreshold": {
@@ -55,8 +56,9 @@
         },
         "action": "DoNothing",
         "next": [
+            "ExplorationFinish",
             "[JumpBack]CommonBountyInterrupt",
-            "ExplorationFinish"
+            "CommonUnknownPopup"
         ]
     },
     "ExplorationTicketMap": {
@@ -153,17 +155,25 @@
                 ]
             }
         },
-        "action": "DoNothing",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
         "next": [
+            "ExplorationChapterReady",
+            "ExplorationSelectChapter",
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_ExplorationSelectChapter"
+            "CommonUnknownPopup"
         ],
-        "post_delay": 0,
+        "post_delay": 1200,
         "pre_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
         "on_error": [],
-        "doc": "选择配置指定的探索章节。"
+        "doc": "选择配置指定的探索章节。",
+        "max_hit": 3
     },
     "ExplorationEnterChapter": {
         "recognition": {
@@ -178,17 +188,25 @@
                 ]
             }
         },
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "post_delay": 1200,
         "next": [
+            "ExplorationFieldReady",
+            "ExplorationEnterChapter",
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_ExplorationEnterChapter"
+            "CommonUnknownPopup"
         ],
         "pre_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
         "on_error": [],
-        "doc": "从章节入口进入探索场景。"
+        "doc": "从章节入口进入探索场景。",
+        "max_hit": 3
     },
     "ExplorationFindEnemy": {
         "recognition": {
@@ -201,11 +219,10 @@
                 "box_index": 1
             }
         },
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": "Click",
+        "post_delay": 1000,
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_ExplorationFindEnemy"
+            "ExplorationBattle"
         ],
         "pre_delay": 0,
         "pre_wait_freezes": 0,
@@ -259,22 +276,23 @@
                     "nodes": [
                         "ExplorationEnemySwipe",
                         "ExplorationReenter",
-                        "SafeInput_DailyPrepare",
-                        "SafeInput_ExplorationBattleResult",
-                        "SafeInput_ExplorationBattleFailedResult",
-                        "SafeInput_DailyRewardPopup",
+                        "DailyPrepare",
+                        "ExplorationBattleResult",
+                        "ExplorationBattleFailedResult",
+                        "DailyRewardPopup",
                         "CommonBattleEnteringWait"
                     ]
                 }
             }
         },
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "[JumpBack]SafeInput_DailyRewardPopup",
-            "[JumpBack]SafeInput_ExplorationCollectChest",
-            "SafeInput_ExplorationFindEnemy",
+            "[JumpBack]DailyRewardPopup",
+            "[JumpBack]ExplorationCollectChest",
+            "ExplorationFindEnemy",
             "ExplorationEnemySwipe",
-            "ExplorationReenter"
+            "ExplorationReenter",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "timeout": 20000,
         "pre_delay": 0,
@@ -292,16 +310,18 @@
         },
         "action": "DoNothing",
         "next": [
+            "ExplorationEnterChapter",
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_ExplorationEnterChapter"
+            "CommonUnknownPopup"
         ]
     },
     "ExplorationSearchChapter": {
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_ExplorationSelectChapter",
+            "ExplorationSelectChapter",
             "ExplorationChapterScrollDown",
-            "ExplorationChapterScrollUp"
+            "ExplorationChapterScrollUp",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "timeout": 20000
     },
@@ -315,11 +335,34 @@
             }
         },
         "max_hit": 12,
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "BezierSwipe",
+                "custom_action_param": {
+                    "begin": [
+                        1158,
+                        492,
+                        24,
+                        24
+                    ],
+                    "end": [
+                        1158,
+                        238,
+                        24,
+                        24
+                    ],
+                    "duration": 500,
+                    "duration_random": 80,
+                    "segments": 24,
+                    "deviation": 8,
+                    "easing": true
+                }
+            }
+        },
+        "post_delay": 1000,
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_ExplorationChapterScrollDown"
+            "ExplorationSearchChapter"
         ],
         "pre_delay": 0,
         "pre_wait_freezes": 0,
@@ -337,11 +380,34 @@
             }
         },
         "max_hit": 12,
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "BezierSwipe",
+                "custom_action_param": {
+                    "begin": [
+                        1158,
+                        238,
+                        24,
+                        24
+                    ],
+                    "end": [
+                        1158,
+                        492,
+                        24,
+                        24
+                    ],
+                    "duration": 500,
+                    "duration_random": 80,
+                    "segments": 24,
+                    "deviation": 8,
+                    "easing": true
+                }
+            }
+        },
+        "post_delay": 1000,
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_ExplorationChapterScrollUp"
+            "ExplorationSearchChapter"
         ],
         "pre_delay": 0,
         "pre_wait_freezes": 0,
@@ -358,10 +424,10 @@
                     "nodes": [
                         "ExplorationEnemySwipe",
                         "ExplorationReenter",
-                        "SafeInput_DailyPrepare",
-                        "SafeInput_ExplorationBattleResult",
-                        "SafeInput_ExplorationBattleFailedResult",
-                        "SafeInput_DailyRewardPopup",
+                        "DailyPrepare",
+                        "ExplorationBattleResult",
+                        "ExplorationBattleFailedResult",
+                        "DailyRewardPopup",
                         "CommonBattleEnteringWait"
                     ]
                 }
@@ -373,12 +439,13 @@
     },
     "ExplorationScan": {
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "[JumpBack]SafeInput_DailyRewardPopup",
-            "[JumpBack]SafeInput_ExplorationCollectChest",
-            "SafeInput_ExplorationFindEnemy",
+            "[JumpBack]DailyRewardPopup",
+            "[JumpBack]ExplorationCollectChest",
+            "ExplorationFindEnemy",
             "ExplorationEnemySwipe",
-            "ExplorationReenter"
+            "ExplorationReenter",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "timeout": 20000
     },
@@ -392,11 +459,34 @@
             }
         },
         "max_hit": 6,
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "BezierSwipe",
+                "custom_action_param": {
+                    "begin": [
+                        1038,
+                        458,
+                        24,
+                        24
+                    ],
+                    "end": [
+                        328,
+                        458,
+                        24,
+                        24
+                    ],
+                    "duration": 500,
+                    "duration_random": 80,
+                    "segments": 24,
+                    "deviation": 20,
+                    "easing": true
+                }
+            }
+        },
+        "post_delay": 1000,
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_ExplorationEnemySwipe"
+            "ExplorationScan"
         ],
         "pre_delay": 0,
         "pre_wait_freezes": 0,
@@ -415,9 +505,10 @@
         },
         "max_hit": 1,
         "next": [
+            "ExplorationReenterClick",
+            "[JumpBack]NavigateChapter",
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_ExplorationReenterClick",
-            "[JumpBack]NavigateChapter"
+            "CommonUnknownPopup"
         ]
     },
     "ExplorationReenterClick": {
@@ -431,17 +522,25 @@
                 "box_index": 1
             }
         },
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "post_delay": 1200,
         "next": [
+            "ExplorationReentered",
+            "ExplorationReenterClick",
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_ExplorationReenterClick"
+            "CommonUnknownPopup"
         ],
         "pre_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
         "on_error": [],
-        "doc": "重新进入章节，刷新可挑战的敌人。"
+        "doc": "重新进入章节，刷新可挑战的敌人。",
+        "max_hit": 3
     },
     "ExplorationReentered": {
         "recognition": {
@@ -469,12 +568,13 @@
     },
     "ExplorationBattle": {
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "ExplorationBattleNoResource",
             "ExplorationBattleFailure",
-            "SafeInput_ExplorationBattleResult",
+            "ExplorationBattleResult",
             "[JumpBack]DailyPrepare",
-            "[JumpBack]SafeInput_DailyRewardPopup"
+            "[JumpBack]DailyRewardPopup",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "timeout": 180000
     },
@@ -491,8 +591,9 @@
         },
         "action": "DoNothing",
         "next": [
+            "ExplorationFinish",
             "[JumpBack]CommonBountyInterrupt",
-            "ExplorationFinish"
+            "CommonUnknownPopup"
         ]
     },
     "ExplorationBattleResult": {
@@ -504,18 +605,29 @@
                 ]
             }
         },
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "post_delay": 1200,
         "next": [
+            "ExplorationBattleNoResource",
+            "ExplorationBattleFailure",
+            "ExplorationBattleResult",
+            "[JumpBack]DailyRewardPopup",
+            "ExplorationBattleAfterResult",
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_ExplorationBattleResult"
+            "CommonUnknownPopup"
         ],
         "timeout": 30000,
         "pre_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
         "on_error": [],
-        "doc": "关闭探索成功结算，返回场景后再记录成功次数。"
+        "doc": "关闭探索成功结算，返回场景后再记录成功次数。",
+        "max_hit": 5
     },
     "ExplorationBattleAfterResult": {
         "recognition": {
@@ -542,8 +654,9 @@
         },
         "action": "DoNothing",
         "next": [
+            "ExplorationBattleFailedResult",
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_ExplorationBattleFailedResult"
+            "CommonUnknownPopup"
         ],
         "timeout": 30000
     },
@@ -556,17 +669,26 @@
                 ]
             }
         },
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "post_delay": 1200,
         "next": [
+            "ExplorationBattleFailedResult",
+            "[JumpBack]DailyRewardPopup",
+            "ExplorationBattleFailedReturn",
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_ExplorationBattleFailedResult"
+            "CommonUnknownPopup"
         ],
         "pre_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
         "on_error": [],
-        "doc": "关闭探索失败结算，返回场景后停止任务。"
+        "doc": "关闭探索失败结算，返回场景后停止任务。",
+        "max_hit": 5
     },
     "ExplorationBattleFailedReturn": {
         "pre_delay": 0,
@@ -632,10 +754,11 @@
     "ExplorationEnsureMainline": {
         "doc": "先确认右侧章节列表可见；停在玩法页时切回主线。",
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "ExplorationMainlineReady",
-            "SafeInput_ExplorationOpenMainline",
-            "SafeInput_ExplorationExpandChapterPanel"
+            "ExplorationOpenMainline",
+            "ExplorationExpandChapterPanel",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "timeout": 10000
     },
@@ -693,15 +816,20 @@
                 "box_index": 1
             }
         },
-        "action": "DoNothing",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_ExplorationOpenMainline"
+            "ExplorationEnsureMainline"
         ],
         "pre_delay": 0,
-        "post_delay": 0,
+        "post_delay": 800,
         "pre_wait_freezes": 0,
-        "on_error": []
+        "on_error": [],
+        "max_hit": 3
     },
     "ExplorationExpandChapterPanel": {
         "doc": "展开探索地图右侧收起的章节面板。",
@@ -729,15 +857,20 @@
                 "box_index": 1
             }
         },
-        "action": "DoNothing",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
         "pre_delay": 0,
-        "post_delay": 0,
+        "post_delay": 1000,
         "pre_wait_freezes": 0,
         "on_error": [],
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_ExplorationExpandChapterPanel"
-        ]
+            "ExplorationEnsureMainline"
+        ],
+        "max_hit": 3
     },
     "ExplorationCollectChest": {
         "doc": "拾取章节场景左下角的通关宝箱。",
@@ -768,23 +901,27 @@
                 "box_index": 1
             }
         },
-        "action": "DoNothing",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
         "pre_delay": 0,
-        "post_delay": 0,
+        "post_delay": 1000,
         "pre_wait_freezes": 0,
         "on_error": [],
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_ExplorationCollectChest"
-        ]
+        "next": [],
+        "max_hit": 3
     },
     "ExplorationPostBattleRewards": {
         "doc": "处理通关宝箱及奖励展示后，再计数并判断是否结束探索。",
         "next": [
+            "[JumpBack]DailyRewardPopup",
+            "[JumpBack]ExplorationCollectChest",
+            "ExplorationProgress",
             "[JumpBack]CommonBountyInterrupt",
-            "[JumpBack]SafeInput_DailyRewardPopup",
-            "[JumpBack]SafeInput_ExplorationCollectChest",
-            "ExplorationProgress"
+            "CommonUnknownPopup"
         ]
     }
 }

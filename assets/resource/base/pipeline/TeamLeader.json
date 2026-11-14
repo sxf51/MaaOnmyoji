@@ -15,17 +15,20 @@
                 ]
             }
         },
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": "Click",
+        "post_delay": 800,
         "next": [
+            "TeamLeaderCreate",
+            "TeamLeaderOpen",
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_TeamLeaderOpen"
+            "CommonUnknownPopup"
         ],
         "pre_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
         "on_error": [],
-        "doc": "组队：队长打开组队界面。"
+        "doc": "组队：队长打开组队界面。",
+        "max_hit": 3
     },
     "TeamLeaderCreate": {
         "desc": "组队：创建队伍",
@@ -43,17 +46,20 @@
                 ]
             }
         },
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": "Click",
+        "post_delay": 800,
         "next": [
+            "TeamLeaderVerifyPrivacy",
+            "TeamLeaderCreate",
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_TeamLeaderCreate"
+            "CommonUnknownPopup"
         ],
         "pre_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
         "on_error": [],
-        "doc": "组队：创建队伍。"
+        "doc": "组队：创建队伍。",
+        "max_hit": 3
     },
     "TeamLeaderSetPrivate": {
         "desc": "组队：不公开",
@@ -67,17 +73,17 @@
                 "box_index": 1
             }
         },
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": "Click",
+        "post_delay": 800,
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_TeamLeaderSetPrivate"
+            "TeamLeaderVerifyPrivacy"
         ],
         "pre_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
         "on_error": [],
-        "doc": "组队：不公开。"
+        "doc": "组队：不公开。",
+        "max_hit": 3
     },
     "TeamLeaderCreateConfirm": {
         "desc": "组队：创建",
@@ -92,17 +98,17 @@
                 "box_index": 2
             }
         },
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": "Click",
+        "post_delay": 800,
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_TeamLeaderCreateConfirm"
+            "TeamLeaderWaitRoom"
         ],
         "pre_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
         "on_error": [],
-        "doc": "组队：创建。"
+        "doc": "组队：创建。",
+        "max_hit": 3
     },
     "TeamLeaderOpenInvite": {
         "desc": "组队：打开邀请列表",
@@ -120,15 +126,35 @@
                 ]
             }
         },
-        "action": "DoNothing",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    1036,
+                    227,
+                    54,
+                    56
+                ]
+            }
+        },
         "post_delay": 0,
         "next": [
+            "TeamLeaderFindTeammate",
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_TeamLeaderOpenInvite"
+            "CommonUnknownPopup"
         ],
         "pre_delay": 0,
         "pre_wait_freezes": 0,
-        "post_wait_freezes": 0,
+        "post_wait_freezes": {
+            "time": 500,
+            "target": [
+                346,
+                178,
+                590,
+                355
+            ],
+            "timeout": 3000
+        },
         "on_error": [],
         "doc": "组队：打开邀请列表。"
     },
@@ -148,15 +174,35 @@
                 ]
             }
         },
-        "action": "DoNothing",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    606,
+                    227,
+                    54,
+                    56
+                ]
+            }
+        },
         "post_delay": 0,
         "next": [
+            "TeamLeaderFindTeammate",
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_TeamLeaderOpenInviteMiddle"
+            "CommonUnknownPopup"
         ],
         "pre_delay": 0,
         "pre_wait_freezes": 0,
-        "post_wait_freezes": 0,
+        "post_wait_freezes": {
+            "time": 500,
+            "target": [
+                346,
+                178,
+                590,
+                355
+            ],
+            "timeout": 3000
+        },
         "on_error": [],
         "doc": "组队：从中间空位打开邀请列表。"
     },
@@ -166,10 +212,11 @@
         "post_delay": 0,
         "action": "DoNothing",
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "TeamLeaderInviteSlotRight",
             "TeamLeaderInviteSlotMiddle",
-            "TeamLeaderInviteSlotFull"
+            "TeamLeaderInviteSlotFull",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ]
     },
     "TeamLeaderInviteSlotRight": {
@@ -190,8 +237,9 @@
         "inverse": true,
         "action": "DoNothing",
         "next": [
+            "TeamLeaderOpenInvite",
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_TeamLeaderOpenInvite"
+            "CommonUnknownPopup"
         ]
     },
     "TeamLeaderInviteSlotMiddle": {
@@ -212,8 +260,9 @@
         "inverse": true,
         "action": "DoNothing",
         "next": [
+            "TeamLeaderOpenInviteMiddle",
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_TeamLeaderOpenInviteMiddle"
+            "CommonUnknownPopup"
         ]
     },
     "TeamLeaderInviteSlotFull": {
@@ -230,16 +279,18 @@
         },
         "action": "DoNothing",
         "next": [
+            "TeamLeaderFight",
             "[JumpBack]CommonBountyInterrupt",
-            "TeamLeaderFight"
+            "CommonUnknownPopup"
         ]
     },
     "TeamLeaderFindTeammate": {
         "action": "DoNothing",
         "next": [
+            "TeamLeaderInviteOpenFriends",
+            "TeamLeaderInviteSearch",
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_TeamLeaderInviteOpenFriends",
-            "TeamLeaderInviteSearch"
+            "CommonUnknownPopup"
         ],
         "doc": "每轮邀请都从好友栏开始找本轮的队友；面板可能停在上次的栏。本轮找谁由锚点 TeamLeaderSelectTarget 决定。"
     },
@@ -249,13 +300,14 @@
         "post_delay": 0,
         "action": "DoNothing",
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "[Anchor]TeamLeaderSelectTarget",
             "TeamLeaderInviteListFits",
             "TeamLeaderInviteListAtBottom",
             "TeamLeaderInviteRememberList",
             "TeamLeaderInvitePanelGone",
-            "TeamLeaderInviteAdvance"
+            "TeamLeaderInviteAdvance",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "timeout": 20000
     },
@@ -318,19 +370,20 @@
         "post_delay": 0,
         "action": "DoNothing",
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_TeamLeaderInviteOpenRecent",
-            "SafeInput_TeamLeaderInviteOpenGuild",
-            "SafeInput_TeamLeaderInviteOpenCross",
+            "TeamLeaderInviteOpenRecent",
+            "TeamLeaderInviteOpenGuild",
+            "TeamLeaderInviteOpenCross",
             "TeamLeaderInvitePanelGone",
-            "TeamLeaderInviteTeammateMissing"
+            "TeamLeaderInviteTeammateMissing",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "timeout": 5000
     },
     "TeamLeaderInviteTeammateMissing": {
         "doc": "所有栏都没有找到匹配的队友：不发送邀请，点“取消”关闭面板回房间重新判断。队友可能在判断不在之后已经进房（进房后不在列表里），所以不直接停止；昵称填错时由每场 3 轮重新邀请的上限停止。",
         "pre_delay": 0,
-        "post_delay": 0,
+        "post_delay": 1200,
         "recognition": {
             "type": "And",
             "param": {
@@ -341,11 +394,18 @@
                 "box_index": 1
             }
         },
-        "action": "DoNothing",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
         "next": [
+            "TeamLeaderInviteClosed",
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_TeamLeaderInviteTeammateMissing"
-        ]
+            "CommonUnknownPopup"
+        ],
+        "pre_wait_freezes": 0
     },
     "TeamLeaderInvitePanelGone": {
         "doc": "找人过程中邀请面板不见了：队友在搜索期间进了房，游戏会自己关掉邀请面板（实测日志 2026-11-13 03:32，搜到跨区栏时面板消失，之后每一步都要求面板在而超时失败）。确认回到房间后照常判断还要不要邀请、能不能开战。房间标题“协战队伍”在面板打开时也看得到，所以用“面板不在”判断，不能只看房间。",
@@ -362,8 +422,9 @@
         "inverse": true,
         "action": "DoNothing",
         "next": [
+            "TeamLeaderInviteClosed",
             "[JumpBack]CommonBountyInterrupt",
-            "TeamLeaderInviteClosed"
+            "CommonUnknownPopup"
         ]
     },
     "TeamLeaderInviteClosed": {
@@ -380,8 +441,9 @@
         },
         "action": "DoNothing",
         "next": [
+            "TeamLeaderInviteRoundCheck",
             "[JumpBack]CommonBountyInterrupt",
-            "TeamLeaderInviteRoundCheck"
+            "CommonUnknownPopup"
         ]
     },
     "TeamLeaderInviteTabFriends": {
@@ -647,16 +709,21 @@
                 "box_index": 2
             }
         },
-        "action": "DoNothing",
+        "action": "Click",
         "pre_delay": 0,
-        "post_delay": 0,
+        "post_delay": 300,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
         "next": [
+            "TeamLeaderInviteRecentReady",
+            "TeamLeaderInviteOpenRecent",
+            "TeamLeaderInvitePanelGone",
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_TeamLeaderInviteOpenRecent"
+            "CommonUnknownPopup"
         ],
-        "on_error": []
+        "on_error": [],
+        "timeout": 5000,
+        "max_hit": 3
     },
     "TeamLeaderInviteOpenGuild": {
         "doc": "排在寮友之前的栏已查完，切到寮友栏。",
@@ -671,16 +738,21 @@
                 "box_index": 2
             }
         },
-        "action": "DoNothing",
+        "action": "Click",
         "pre_delay": 0,
-        "post_delay": 0,
+        "post_delay": 300,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
         "next": [
+            "TeamLeaderInviteGuildReady",
+            "TeamLeaderInviteOpenGuild",
+            "TeamLeaderInvitePanelGone",
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_TeamLeaderInviteOpenGuild"
+            "CommonUnknownPopup"
         ],
-        "on_error": []
+        "on_error": [],
+        "timeout": 5000,
+        "max_hit": 3
     },
     "TeamLeaderInviteOpenCross": {
         "doc": "排在跨区之前的栏已查完，切到跨区栏。",
@@ -695,16 +767,21 @@
                 "box_index": 2
             }
         },
-        "action": "DoNothing",
+        "action": "Click",
         "pre_delay": 0,
-        "post_delay": 0,
+        "post_delay": 300,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
         "next": [
+            "TeamLeaderInviteCrossReady",
+            "TeamLeaderInviteOpenCross",
+            "TeamLeaderInvitePanelGone",
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_TeamLeaderInviteOpenCross"
+            "CommonUnknownPopup"
         ],
-        "on_error": []
+        "on_error": [],
+        "timeout": 5000,
+        "max_hit": 3
     },
     "TeamLeaderInviteRecentReady": {
         "doc": "确认已切到最近栏：重置滑动预算，并等加载动画结束，避免把上一栏的旧列表当成本栏。",
@@ -845,16 +922,21 @@
                 "box_index": 2
             }
         },
-        "action": "DoNothing",
+        "action": "Click",
         "pre_delay": 0,
-        "post_delay": 0,
+        "post_delay": 300,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
         "next": [
+            "TeamLeaderInviteFriendsReady",
+            "TeamLeaderInviteOpenFriends",
+            "TeamLeaderInvitePanelGone",
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_TeamLeaderInviteOpenFriends"
+            "CommonUnknownPopup"
         ],
-        "on_error": []
+        "on_error": [],
+        "timeout": 5000,
+        "max_hit": 3
     },
     "TeamLeaderInviteFriendsReady": {
         "doc": "确认已切回好友栏：重置滑动预算，并等列表加载完。",
@@ -900,9 +982,10 @@
         "post_delay": 0,
         "action": "DoNothing",
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "TeamLeaderInviteRoundCheck",
-            "TeamLeaderInviteStillOpen"
+            "TeamLeaderInviteStillOpen",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ]
     },
     "TeamLeaderInviteStillOpen": {
@@ -921,9 +1004,10 @@
         "action": "DoNothing",
         "max_hit": 3,
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "TeamLeaderInviteRoundCheck",
-            "SafeInput_TeamLeaderInviteTeammateMissing"
+            "TeamLeaderInviteTeammateMissing",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ]
     },
     "TeamLeaderInviteRoundCheck": {
@@ -940,9 +1024,10 @@
         },
         "action": "DoNothing",
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "TeamLeaderInviteAgain",
-            "TeamLeaderFight"
+            "TeamLeaderFight",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ]
     },
     "TeamLeaderInviteAgain": {
@@ -958,7 +1043,7 @@
         },
         "inverse": true,
         "anchor": {
-            "TeamLeaderSelectTarget": "SafeInput_TeamLeaderSelectTeammate2"
+            "TeamLeaderSelectTarget": "TeamLeaderSelectTeammate2"
         },
         "pre_delay": 0,
         "post_delay": 3000,
@@ -969,18 +1054,19 @@
                 "custom_action_param": {
                     "nodes": [
                         "TeamLeaderInviteRememberList",
-                        "SafeInput_TeamLeaderInviteOpenFriends",
-                        "SafeInput_TeamLeaderInviteOpenRecent",
-                        "SafeInput_TeamLeaderInviteOpenGuild",
-                        "SafeInput_TeamLeaderInviteOpenCross"
+                        "TeamLeaderInviteOpenFriends",
+                        "TeamLeaderInviteOpenRecent",
+                        "TeamLeaderInviteOpenGuild",
+                        "TeamLeaderInviteOpenCross"
                     ],
                     "strict": true
                 }
             }
         },
         "next": [
+            "TeamLeaderInviteSlot",
             "[JumpBack]CommonBountyInterrupt",
-            "TeamLeaderInviteSlot"
+            "CommonUnknownPopup"
         ]
     },
     "TeamLeaderResumeRoom": {
@@ -1015,10 +1101,14 @@
                 ]
             }
         },
-        "action": "DoNothing",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_TeamLeaderSendInvite"
+            "TeamLeaderInviteNext"
         ],
         "pre_delay": 0,
         "post_delay": 0,
@@ -1039,11 +1129,12 @@
             }
         },
         "next": [
+            "[JumpBack]TeamLeaderReinviteTick",
+            "[JumpBack]TeamLeaderReinvite",
+            "[JumpBack]CommonConfirm",
+            "TeamLeaderCountDetermine",
             "[JumpBack]CommonBountyInterrupt",
-            "[JumpBack]SafeInput_TeamLeaderReinviteTick",
-            "[JumpBack]SafeInput_TeamLeaderReinvite",
-            "[JumpBack]SafeInput_CommonConfirm",
-            "TeamLeaderCountDetermine"
+            "CommonUnknownPopup"
         ],
         "pre_delay": 0,
         "post_delay": 0
@@ -1064,8 +1155,9 @@
             }
         },
         "next": [
+            "TeamLeaderBattleEntry",
             "[JumpBack]CommonBountyInterrupt",
-            "TeamLeaderBattleEntry"
+            "CommonUnknownPopup"
         ]
     },
     "TeamLeaderTeammateName": {
@@ -1130,15 +1222,16 @@
     },
     "TeamLeaderFight": {
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "TeamLeaderBattleStarted",
-            "[JumpBack]SafeInput_TeamLeaderReinviteTick",
-            "[JumpBack]SafeInput_TeamLeaderReinvite",
-            "SafeInput_TeamLeaderStart",
+            "[JumpBack]TeamLeaderReinviteTick",
+            "[JumpBack]TeamLeaderReinvite",
+            "TeamLeaderStart",
             "TeamLeaderRoomDestroyed",
             "[JumpBack]TeamLeaderWaitTeammate",
             "TeamLeaderInviteMissing",
-            "TeamLeaderTeammateNoShow"
+            "TeamLeaderTeammateNoShow",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "timeout": 180000,
         "pre_delay": 0,
@@ -1182,20 +1275,21 @@
                         "TeamLeaderWaitTeammate",
                         "TeamLeaderInviteAgain",
                         "TeamLeaderInviteRememberList",
-                        "SafeInput_TeamLeaderInviteOpenFriends",
-                        "SafeInput_TeamLeaderInviteOpenRecent",
-                        "SafeInput_TeamLeaderInviteOpenGuild",
-                        "SafeInput_TeamLeaderInviteOpenCross"
+                        "TeamLeaderInviteOpenFriends",
+                        "TeamLeaderInviteOpenRecent",
+                        "TeamLeaderInviteOpenGuild",
+                        "TeamLeaderInviteOpenCross"
                     ],
                     "strict": true
                 }
             }
         },
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "TeamLeaderReinviteFirst",
             "TeamLeaderInviteAgain",
-            "TeamLeaderFight"
+            "TeamLeaderFight",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ]
     },
     "TeamLeaderReinviteFirst": {
@@ -1212,12 +1306,13 @@
         },
         "inverse": true,
         "anchor": {
-            "TeamLeaderSelectTarget": "SafeInput_TeamLeaderSelectTeammate"
+            "TeamLeaderSelectTarget": "TeamLeaderSelectTeammate"
         },
         "action": "DoNothing",
         "next": [
+            "TeamLeaderInviteSlot",
             "[JumpBack]CommonBountyInterrupt",
-            "TeamLeaderInviteSlot"
+            "CommonUnknownPopup"
         ]
     },
     "TeamLeaderTeammateNoShow": {
@@ -1251,11 +1346,12 @@
                 "box_index": 1
             }
         },
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": "Click",
+        "post_delay": 1200,
         "next": [
+            "TeamLeaderSendInvite",
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_TeamLeaderSelectTeammate"
+            "CommonUnknownPopup"
         ],
         "pre_delay": 0,
         "pre_wait_freezes": 0,
@@ -1274,11 +1370,12 @@
                 "box_index": 1
             }
         },
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": "Click",
+        "post_delay": 1200,
         "next": [
+            "TeamLeaderSendInvite",
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_TeamLeaderSelectTeammate2"
+            "CommonUnknownPopup"
         ],
         "pre_delay": 0,
         "pre_wait_freezes": 0,
@@ -1295,11 +1392,34 @@
                 ]
             }
         },
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "BezierSwipe",
+                "custom_action_param": {
+                    "begin": [
+                        846,
+                        457,
+                        24,
+                        24
+                    ],
+                    "end": [
+                        846,
+                        212,
+                        24,
+                        24
+                    ],
+                    "duration": 500,
+                    "duration_random": 80,
+                    "segments": 24,
+                    "deviation": 8,
+                    "easing": true
+                }
+            }
+        },
+        "post_delay": 1000,
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_TeamLeaderInviteScroll"
+            "TeamLeaderInviteSearch"
         ],
         "pre_delay": 0,
         "pre_wait_freezes": 0,
@@ -1327,8 +1447,9 @@
             }
         },
         "next": [
+            "TeamLeaderInviteScroll",
             "[JumpBack]CommonBountyInterrupt",
-            "TeamLeaderInviteScroll"
+            "CommonUnknownPopup"
         ]
     },
     "TeamLeaderStart": {
@@ -1344,35 +1465,41 @@
                 "box_index": 3
             }
         },
-        "action": "DoNothing",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_TeamLeaderStart"
+            "TeamLeaderWaitBattleStart"
         ],
-        "post_delay": 0,
+        "post_delay": 1000,
         "pre_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
         "on_error": [],
-        "doc": "确认所有配置的队友都在房间后开始战斗。"
+        "doc": "确认所有配置的队友都在房间后开始战斗。",
+        "max_hit": 3
     },
     "TeamLeaderBattle": {
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
+            "[JumpBack]CommonBattleEnableAuto",
+            "[JumpBack]CommonBattleMark",
+            "[JumpBack]CommonBattleWait",
             "[JumpBack]MitamaTreasurePopup",
             "TeamLeaderBattleNoResource",
             "TeamLeaderBattleFailure",
             "[JumpBack]CommonRewardOverflow",
             "TeamLeaderDropStatistics",
-            "SafeInput_TeamLeaderBattleResult",
+            "TeamLeaderBattleResult",
             "[JumpBack]CommonBattleEnteringWait",
             "[JumpBack]DailyPrepare",
-            "[JumpBack]SafeInput_DailyRewardPopup",
-            "[JumpBack]CommonBattleEnableAuto",
-            "[JumpBack]CommonBattleMark",
-            "[JumpBack]CommonBattleWait",
+            "[JumpBack]DailyRewardPopup",
             "[JumpBack]CommonNetworkRetry",
-            "TeamLeaderRoomDestroyed"
+            "TeamLeaderRoomDestroyed",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "timeout": 180000,
         "pre_delay": 0,
@@ -1391,8 +1518,9 @@
         },
         "action": "DoNothing",
         "next": [
+            "[Anchor]TeamLeaderNoResourceTarget",
             "[JumpBack]CommonBountyInterrupt",
-            "[Anchor]TeamLeaderNoResourceTarget"
+            "CommonUnknownPopup"
         ]
     },
     "TeamLeaderBattleResult": {
@@ -1404,20 +1532,33 @@
                 ]
             }
         },
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "post_delay": 600,
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "[JumpBack]MitamaTreasurePopup",
+            "TeamLeaderBattleNoResource",
+            "TeamLeaderBattleFailure",
             "TeamLeaderDropStatistics",
-            "SafeInput_TeamLeaderBattleResult"
+            "TeamLeaderBattleResult",
+            "[JumpBack]DailyRewardPopup",
+            "[JumpBack]TeamLeaderReinviteTick",
+            "[JumpBack]TeamLeaderReinvite",
+            "TeamLeaderBattleAfterResult",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "timeout": 30000,
         "pre_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
         "on_error": [],
-        "doc": "结算点击的识别目标；战斗循环直接调用 SafeInput 节点，同一轮完成识别和点击，不经过这里。"
+        "doc": "点击结算页的继续提示；点击后若仍停在结算页由自身重试，max_hit 限次。",
+        "max_hit": 5
     },
     "TeamLeaderBattleAfterResult": {
         "recognition": {
@@ -1430,8 +1571,9 @@
         },
         "action": "DoNothing",
         "next": [
+            "TeamLeaderComplete",
             "[JumpBack]CommonBountyInterrupt",
-            "TeamLeaderComplete"
+            "CommonUnknownPopup"
         ],
         "pre_delay": 0,
         "post_delay": 0
@@ -1447,8 +1589,9 @@
         },
         "action": "DoNothing",
         "next": [
+            "TeamLeaderBattleFailedResult",
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_TeamLeaderBattleFailedResult"
+            "CommonUnknownPopup"
         ],
         "timeout": 30000,
         "focus": {
@@ -1464,17 +1607,26 @@
                 ]
             }
         },
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "post_delay": 1200,
         "next": [
+            "TeamLeaderBattleFailedResult",
+            "[JumpBack]DailyRewardPopup",
+            "TeamLeaderBattleFailedReturn",
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_TeamLeaderBattleFailedResult"
+            "CommonUnknownPopup"
         ],
         "pre_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
         "on_error": [],
-        "doc": "关闭组队失败结算，返回房间后停止任务。"
+        "doc": "关闭组队失败结算，返回房间后停止任务。",
+        "max_hit": 5
     },
     "TeamLeaderBattleFailedReturn": {
         "pre_delay": 0,
@@ -1514,8 +1666,9 @@
             }
         },
         "next": [
+            "TeamLeaderBattleResult",
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_TeamLeaderBattleResult"
+            "CommonUnknownPopup"
         ],
         "pre_delay": 2000
     },
@@ -1537,11 +1690,12 @@
     "TeamLeaderWaitBattleStart": {
         "doc": "等待过场、布阵载入、准备、正式战斗或结算；仅原挑战目标仍存在时允许有界重试。",
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "TeamLeaderBattleNoResource",
             "TeamLeaderBattleStarted",
-            "[JumpBack]SafeInput_TeamLeaderStartConfirm",
-            "SafeInput_TeamLeaderStart"
+            "[JumpBack]TeamLeaderStartConfirm",
+            "TeamLeaderStart",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "timeout": 60000,
         "pre_delay": 0,
@@ -1608,15 +1762,18 @@
                 "box_index": 2
             }
         },
-        "action": "DoNothing",
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_TeamLeaderStartConfirm"
-        ],
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "next": [],
         "pre_delay": 0,
-        "post_delay": 0,
+        "post_delay": 800,
         "pre_wait_freezes": 0,
-        "on_error": []
+        "on_error": [],
+        "max_hit": 3
     },
     "TeamLeaderReinvitePrompt": {
         "recognition": {
@@ -1700,16 +1857,19 @@
                 "box_index": 2
             }
         },
-        "action": "DoNothing",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
         "pre_delay": 0,
-        "post_delay": 0,
+        "post_delay": 800,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_TeamLeaderReinviteTick"
-        ],
-        "on_error": []
+        "next": [],
+        "on_error": [],
+        "max_hit": 3
     },
     "TeamLeaderReinvite": {
         "doc": "每场结束后询问队长是否再次邀请队友：点确定让队友回房，不能走通用弹窗的取消。勾选默认邀请由 TeamLeaderReinviteTick 先处理。",
@@ -1723,15 +1883,18 @@
                 "box_index": 1
             }
         },
-        "action": "DoNothing",
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_TeamLeaderReinvite"
-        ],
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "next": [],
         "pre_delay": 0,
-        "post_delay": 0,
+        "post_delay": 800,
         "pre_wait_freezes": 0,
-        "on_error": []
+        "on_error": [],
+        "max_hit": 3
     },
     "TeamLeaderRoomDestroyed": {
         "pre_delay": 0,
@@ -1758,23 +1921,22 @@
                 "custom_action": "ResetCount",
                 "custom_action_param": {
                     "nodes": [
-                        "SafeInput_TeamLeaderStart",
-                        "SafeInput_TeamLeaderStartConfirm",
-                        "SafeInput_TeamLeaderReinviteTick",
-                        "SafeInput_TeamLeaderReinvite",
-                        "SafeInput_CommonBattleEnableAuto",
-                        "SafeInput_CommonNetworkRetry",
-                        "SafeInput_CommonRewardOverflow",
-                        "SafeInput_MitamaTreasurePopup",
+                        "TeamLeaderStart",
+                        "TeamLeaderStartConfirm",
+                        "TeamLeaderReinviteTick",
+                        "TeamLeaderReinvite",
+                        "CommonBattleEnableAuto",
+                        "CommonNetworkRetry",
+                        "CommonRewardOverflow",
+                        "MitamaTreasurePopup",
                         "CommonBattleMark",
-                        "SafeInput_CommonBattleMark",
-                        "SafeInput_DailyPrepare",
-                        "SafeInput_TeamLeaderBattleResult",
-                        "SafeInput_CommonConfirm",
+                        "DailyPrepare",
+                        "TeamLeaderBattleResult",
+                        "CommonConfirm",
                         "CommonBattleWait",
                         "CommonBattleEnteringWait",
                         "CommonCutscene",
-                        "SafeInput_DailyRewardPopup",
+                        "DailyRewardPopup",
                         "TeamLeaderWaitTeammate",
                         "TeamLeaderInviteMissing",
                         "TeamLeaderInviteStillOpen"
@@ -1843,15 +2005,17 @@
         },
         "action": "DoNothing",
         "next": [
+            "TeamLeaderCreateConfirm",
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_TeamLeaderCreateConfirm"
+            "CommonUnknownPopup"
         ]
     },
     "TeamLeaderVerifyPrivacy": {
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "TeamLeaderPrivacySelected",
-            "SafeInput_TeamLeaderSetPrivate"
+            "TeamLeaderSetPrivate",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "timeout": 5000
     },
@@ -1873,9 +2037,10 @@
     },
     "TeamLeaderWaitRoom": {
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "TeamLeaderRoomReady",
-            "SafeInput_TeamLeaderCreateConfirm"
+            "TeamLeaderCreateConfirm",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "timeout": 5000
     },
@@ -1889,8 +2054,9 @@
             }
         },
         "next": [
+            "TeamLeaderInviteSlot",
             "[JumpBack]CommonBountyInterrupt",
-            "TeamLeaderInviteSlot"
+            "CommonUnknownPopup"
         ],
         "action": {
             "type": "Custom",
@@ -1906,7 +2072,7 @@
         },
         "doc": "新建的房间：第一轮邀请第一位队友，并允许再开一轮邀请第二位。",
         "anchor": {
-            "TeamLeaderSelectTarget": "SafeInput_TeamLeaderSelectTeammate"
+            "TeamLeaderSelectTarget": "TeamLeaderSelectTeammate"
         }
     },
     "TeamLeaderFinish": {
@@ -1915,8 +2081,9 @@
         "post_delay": 0,
         "action": "DoNothing",
         "next": [
+            "[Anchor]TeamLeaderFinishTarget",
             "[JumpBack]CommonBountyInterrupt",
-            "[Anchor]TeamLeaderFinishTarget"
+            "CommonUnknownPopup"
         ]
     }
 }

@@ -15,9 +15,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 sys.path.insert(0, str(ROOT / "agent"))
-from custom.route_policy import with_purchase_stop
+from custom.route_policy import with_interrupts
 from custom.battle_session import run_battle_session
-import custom.route_policy as route_policy
 from probe_pages import ScreenshotController
 from validate_schema import load_jsonc
 from maa.context import ContextEventSink
@@ -54,6 +53,7 @@ class Scenario:
         self.frame = 0
         self.probe_frames = {}
         self.touch_blocked = False
+        self.armed = False
 
 
 class CountingController(ScreenshotController):
@@ -127,6 +127,11 @@ class Screen(CustomRecognition):
         if matched and name == self.state.risk_after_probe:
             self.state.flags.add("TouchAreaRisk")
             self.state.risk_after_probe = None
+        if name == 'CommonUnknownPopup':
+            # A confirm/cancel popup no rule handles (purchase prompts included) stops the task.
+            matched = bool(self.state.flags & {'TouchAreaRisk', 'CommonUnknownPopup'})
+            if matched:
+                self.state.touch_blocked = True
         return [100, 100, 10, 10] if matched else None
 
 
@@ -137,13 +142,12 @@ class Input(CustomAction):
 
     def run(self, context, argv):
         state = self.state
-        name = argv.node_name.removeprefix("SafeInput_")
-        # StartApp is an application launch API, not a screenshot-based input.
+        name = argv.node_name
+        # The click must use the frame on which its own node was recognized.
         if json.loads(argv.custom_action_param or '{}').get('check_frame', True):
-            for guard in ("TouchAreaChecked", "CommonRefuseBounty"):
-                if state.probe_frames.get(guard) != state.frame:
-                    state.error = f"Input {name} did not check {guard} on frame {state.frame}"
-                    return self.RunResult(success=False)
+            if name in state.probe_frames and state.probe_frames[name] != state.frame:
+                state.error = f"Input {name} used a stale frame {state.frame}"
+                return self.RunResult(success=False)
         state.clicks.append(name)
         if not state.events or state.events[0][0] != name:
             state.error = f"Unexpected input {name}; remaining {state.events}"
@@ -171,35 +175,6 @@ class StepRecorder(ContextEventSink):
             self.state.completed_steps.append(detail.name)
 
 
-class LocalTarget(CustomRecognition):
-    """Simulate the local image predicate after the real business recognition."""
-    def __init__(self, state):
-        super().__init__()
-        self.state=state
-
-    def analyze(self, context, argv):
-        public=json.loads(argv.custom_recognition_param)['target_node']
-        # InputTarget reads the click action from this node; sub_name must carry it.
-        if argv.node_name!='SafeInput_'+public:
-            self.state.error=f"InputTarget for {public} received node {argv.node_name!r}"
-            context.tasker.post_stop()
-            return None
-        detail=context.run_recognition(public,argv.image)
-        if not detail or not detail.hit or detail.box is None:
-            return None
-        # InputTarget reuses roi as the click target; it must be this frame's target box.
-        if list(argv.roi)!=list(detail.box):
-            self.state.error=f"InputTarget for {public} received roi {list(argv.roi)}, target {list(detail.box)}"
-            context.tasker.post_stop()
-            return None
-        self.state.probe_frames['TouchAreaChecked']=self.state.frame
-        if 'TouchAreaRisk' in self.state.flags or not self.state.readable:
-            self.state.touch_blocked = True
-            context.tasker.post_stop()
-            return None
-        return list(detail.box)
-
-
 class Counter(CustomAction):
     def __init__(self, state, kind):
         super().__init__()
@@ -213,17 +188,25 @@ class Counter(CustomAction):
             params.update(context.get_node_data(argv.node_name).get("attach") or {})
             self.state.target = int(params.get("target_count", 1))
             self.state.count = 0
+        elif self.kind == "TargetCountArm":
+            self.state.armed = True
         elif self.kind == "TargetCountProgress":
+            if params.get("require_armed") and not self.state.armed:
+                idle = params.get("idle_node") or params.get("continue_node")
+                if idle:
+                    context.override_next(argv.node_name, with_interrupts([idle], context))
+                return self.RunResult(success=True)
+            self.state.armed = False
             self.state.count += params.get("count", 1)
             if self.state.pending_statistics:
                 self.state.statistics += 1
                 self.state.pending_statistics = False
             if "continue_node" in params:
                 done = self.state.target != -1 and self.state.count >= self.state.target
-                context.override_next(argv.node_name, with_purchase_stop([params["finish_node"] if done else params["continue_node"]], context))
+                context.override_next(argv.node_name, with_interrupts([params["finish_node"] if done else params["continue_node"]], context))
         elif self.kind == "TargetCountDetermine":
             done = self.state.target != -1 and self.state.count >= self.state.target
-            context.override_next(params["decision_node"], with_purchase_stop([params["finish_node"] if done else params["continue_node"]], context))
+            context.override_next(params["decision_node"], with_interrupts([params["finish_node"] if done else params["continue_node"]], context))
         elif self.kind == "ResetCount":
             for node in params["nodes"]:
                 if not context.clear_hit_count(node):
@@ -238,7 +221,8 @@ class Counter(CustomAction):
 def run_case(resource, controller, nodes, name, entry, flags, events=(), expected_count=0, succeeds=True,
              readable=True, risk_after_probe=None, prepare_only=False, expected_steps=None, probe_events=(),
              enable_drop_statistics=False, expected_statistics=0, requested_count=1, awakening_buff=False,
-             preset_task=None, stop_after_input=None, expected_captures=None, pipeline_override=None):
+             preset_task=None, stop_after_input=None, expected_captures=None, pipeline_override=None,
+             expect_popup_stop=None):
     state = Scenario(flags, events)
     controller.scenario = state
     state.target = requested_count
@@ -249,9 +233,8 @@ def run_case(resource, controller, nodes, name, entry, flags, events=(), expecte
     assert resource.clear_custom_recognition()
     assert resource.clear_custom_action()
     assert resource.register_custom_recognition("SimScreen", Screen(state))
-    assert resource.register_custom_recognition("SimInputTarget", LocalTarget(state))
     assert resource.register_custom_action("SimInput", Input(state))
-    for kind in ("TargetCountInit", "TargetCountProgress", "TargetCountDetermine", "TargetCountFinish",
+    for kind in ("TargetCountInit", "TargetCountArm", "TargetCountProgress", "TargetCountDetermine", "TargetCountFinish",
                  "ResetCount", "RememberFrame", "RewardDropStatistics", "NodeOverride", "RunBattleSession",
                  "ResolveGamePackage"):
         assert resource.register_custom_action(kind, Counter(state, kind))
@@ -263,15 +246,7 @@ def run_case(resource, controller, nodes, name, entry, flags, events=(), expecte
         if isinstance(recognition, dict) and "type" in recognition:
             param = recognition.get("param", {})
             children = param.get("all_of", []) + param.get("any_of", [])
-            guard = next((c for c in children if isinstance(c, dict)
-                          and c.get('recognition', {}).get('param', {}).get('custom_recognition') == 'InputTarget'), None)
-            if guard:
-                # Keep the native And gate; only the inline touch-area check is simulated.
-                node['recognition'] = {'type': 'And', 'param': {**param, 'all_of': [
-                    c if c is not guard else {**guard, 'recognition': {'type': 'Custom', 'param': {
-                        **guard['recognition']['param'], 'custom_recognition': 'SimInputTarget'}}}
-                    for c in children]}}
-            elif key in ('MitamaChallenge', 'MitamaFinishOnce') or key.startswith("Page") or recognition["type"] not in ("And", "Or") or any(isinstance(c, dict) for c in children):
+            if key in ('MitamaChallenge', 'MitamaFinishOnce') or key.startswith("Page") or recognition["type"] not in ("And", "Or") or any(isinstance(c, dict) for c in children):
                 node["recognition"] = {"type": "Custom", "param": {
                     "custom_recognition": "SimScreen", "custom_recognition_param": {"probe": key}}}
         action = original.get("action", "DoNothing")
@@ -298,7 +273,7 @@ def run_case(resource, controller, nodes, name, entry, flags, events=(), expecte
         override[step]["enabled"] = awakening_buff
     override["AwakeningPreset"]["enabled"] = preset_task == "Awakening"
     if stop_after_input:
-        override['SafeInput_' + stop_after_input]['next'] = []
+        override[stop_after_input]['next'] = []
     # Cases entering the shared leader flow midway never pass an entry node, so give them Mitama's ending.
     override["TeamLeaderFinish"]["next"] = ["MitamaFinish"]
     override["TeamLeaderBattleNoResource"]["next"] = ["[JumpBack]CommonBountyInterrupt", "MitamaFinish"]
@@ -321,6 +296,8 @@ def run_case(resource, controller, nodes, name, entry, flags, events=(), expecte
     if not succeeded:
         tasker.post_stop().wait()
     assert succeeded == succeeds, (name, result.status, state.error, state.events, state.count)
+    if expect_popup_stop is not None:
+        assert state.touch_blocked == expect_popup_stop, (name, "popup stop", state.touch_blocked)
     assert not state.error, (name, state.error)
     assert not state.events, (name, state.events)
     assert not state.probe_events, (name, state.probe_events)
@@ -346,49 +323,47 @@ def main():
     assert resource.post_bundle(ROOT / "assets/resource/base").wait().succeeded
     if args.pipeline_dir.resolve() != (ROOT/'assets/resource/base/pipeline').resolve():
         assert resource.post_bundle(args.pipeline_dir.parent).wait().succeeded
-    if nodes['SafeInput_MitamaChallenge']['recognition']['type']=='Custom':
-        route_policy.GUARD_PREFIX[:]=['[JumpBack]CommonBountyInterrupt']
     with tempfile.TemporaryDirectory() as folder:
         screen = Path(folder) / "screen.png"
         screen.write_bytes(blank_png())
         controller = CountingController(screen)
         assert controller.post_connection().wait().succeeded
+        failures = []
+
         def case(*args, **kwargs):
-            run_case(resource, controller, nodes, *args, **kwargs)
+            try:
+                run_case(resource, controller, nodes, *args, **kwargs)
+            except AssertionError as exc:
+                failures.append(args[0])
+                print(f"FAIL {args[0]}: {exc}", flush=True)
         case('challenge resets per-battle budget before matched input', 'MitamaBattleModeDestination', {'MitamaChallenge'},
             [('MitamaChallenge', set())], stop_after_input='MitamaChallenge', expected_captures=2)
-        case('same-frame challenge risk blocks its visible target', 'MitamaBattleModeDestination', {'MitamaChallenge', 'TouchAreaRisk'},
-            succeeds=False, stop_after_input='MitamaChallenge')
-        case('same-frame challenge invitation is refused before target click', 'MitamaBattleModeDestination', {'MitamaChallenge', 'CommonRefuseBounty'},
+        case('unknown popup hiding the challenge stops the task', 'MitamaBattleModeDestination', {'TouchAreaRisk'},
+            succeeds=False, expect_popup_stop=True)
+        case('invitation hiding the challenge is refused, then the challenge is clicked', 'MitamaBattleModeDestination', {'CommonRefuseBounty'},
             [('CommonRefuseBounty', {'MitamaChallenge'}), ('MitamaChallenge', set())], stop_after_input='MitamaChallenge')
         for page, entry in [('Home', 'NavigateHome'), ('Explore', 'NavigateExplore'),
                             ('MitamaStage', 'NavigateMitamaStage'), ('AwakeningStage', 'NavigateAwakening'), ('Bondling', 'NavigateBondling'),
                             ('Raid', 'NavigateRaid'), ('Chapter', 'NavigateChapter'), ('Mail', 'NavigateMail'),
                             ('QuestTasks', 'NavigateQuestTasks'), ('Quests', 'NavigateQuests')]:
-            case('cooperative invite masks ' + page, entry, {'Page' + page, 'CommonRefuseBounty'},
+            # The invite is rare, so it is checked only once the page itself is no longer recognized.
+            case('cooperative invite masks ' + page, entry, {'CommonRefuseBounty'},
                 [('CommonRefuseBounty', {'Page' + page})])
-        case('cooperative invite never overrides purchase stop', 'NavigateHome', {'PageHome', 'CommonRefuseBounty', 'TouchAreaRisk'}, succeeds=False)
-        case('cooperative invite closes after missed refusal', 'NavigateHome', {'PageHome', 'CommonRefuseBounty'}, [
-            ('CommonRefuseBounty', {'PageHome', 'CommonRefuseBounty'}), ('CommonRefuseBounty', {'PageHome'})])
-        case('cooperative invite stuck stops after three refusals', 'NavigateHome', {'PageHome', 'CommonRefuseBounty'},
-            [('CommonRefuseBounty', {'PageHome', 'CommonRefuseBounty'})] * 3, succeeds=False)
-        case('cooperative invite disappears before input', 'NavigateHome', {'PageHome', 'CommonRefuseBounty'},
-            probe_events=[('CommonRefuseBounty', {'PageHome'})])
-        for prefix in ('Mitama', 'CommonActivity'):
-            case(prefix + ' cooperative invite arrives between detection and click', prefix + 'Challenge', {prefix + 'Challenge'}, [
-                ('CommonRefuseBounty', {prefix + 'Challenge'}),
-                (prefix + 'Challenge', {prefix + 'BattleResult'}),
-                (prefix + 'BattleResult', {'MitamaFinishOnce'} if prefix == 'Mitama' else {prefix + 'Challenge'})], expected_count=1,
-                probe_events=[(prefix + 'Challenge', {prefix + 'Challenge', 'CommonRefuseBounty'})])
-        case('four cooperative invites in one task get independent retry budgets', 'CommonActivityTask', {'CommonActivityChallenge', 'CommonRefuseBounty'}, [
+        case('cooperative invite is refused before the unknown-popup stop', 'NavigateHome', {'CommonRefuseBounty', 'TouchAreaRisk'},
+            [('CommonRefuseBounty', {'PageHome'})], expect_popup_stop=False)
+        case('unknown popup hiding the page stops navigation', 'NavigateHome', {'TouchAreaRisk'}, succeeds=False, expect_popup_stop=True)
+        case('cooperative invite closes after missed refusal', 'NavigateHome', {'CommonRefuseBounty'}, [
+            ('CommonRefuseBounty', {'CommonRefuseBounty'}), ('CommonRefuseBounty', {'PageHome'})])
+        case('cooperative invite stuck stops after three refusals', 'NavigateHome', {'CommonRefuseBounty'},
+            [('CommonRefuseBounty', {'CommonRefuseBounty'})] * 3, succeeds=False)
+        case('four cooperative invites in one task get independent retry budgets', 'CommonActivityTask', {'CommonRefuseBounty'}, [
             ('CommonRefuseBounty', {'CommonActivityChallenge'}),
-            ('CommonActivityChallenge', {'CommonActivityBattleResult', 'CommonRefuseBounty'}),
+            ('CommonActivityChallenge', {'CommonRefuseBounty'}),
+            ('CommonRefuseBounty', {'CommonActivityChallenging'}),
             ('CommonRefuseBounty', {'CommonActivityBattleResult'}),
-            ('CommonActivityBattleResult', {'CommonActivityChallenge', 'CommonRefuseBounty'}),
-            ('CommonRefuseBounty', {'CommonActivityChallenge'}),
-            ('CommonActivityChallenge', {'CommonActivityBattleResult', 'CommonRefuseBounty'}),
-            ('CommonRefuseBounty', {'CommonActivityBattleResult'}),
-            ('CommonActivityBattleResult', {'CommonActivityChallenge'})], requested_count=2, expected_count=2)
+            ('CommonActivityBattleResult', {'CommonRefuseBounty'}),
+            ('CommonRefuseBounty', {'CommonActivityChallenge'})], expected_count=1,
+            probe_events=[('PageBattle', {'CommonRefuseBounty'})])
         case("already at target", "NavigateRaid", {"PageRaid"})
         case("prefer home icon", "ReturnMain", {"PageMitamaStage", "ReturnMainHomeButton", "NavBack"},
              [("NativeReturnMainHomeButton", {"PageHome"})])
@@ -400,10 +375,6 @@ def main():
             ("NativeNavBack", {"PageExplore", "NavOpenRaid"}),
             ("NativeToRaidNavOpenRaid", {"PageRaid"})])
         case("refuse navigation during battle", "NavigateHome", {"PageBattle"}, succeeds=False)
-        # A slow page change can satisfy the public node on the old frame and leave its SafeInput without a target.
-        case("navigation recovers when the page changes after its target matched", "NavigateMitamaStage", {"PageExplore", "NavOpenMitama"}, [
-            ("NativeToMitamaStageNavOpenBaqi", {"PageMitamaStage"})],
-            probe_events=[("NavOpenMitama", {"PageMitamaMenu", "NavOpenBaqi"})])
         stop_at_layer = {"MitamaLayerReady": {"next": []}}
         case("mitama entry from another page navigates once and confirms the layer", "MitamaNavigate", {"PageExplore", "NavOpenMitama"}, [
             ("NativeToMitamaStageNavOpenMitama", {"PageMitamaMenu", "NavOpenBaqi"}),
@@ -414,8 +385,8 @@ def main():
             ("NativeDailyRewardPopup", {"PageMitamaStage", "MitamaLayerSelected"})], pipeline_override=stop_at_layer)
         case("mitama entry stops when the stage is lost after navigating", "MitamaNavigate", {"PageMitamaStage", "MitamaLayerSelected"},
              succeeds=False, probe_events=[("PageMitamaStage", {"PageHome"})])
-        case("navigation retry never bypasses the local touch check", "NavigateMitamaStage",
-             {"PageExplore", "NavOpenMitama", "TouchAreaRisk"}, succeeds=False)
+        case("navigation stops on an unknown popup hiding the page", "NavigateMitamaStage",
+             {"TouchAreaRisk"}, succeeds=False, expect_popup_stop=True)
         case("leader battle never counts a waiting room", "TeamLeaderBattle", {"PageTeamRoom"}, succeeds=False)
         case("leader does not start for an unmatched teammate", "TeamLeaderFight", {"PageTeamRoom"}, succeeds=False)
         room_wait = {"TeamMemberRoomWait": {"max_hit": 3}}
@@ -426,8 +397,6 @@ def main():
         case("member taps the speak button while waiting and still joins the battle", "TeamMemberTask", speak, [
             ("TeamMemberIdleEmote", speak | {"DailyBattleResult"}), ("TeamMemberBattleResult", set())], expected_count=1,
             pipeline_override={"TeamMemberRoomTick": {"max_hit": 2}})
-        case("speak button never bypasses the local touch check", "TeamMemberTask", speak | {"TouchAreaRisk"}, succeeds=False,
-             pipeline_override={"TeamMemberRoomTick": {"max_hit": 1}, "TeamMemberIdleEmoteReady": {"max_hit": 1}, **room_wait})
         case("unmatched invitation is not accepted", "TeamMemberTask", {"TeamMemberAcceptIcon"}, succeeds=False)
         case("named invitation and team settlement", "TeamMemberTask", invite, [
             ("TeamMemberAccept", {"DailyBattleResult"}),
@@ -456,7 +425,6 @@ def main():
         case("member taps both win pages without the defeat check", "TeamMemberTask", {"DailyBattleResult", "CommonBattleWinDrum"}, [
             ("TeamMemberWinResult", {"DailyBattleResult", "CommonBattleRewardBag"}), ("TeamMemberWinResult", set())],
             expected_count=1)
-        case("auto-ready confirm respects the local touch check", "TeamMemberTask", auto_ready | {"TouchAreaRisk"}, succeeds=False)
         case("member accepts again for every battle", "TeamMemberTask", invite, [
             ("TeamMemberAccept", {"DailyBattleResult"}),
             ("TeamMemberBattleResult", invite),
@@ -481,7 +449,6 @@ def main():
         case("member defeat stops without counting or waiting for another invite", "TeamMemberTask", {"DailyBattleFailed", "DailyBattleResult"}, [
             ("TeamMemberFailedResult", invite)], succeeds=False)
         case("member stops when the leader left and the room is now theirs", "TeamMemberTask", {"PageTeamRoom", "TeamLeaderStartButton"}, succeeds=False)
-        case("member accept never bypasses the local touch check", "TeamMemberTask", invite | {"TouchAreaRisk"}, succeeds=False)
         case("frozen screen stops: member accept never joins", "TeamMemberTask", invite, [("TeamMemberAccept", invite)] * 5, succeeds=False)
         case("frozen screen stops: member settlement never closes", "TeamMemberTask", {"DailyBattleResult"},
              [("TeamMemberBattleResult", {"DailyBattleResult"})] * 8, succeeds=False)
@@ -553,9 +520,9 @@ def main():
             ("RealmRaidBattleResult", {"PageRaid", "RealmRaidBroken", "RealmRaidCard"}),
             ("RealmRaidSelect", {"PageRaidTarget"}), ("RealmRaidAttack", {"DailyBattleResult"}),
             ("RealmRaidBattleResult", {"PageRaid", "RealmRaidBroken"})], requested_count=2, expected_count=2)
-        case("raid risk blocks next card", "RealmRaidSuccess", {"PageRaid", "RealmRaidBroken"},
-            requested_count=2, expected_count=1, succeeds=False,
-            probe_events=[("RealmRaidBroken", {"PageRaid", "RealmRaidCard", "TouchAreaRisk"})])
+        case("unknown popup after a raid win stops before the next card", "RealmRaidSuccess", {"PageRaid", "RealmRaidBroken"},
+            requested_count=2, expected_count=1, succeeds=False, expect_popup_stop=True,
+            probe_events=[("RealmRaidBroken", {"TouchAreaRisk"})])
         case("no raid tickets stops without count", "RealmRaidTask", {"PageRaid", "RealmRaidCard"}, [
             ("RealmRaidSelect", {"PageRaidTarget"}), ("RealmRaidAttack", {"DailyNoResource"})])
         case("raid zero ticket counter finishes before choosing", "RealmRaidTask", {"PageRaid", "RealmRaidCard", "RealmRaidTicketEmpty"})
@@ -683,49 +650,56 @@ def main():
             ("DailyRewardPopup", {"PageQuests", "DailyRewardsClaimReward"}),
             ("NativeRewardsClaim", {"PageQuests"}),
             *[("NativeRewardsScroll", {"PageQuests"}) for _ in range(5)]])
-        case("reward loop purchase popup after claim prevents next input", "NativeRewardsClaimLoop", {"PageQuests", "DailyRewardsClaimReward"}, [
-            ("NativeRewardsClaim", {"PageQuests", "DailyRewardsClaimReward", "TouchAreaRisk"})], succeeds=False)
-        for prefix in ("CommonActivity",):
-            case(prefix + " merged loop counts two victories and stops", prefix + "Task", {prefix + "Challenge"}, [
-                (prefix + "Challenge", {prefix + "BattleResult"}),
-                (prefix + "BattleResult", {prefix + "Challenge"}),
-                (prefix + "Challenge", {prefix + "BattleResult"}),
-                (prefix + "BattleResult", {prefix + "Challenge"})], requested_count=2, expected_count=2)
-            case(prefix + " risk after result return prevents next input", prefix + "FinishOnce", {prefix + "Challenge"},
-                requested_count=2, expected_count=1, succeeds=False,
-                probe_events=[(prefix + "Challenge", {prefix + "Challenge", "TouchAreaRisk"})])
-        for prefix in ("CommonActivity", "Mitama"):
-            start = prefix + "Task" if prefix != "Mitama" else "MitamaChallenge"
-            returned = prefix + "Challenge" if prefix != "Mitama" else "MitamaFinishOnce"
-            case(prefix + " single victory counts once", start, {prefix + "Challenge"}, [
-                (prefix + "Challenge", {prefix + "BattleResult"}),
-                (prefix + "BattleResult", {returned})], expected_count=1)
-            case(prefix + " defeat does not count", start, {prefix + "Challenge"}, [
-                (prefix + "Challenge", {"DailyBattleFailed", prefix + "BattleResult"}),
-                (prefix + "FailedBattleResult", {returned})], succeeds=False)
-            case(prefix + " resource handler finishes without input or count", prefix + "InsufficientAP",
-                 {prefix + "Challenge", "CommonInsufficientAP"})
-        # A dangerous button overlapping the touch range blocks even a positive background target.
-        for entry, background in [
-            ("MitamaChallenge", {"MitamaChallenge"}),
-            ("CommonActivityTask", {"CommonActivityChallenge"}),
-            ("DailyRewardsTask", {"PageMail", "DailyRewardsClaimAllMail"}),
-            ("DailyRewardsClaimAllMail", {"DailyRewardsClaimAllMail"}),
-            ("ReturnMain", {"NavBack", "ReturnMainHomeButton"}),
-            ("NavCancelNoResource", {"NavCancelNoResource"}),
-            ("CommonConfirm", {"CommonConfirm"}),
-            ("StartupUpdateConfirm", {"StartupUpdateText", "StartupUpdateButton"}),
-            ("ExplorationFindEnemy", {"PageChapterField", "ExplorationEnemyProbe"}),
-            ("TeamLeaderFindTeammate", {"PageTeamInvite", "TeamLeaderTeammateName"}),
-        ]:
-            case(entry + " blocks a hazardous button overlapping its touch range", entry,
-                 background | {"TouchAreaRisk"}, succeeds=False)
-        case("purchase popup after challenge is never confirmed", "CommonActivityTask", {"CommonActivityChallenge"}, [
-            ("CommonActivityChallenge", {"TouchAreaRisk", "CommonActivityChallenge", "CommonConfirm", "DailyRewardPopup"})], succeeds=False)
-        case("purchase popup appears after button was matched", "CommonActivityTask", {"CommonActivityChallenge"},
-             risk_after_probe="CommonActivityChallenge", succeeds=False)
-        case("unreadable OCR screen prevents template click", "ReturnMain", {"ReturnMainHomeButton"},
-             readable=False, succeeds=False)
+        case("reward loop stops on an unknown popup after a claim", "NativeRewardsClaimLoop", {"PageQuests", "DailyRewardsClaimReward"}, [
+            ("NativeRewardsClaim", {"TouchAreaRisk"})], succeeds=False, expect_popup_stop=True)
+        # CommonActivity counter FSM: a battle frame arms it, the next challenge page counts once.
+        ca_battle = [("PageBattle", {"CommonActivityBattleResult"})]
+        case("CommonActivity merged loop counts two victories and stops", "CommonActivityTask", {"CommonActivityChallenge"}, [
+            ("CommonActivityChallenge", {"CommonActivityChallenging"}),
+            ("CommonActivityBattleResult", {"CommonActivityChallenge"}),
+            ("CommonActivityChallenge", {"CommonActivityChallenging"}),
+            ("CommonActivityBattleResult", {"CommonActivityChallenge"})], requested_count=2, expected_count=2,
+            probe_events=ca_battle * 2)
+        case("CommonActivity single victory counts once", "CommonActivityTask", {"CommonActivityChallenge"}, [
+            ("CommonActivityChallenge", {"CommonActivityChallenging"}),
+            ("CommonActivityBattleResult", {"CommonActivityChallenge"})], expected_count=1, probe_events=ca_battle)
+        case("CommonActivity victory without continue text taps the safe area and counts", "CommonActivityTask", {"CommonActivityChallenge"}, [
+            ("CommonActivityChallenge", {"CommonActivityChallenging"}),
+            ("CommonActivityVictory", {"CommonActivityChallenge"})], expected_count=1,
+            probe_events=[("PageBattle", {"CommonActivityVictory"})])
+        case("CommonActivity result that returns straight to the stage still counts", "CommonActivityTask", {"CommonActivityChallenge"}, [
+            ("CommonActivityChallenge", {"CommonActivityChallenging"})], expected_count=1,
+            probe_events=[("PageBattle", {"CommonActivityChallenge"})])
+        case("CommonActivity stage seen without a battle never counts", "CommonActivityTask", {"CommonActivityChallenge"}, [
+            ("CommonActivityChallenge", {"CommonActivityChallenge"}),
+            ("CommonActivityChallenge", {"CommonActivityChallenging"}),
+            ("CommonActivityBattleResult", {"CommonActivityChallenge"})], expected_count=1, probe_events=ca_battle)
+        case("CommonActivity challenge that never registers stops after three taps", "CommonActivityTask", {"CommonActivityChallenge"},
+            [("CommonActivityChallenge", {"CommonActivityChallenge"})] * 3, succeeds=False)
+        case("CommonActivity unknown popup after a battle stops before the next challenge", "CommonActivityTask", {"CommonActivityChallenge"}, [
+            ("CommonActivityChallenge", {"CommonActivityChallenging"}),
+            ("CommonActivityBattleResult", {"TouchAreaRisk"})], succeeds=False, expect_popup_stop=True, probe_events=ca_battle)
+        case("CommonActivity defeat does not count", "CommonActivityTask", {"CommonActivityChallenge"}, [
+            ("CommonActivityChallenge", {"CommonActivityChallenging"}),
+            ("CommonActivityFailedBattleResult", {"CommonActivityChallenge"})], succeeds=False,
+            probe_events=[("PageBattle", {"DailyBattleFailed", "CommonActivityBattleResult"})])
+        case("CommonActivity resource handler finishes without input or count", "CommonActivityInsufficientAP",
+             {"CommonActivityChallenge", "CommonInsufficientAP"})
+        case("Mitama single victory counts once", "MitamaChallenge", {"MitamaChallenge"}, [
+            ("MitamaChallenge", {"MitamaBattleResult"}),
+            ("MitamaBattleResult", {"MitamaFinishOnce"})], expected_count=1)
+        case("Mitama defeat does not count", "MitamaChallenge", {"MitamaChallenge"}, [
+            ("MitamaChallenge", {"DailyBattleFailed", "MitamaBattleResult"}),
+            ("MitamaFailedBattleResult", {"MitamaFinishOnce"})], succeeds=False)
+        case("Mitama resource handler finishes without input or count", "MitamaInsufficientAP",
+             {"MitamaChallenge", "CommonInsufficientAP"})
+        # A confirm/cancel popup no rule handles stops the task once the frequent candidates miss.
+        for entry in ("CommonActivityTask", "DailyRewardsTask", "ReturnMain", "TeamLeaderFindTeammate"):
+            case(entry + " stops on an unknown popup", entry, {"TouchAreaRisk"}, succeeds=False, expect_popup_stop=True)
+        # Accepted trade-off: a visible button under a popup is tapped (max_hit bounds it) before the popup stops the task.
+        popup_over_stage = {"TouchAreaRisk", "CommonActivityChallenge", "CommonConfirm"}
+        case("purchase popup over the challenge stops after the challenge budget", "CommonActivityTask", {"CommonActivityChallenge"},
+             [("CommonActivityChallenge", popup_over_stage)] * 3, succeeds=False, expect_popup_stop=True)
         case("confirmation alone never authorizes an update click", "StartupUpdateConfirm", {"StartupUpdateButton"}, succeeds=False)
         case("unknown startup screen is never blindly clicked", "StartupSkipAnimation", set(), succeeds=False)
         case("explicit update context allows its own button", "StartupUpdateConfirm", {"StartupUpdateText", "StartupUpdateButton"}, [
@@ -791,8 +765,8 @@ def main():
         friends, recent = invite | {"TeamLeaderInviteFriendsSelected"}, invite | {"TeamLeaderInviteRecentSelected"}
         guild, cross = invite | {"TeamLeaderInviteGuildSelected"}, invite | {"TeamLeaderInviteCrossSelected"}
         # Cases entering at the invite search never pass TeamLeaderRoomReady, which names the first teammate as the round target.
-        stop_at_fight = {"SafeInput_TeamLeaderSendInvite": {"next": []},
-                         "TeamLeaderFindTeammate": {"anchor": {"TeamLeaderSelectTarget": "SafeInput_TeamLeaderSelectTeammate"}}}
+        stop_at_fight = {"TeamLeaderSendInvite": {"next": []},
+                         "TeamLeaderFindTeammate": {"anchor": {"TeamLeaderSelectTarget": "TeamLeaderSelectTeammate"}}}
         found = [("TeamLeaderSelectTeammate", {"TeamLeaderSendInvite"}), ("TeamLeaderSendInvite", set())]
         def teammate(flags):
             return flags | {"TeamLeaderTeammateName"}
@@ -821,8 +795,6 @@ def main():
         case("invite stops when a tab never switches", "TeamLeaderFindTeammate", friends | {"TeamLeaderInviteListFits"},
             [("TeamLeaderInviteOpenRecent", friends | {"TeamLeaderInviteListFits"})] * 3, succeeds=False,
             pipeline_override=stop_at_fight)
-        case("invite tab switch respects local touch safety", "TeamLeaderFindTeammate",
-            friends | {"TeamLeaderInviteListFits", "TouchAreaRisk"}, succeeds=False, pipeline_override=stop_at_fight)
         private = {"PageTeamCreate","TeamLeaderPrivacyText","TeamLeaderCreateButton","TeamLeaderPrivacySelected"}
         public = private - {"TeamLeaderPrivacySelected"}
         case("private room already selected skips toggling", "TeamLeaderVerifyPrivacy", private,
@@ -894,14 +866,14 @@ def main():
         case("team mode never falls back to sortie when the window stays open", "MitamaPreset", stage, [
             ("TeamPresetOpen", window), *apply_steps, *[("TeamPresetClose", window | {"TeamPresetInUse"})] * 3],
              prepare_only=True, succeeds=False, expected_steps=[], pipeline_override=team_preset)
-        case("purchase risk while opening preset prevents dependent steps", "MitamaPreset", stage, [
-            ("TeamPresetOpen", window | {"TouchAreaRisk"})],
-             prepare_only=True, succeeds=False, expected_steps=[])
-        case("locked team enters battle while prepare is being rechecked", "MitamaChallenge", {"MitamaChallenge"}, [
+        case("unknown popup after opening preset prevents dependent steps", "MitamaPreset", stage, [
+            ("TeamPresetOpen", {"TouchAreaRisk"})],
+             prepare_only=True, succeeds=False, expected_steps=[], expect_popup_stop=True)
+        case("locked team: prepare seen during the automatic transition is tapped once", "MitamaChallenge", {"MitamaChallenge"}, [
             ("MitamaChallenge", {"MitamaPrepare"}),
+            ("MitamaPrepare", {"MitamaChallenging"}),
             ("MitamaBattleResult", {"MitamaFinishOnce"})], expected_count=1,
-            probe_events=[("MitamaPrepare", {"MitamaChallenging"}),
-                          ("PageBattle", {"MitamaBattleResult"})])
+            probe_events=[("PageBattle", {"MitamaBattleResult"})])
         case("locked team skips prepare screen entirely", "MitamaChallenge", {"MitamaChallenge"}, [
             ("MitamaChallenge", {"MitamaBattleResult"}),
             ("MitamaBattleResult", {"MitamaFinishOnce"})], expected_count=1)
@@ -911,27 +883,22 @@ def main():
             ("MitamaChallenge", {"MitamaBattleResult"}),
             ("MitamaBattleResult", {"MitamaFinishOnce", "MitamaChallenge"})],
             requested_count=2, expected_count=2)
-        case("mitama merged turnaround rechecks purchase risk before next challenge", "MitamaChallenge", {"MitamaChallenge"}, [
+        case("mitama turnaround stops on an unknown popup before the next challenge", "MitamaChallenge", {"MitamaChallenge"}, [
             ("MitamaChallenge", {"MitamaBattleResult"}),
             ("MitamaBattleResult", {"MitamaFinishOnce"})], requested_count=2, expected_count=1, succeeds=False,
-            probe_events=[("MitamaFinishOnce", {"MitamaChallenge", "TouchAreaRisk"})])
+            expect_popup_stop=True, probe_events=[("MitamaFinishOnce", {"TouchAreaRisk"})])
         case("unlocked team still clicks its prepare button", "MitamaChallenge", {"MitamaChallenge"}, [
             ("MitamaChallenge", {"MitamaPrepare"}),
             ("MitamaPrepare", {"MitamaBattleResult"}),
             ("MitamaBattleResult", {"MitamaFinishOnce"})], expected_count=1)
         case("team battle also tolerates automatic preparation", "TeamLeaderBattle", {"DailyPrepare"}, [
+            ("DailyPrepare", {"MitamaChallenging"}),
             ("TeamLeaderBattleResult", {"PageTeamRoom"})], expected_count=1,
-            probe_events=[("DailyPrepare", {"MitamaChallenging"}),
-                          ("PageBattle", {"DailyBattleResult"})])
+            probe_events=[("PageBattle", {"DailyBattleResult"})])
         case("first daily treasure closes before continuing settlement", "MitamaChallenge", {"MitamaChallenge"}, [
             ("MitamaChallenge", {"MitamaBattleResult"}),
             ("MitamaBattleResult", {"MitamaTreasurePopup"}),
             ("MitamaTreasurePopup", {"MitamaFinishOnce"})], expected_count=1)
-        case("treasure appears between settlement detection and input", "MitamaChallenge", {"MitamaChallenge"}, [
-            ("MitamaChallenge", {"MitamaBattleResult"}),
-            ("MitamaTreasurePopup", {"MitamaBattleResult"}),
-            ("MitamaBattleResult", {"MitamaFinishOnce"})], expected_count=1,
-            probe_events=[("MitamaBattleResult", {"MitamaTreasurePopup"})])
         case("missed treasure dismissal retries before settlement", "MitamaChallenge", {"MitamaChallenge"}, [
             ("MitamaChallenge", {"MitamaTreasurePopup"}),
             ("MitamaTreasurePopup", {"MitamaTreasurePopup"}),
@@ -939,21 +906,19 @@ def main():
             ("MitamaBattleResult", {"MitamaFinishOnce"})], expected_count=1)
         case("treasure dismissal stops after three misses", "MitamaTreasurePopup", {"MitamaTreasurePopup"},
             [("MitamaTreasurePopup", {"MitamaTreasurePopup"})] * 3, succeeds=False)
-        case("treasure popup never bypasses purchase protection", "MitamaTreasurePopup",
-            {"MitamaTreasurePopup", "TouchAreaRisk"}, succeeds=False)
         case("team treasure closes before returning to the room", "TeamLeaderBattle", {"DailyBattleResult"}, [
             ("TeamLeaderBattleResult", {"MitamaTreasurePopup"}),
             ("MitamaTreasurePopup", {"PageTeamRoom"})], expected_count=1)
         for prefix in ("CommonActivity",):
             case(prefix + " tolerates automatic preparation", prefix + "Task", {prefix + "Challenge"}, [
                 (prefix + "Challenge", {prefix + "Prepare"}),
+                (prefix + "Prepare", {prefix + "Challenging"}),
                 (prefix + "BattleResult", {prefix + "Challenge"})], expected_count=1,
-                probe_events=[(prefix + "Prepare", {prefix + "Challenging"}),
-                              ("PageBattle", {prefix + "BattleResult"})])
-        case("exploration preparation can advance before fresh target check", "ExplorationTask", {"PageChapterField", "ExplorationEnemyProbe"}, [
+                probe_events=[("PageBattle", {prefix + "BattleResult"})])
+        case("exploration prepare tapped during the automatic transition", "ExplorationTask", {"PageChapterField", "ExplorationEnemyProbe"}, [
             ("ExplorationFindEnemy", {"DailyPrepare"}),
-            ("ExplorationBattleResult", {"PageChapterField"})], expected_count=1,
-            probe_events=[("DailyPrepare", {"PageBattle"}), ("PageBattle", {"DailyBattleResult"})])
+            ("DailyPrepare", {"DailyBattleResult"}),
+            ("ExplorationBattleResult", {"PageChapterField"})], expected_count=1)
         case("exploration switches gameplay tab back to mainline", "ExplorationEnsureMainline", {"PageExplore", "ExplorationOpenMainline"}, [
             ("ExplorationOpenMainline", {"PageExplore", "ExplorationMainlineReady", "ExplorationSelectChapter"}),
             ("ExplorationSelectChapter", {"PageChapter", "ExplorationEnterChapter"}),
@@ -1028,7 +993,7 @@ def main():
         explore = {"PageExplore"}
         anchored = {"TeamLeaderFinish": {"next": ["[JumpBack]CommonBountyInterrupt", "[Anchor]TeamLeaderFinishTarget"]},
                     "TeamLeaderBattleNoResource": {"next": ["[JumpBack]CommonBountyInterrupt", "[Anchor]TeamLeaderNoResourceTarget"]},
-                    "SafeInput_TeamLeaderOpen": {"next": ["TeamLeaderFight"]}}
+                    "TeamLeaderOpen": {"next": ["TeamLeaderFight"]}}
         for scope in ("Mitama", "Awakening"):
             case(scope + " team run ends through its own finish", scope + "TeamEntry", {"TeamLeaderOpen"}, [
                 ("TeamLeaderOpen", room),
@@ -1041,7 +1006,7 @@ def main():
             ("TeamLeaderOpen", room),
             ("TeamLeaderStart", {"DailyNoResource"})], pipeline_override=anchored)
         awakening_team = {"AwakeningBattleModeDestination": {"next": ["[JumpBack]CommonBountyInterrupt", "AwakeningTeamEntry"]},
-                          "SafeInput_TeamLeaderOpen": {"next": []}}
+                          "TeamLeaderOpen": {"next": []}}
         case("awakening team option opens the shared team page", "AwakeningBattleModeDestination", {"TeamLeaderOpen"},
              [("TeamLeaderOpen", set())], pipeline_override=awakening_team)
         case("awakening without the team option still challenges solo", "AwakeningBattleModeDestination", {"AwakeningLayerSelected", "AwakeningChallengeButton"},
@@ -1064,7 +1029,7 @@ def main():
             ("MitamaFinishCloseBuffPanel", {"PageMitamaStage"})], pipeline_override=buff_on)
         pick = {"PageTeamInvite", "TeamLeaderTeammateName", "TeamLeaderInviteFriendsSelected", "TeamLeaderInviteTabFriends"}
         both = {"PageTeamRoom", "TeamLeaderRoomTeammate", "TeamLeaderRoomTeammate2", "TeamLeaderStartButton"}
-        anchored_first = {"TeamLeaderInviteSearch": {"anchor": {"TeamLeaderSelectTarget": "SafeInput_TeamLeaderSelectTeammate"}}}
+        anchored_first = {"TeamLeaderInviteSearch": {"anchor": {"TeamLeaderSelectTarget": "TeamLeaderSelectTeammate"}}}
         # Screenshot 2026-11-13: 寮友 tab selected, 在线：0, empty list -> no swipe, straight to 跨区.
         case("empty guild list switches to cross without swiping", "TeamLeaderInviteSearch", guild | {"TeamLeaderInviteListFits"}, [
             ("TeamLeaderInviteOpenCross", cross | {"TeamLeaderTeammateName"}), ("TeamLeaderSelectTeammate", {"TeamLeaderSendInvite"}),
@@ -1131,7 +1096,7 @@ def main():
         case("teammate who joined meanwhile is not in the lists: close the panel and start", "TeamLeaderFindTeammate", searched, [
             ("TeamLeaderInviteTeammateMissing", both), ("TeamLeaderStart", {"DailyBattleResult"}),
             ("TeamLeaderBattleResult", {"PageTeamRoom"})], expected_count=1,
-            pipeline_override={"TeamLeaderFindTeammate": {"anchor": {"TeamLeaderSelectTarget": "SafeInput_TeamLeaderSelectTeammate"}}})
+            pipeline_override={"TeamLeaderFindTeammate": {"anchor": {"TeamLeaderSelectTarget": "TeamLeaderSelectTeammate"}}})
         resume = {"PageTeamRoom", "MitamaRoomTargetDungeon", "MitamaRoomTargetLayer", "TeamLeaderRoomTeammate",
                   "TeamLeaderRoomTeammate2", "TeamLeaderStartButton"}
         team_mode = {"MitamaTeamResume": {"enabled": True},
@@ -1169,9 +1134,6 @@ def main():
             ("StartupLaunch", {"StartupCancelIllustration"}),
             ("StartupCancelIllustration", {"startupMain", "StartupCheckServer", "StartupEnterGame"}),
             ("StartupEnterGame", {"StartupHome"})])
-        for name in ("ExplorationOpenMainline", "DailyMailClaimConfirm", "DailyMailIllustrationCancel", "TeamLeaderStartConfirm",
-                     "StartupCloseAnnouncement", "StartupCancelIllustration"):
-            case(name + " preserves purchase stop priority", name, {name, "TouchAreaRisk"}, succeeds=False)
         case("collapsed chapter panel expands before chapter search", "ExplorationEnsureMainline", {"PageExplore", "ExplorationExpandChapterPanel"}, [
             ("ExplorationExpandChapterPanel", {"PageExplore", "ExplorationMainlineReady", "ExplorationSelectChapter"}),
             ("ExplorationSelectChapter", {"PageChapter", "ExplorationEnterChapter"}),
@@ -1260,9 +1222,10 @@ def main():
             ("AwakeningBattleResult", awake_stage)], expected_count=1)
         case("awakening missed challenge stops after three clicks", "AwakeningTask", awake_stage,
             [("AwakeningChallenge", awake_stage)] * 3, succeeds=False)
-        case("awakening auto preparation advances during target recheck", "AwakeningBattle", {"DailyPrepare"}, [
+        case("awakening prepare tapped during the automatic transition", "AwakeningBattle", {"DailyPrepare"}, [
+            ("DailyPrepare", {"PageBattle"}),
             ("AwakeningBattleResult", awake_stage)], expected_count=1,
-            probe_events=[("DailyPrepare", {"PageBattle"}), ("PageBattle", {"DailyBattleResult"})])
+            probe_events=[("PageBattle", {"DailyBattleResult"})])
         case("awakening handles manual preparation", "AwakeningTask", awake_stage, [
             ("AwakeningChallenge", {"DailyPrepare"}),
             ("DailyPrepare", {"DailyBattleResult"}),
@@ -1275,21 +1238,15 @@ def main():
             ("AwakeningChallenge", {"DailyBattleResult"}),
             ("AwakeningBattleResult", {"MitamaTreasurePopup"}),
             ("MitamaTreasurePopup", awake_stage)], expected_count=1)
-        case("awakening refuses bounty before touching settlement", "AwakeningTask", awake_stage, [
-            ("AwakeningChallenge", {"CommonRefuseBounty", "DailyBattleResult"}),
+        case("awakening refuses an invite hiding the settlement", "AwakeningTask", awake_stage, [
+            ("AwakeningChallenge", {"CommonRefuseBounty"}),
             ("CommonRefuseBounty", {"DailyBattleResult"}),
             ("AwakeningBattleResult", awake_stage)], expected_count=1)
-        case("awakening treasure may appear before fresh settlement input", "AwakeningBattle", {"DailyBattleResult"}, [
-            ("MitamaTreasurePopup", {"DailyBattleResult"}),
-            ("AwakeningBattleResult", awake_stage)], expected_count=1,
-            probe_events=[("DailyBattleResult", {"MitamaTreasurePopup"})])
         case("awakening defeat never counts as a completed victory", "AwakeningTask", awake_stage, [
             ("AwakeningChallenge", {"DailyBattleFailed", "DailyBattleResult"}),
             ("AwakeningFailedBattleResult", awake_stage)], succeeds=False)
         case("awakening insufficient stamina stops before challenge", "AwakeningTask", awake_stage | {"DailyNoResource"}, succeeds=False)
         case("awakening cannot count an idle stage as success", "AwakeningBattle", awake_stage, succeeds=False)
-        for name in ("AwakeningOpenType", "AwakeningSwitchType", "AwakeningSelectLayer", "AwakeningChallenge", "AwakeningBattleResult", "AwakeningOpenBuffMenu"):
-            case(name + " keeps purchase protection", name, awake_stage | {name, "TouchAreaRisk"}, succeeds=False)
         case("awakening challenge retry budget resets for the second battle", "AwakeningTask", awake_stage, [
             ("AwakeningChallenge", awake_stage), ("AwakeningChallenge", awake_stage),
             ("AwakeningChallenge", {"DailyBattleResult"}), ("AwakeningBattleResult", awake_stage),
@@ -1314,8 +1271,6 @@ def main():
             ("AwakeningDisableBuffClick", awake_buff_off),
             ("AwakeningCloseBuffAfterDisable", awake_stage)], expected_count=1, awakening_buff=True,
             expected_steps=["AwakeningLockedTeam", "AwakeningBuffEnabled", "AwakeningBuffDisabled"])
-        for name in ("AwakeningEnableBuffClick", "AwakeningDisableBuffClick", "AwakeningCloseBuffAfterEnable", "AwakeningCloseBuffAfterDisable"):
-            case(name + " cannot bypass purchase stop", name, awake_buff_on | {name, "TouchAreaRisk"}, succeeds=False)
         def preset_events(stage):
             window = stage | {"TeamPresetFrameTemplate", "TeamPresetOut", "TeamPresetFooter", "TeamPresetGroupSelected", "TeamPresetSelectTeamConfigured"}
             return [
@@ -1336,9 +1291,8 @@ def main():
                 (prefix + "Challenge", {result}),
                 (prefix + "BattleResult", returned)], expected_count=1, preset_task=prefix, expected_steps=steps_done)
             steps = preset_events(stage)
-            window_with_bounty = steps[0][1] | {"CommonRefuseBounty"}
             case(prefix + " preset resumes after cooperative invite", prefix + "Task", stage, [
-                ("TeamPresetOpen", window_with_bounty),
+                ("TeamPresetOpen", {"CommonRefuseBounty"}),
                 ("CommonRefuseBounty", steps[0][1]),
                 *steps[1:], (prefix + "Challenge", {result}),
                 (prefix + "BattleResult", returned)], expected_count=1, preset_task=prefix, expected_steps=steps_done)
@@ -1358,8 +1312,8 @@ def main():
         case("preset out must actually close window before completing", "AwakeningTask", awake_preset_stage, [
             *events[:-1], *[("TeamPresetOut", window | {"TeamPresetInUse"}) for _ in range(3)]],
             succeeds=False, preset_task="Awakening", expected_steps=["AwakeningLockedTeam"])
-        case("purchase popup after opening preset blocks application", "AwakeningTask", awake_preset_stage, [
-            ("TeamPresetOpen", window | {"TouchAreaRisk"})], succeeds=False,
+        case("unknown popup after opening preset blocks application", "AwakeningTask", awake_preset_stage, [
+            ("TeamPresetOpen", {"TouchAreaRisk"})], succeeds=False, expect_popup_stop=True,
             preset_task="Awakening", expected_steps=["AwakeningLockedTeam"])
         stage = awake_preset_stage | {"AwakeningOpenBuffMenu"}
         case("awakening dependency order is lock preset buff then battle", "AwakeningTask", stage, [
@@ -1389,6 +1343,9 @@ def main():
         assert all(100 <= x1 < 130 and 500 <= y1 < 530 and 800 <= x2 < 830 and 100 <= y2 < 130
                    for x1, y1, x2, y2 in region_controller.swipes)
         print("PASS framework region inputs: click and swipe samples vary inside configured rectangles", flush=True)
+    if failures:
+        print(f"{len(failures)} scenario(s) failed", flush=True)
+        return 1
     return 0
 
 

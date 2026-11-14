@@ -403,8 +403,9 @@
                     "pipeline_override": {
                         "MitamaBattleModeDestination": {
                             "next": [
+                                "MitamaBattleEntry",
                                 "[JumpBack]CommonBountyInterrupt",
-                                "MitamaBattleEntry"
+                                "CommonUnknownPopup"
                             ]
                         }
                     }
@@ -414,15 +415,17 @@
                     "pipeline_override": {
                         "TeamPresetInUse": {
                             "next": [
+                                "TeamPresetClose",
                                 "[JumpBack]CommonBountyInterrupt",
-                                "TeamPresetClose"
+                                "CommonUnknownPopup"
                             ]
                         },
                         "TeamPresetCloseRetry": {
                             "next": [
-                                "[JumpBack]CommonBountyInterrupt",
                                 "TeamPresetWindowClosed",
-                                "TeamPresetClose"
+                                "TeamPresetClose",
+                                "[JumpBack]CommonBountyInterrupt",
+                                "CommonUnknownPopup"
                             ]
                         },
                         "MitamaTeamResume": {
@@ -430,8 +433,9 @@
                         },
                         "MitamaBattleModeDestination": {
                             "next": [
+                                "MitamaTeamEntry",
                                 "[JumpBack]CommonBountyInterrupt",
-                                "MitamaTeamEntry"
+                                "CommonUnknownPopup"
                             ]
                         }
                     },
@@ -608,7 +612,7 @@
                 {
                     "name": "左一",
                     "pipeline_override": {
-                        "SafeInput_CommonBattleMark": {
+                        "CommonBattleMark": {
                             "action": {
                                 "param": {
                                     "target": [
@@ -625,7 +629,7 @@
                 {
                     "name": "左二",
                     "pipeline_override": {
-                        "SafeInput_CommonBattleMark": {
+                        "CommonBattleMark": {
                             "action": {
                                 "param": {
                                     "target": [
@@ -642,7 +646,7 @@
                 {
                     "name": "左三",
                     "pipeline_override": {
-                        "SafeInput_CommonBattleMark": {
+                        "CommonBattleMark": {
                             "action": {
                                 "param": {
                                     "target": [
@@ -659,7 +663,7 @@
                 {
                     "name": "左四",
                     "pipeline_override": {
-                        "SafeInput_CommonBattleMark": {
+                        "CommonBattleMark": {
                             "action": {
                                 "param": {
                                     "target": [
@@ -676,7 +680,7 @@
                 {
                     "name": "左五",
                     "pipeline_override": {
-                        "SafeInput_CommonBattleMark": {
+                        "CommonBattleMark": {
                             "action": {
                                 "param": {
                                     "target": [
@@ -693,7 +697,7 @@
                 {
                     "name": "阴阳师",
                     "pipeline_override": {
-                        "SafeInput_CommonBattleMark": {
+                        "CommonBattleMark": {
                             "action": {
                                 "param": {
                                     "target": [

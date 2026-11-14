@@ -14,7 +14,7 @@ class ExplorationTicketTest(unittest.TestCase):
     def test_disabled_by_default_and_each_page_reads_its_own_area(self):
         node=self.nodes['ExplorationTicketThreshold']
         self.assertFalse(node['enabled'])
-        self.assertEqual(node['next'][-1],'ExplorationFinish')
+        self.assertEqual(node['next'][-3:],['ExplorationFinish','[JumpBack]CommonBountyInterrupt','CommonUnknownPopup'])
         self.assertEqual(node['recognition']['param']['any_of'],['ExplorationTicket'+s for s in PAGES])
         for suffix,page in PAGES.items():
             self.assertEqual(self.nodes['ExplorationTicket'+suffix]['recognition']['param']['all_of'],

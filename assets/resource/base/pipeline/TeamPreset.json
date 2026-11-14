@@ -16,9 +16,10 @@
             }
         },
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "TeamPresetWindowReady",
-            "TeamPresetOpen"
+            "TeamPresetOpen",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "doc": "预设入口：重置分组/队伍列表的滑动预算和组队关窗次数，再打开窗口。"
     },
@@ -34,11 +35,23 @@
                 "box_index": 1
             }
         },
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    750,
+                    558,
+                    52,
+                    50
+                ]
+            }
+        },
+        "post_delay": 1000,
         "next": [
+            "TeamPresetWaitWindow",
+            "TeamPresetOpen",
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_TeamPresetOpen"
+            "CommonUnknownPopup"
         ],
         "pre_delay": 0,
         "pre_wait_freezes": 0,
@@ -63,11 +76,13 @@
                 ]
             }
         },
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": "Click",
+        "post_delay": 500,
         "next": [
+            "TeamPresetGroupSelected",
+            "[JumpBack]TeamPresetSelectGroup",
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_TeamPresetSelectGroup"
+            "CommonUnknownPopup"
         ],
         "pre_delay": 0,
         "pre_wait_freezes": 0,
@@ -96,14 +111,15 @@
         },
         "max_hit": 5,
         "next": [
+            "TeamPresetGroupScroll",
             "[JumpBack]CommonBountyInterrupt",
-            "TeamPresetGroupScroll"
+            "CommonUnknownPopup"
         ]
     },
     "TeamPresetGroupScroll": {
         "doc": "用贝塞尔曲线上滑左侧分组列表，继续找配置的分组。",
         "pre_delay": 0,
-        "post_delay": 0,
+        "post_delay": 1000,
         "recognition": {
             "type": "And",
             "param": {
@@ -112,11 +128,35 @@
                 ]
             }
         },
-        "action": "DoNothing",
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "BezierSwipe",
+                "custom_action_param": {
+                    "begin": [
+                        455,
+                        460,
+                        24,
+                        24
+                    ],
+                    "end": [
+                        455,
+                        220,
+                        24,
+                        24
+                    ],
+                    "duration": 500,
+                    "duration_random": 80,
+                    "segments": 24,
+                    "deviation": 8,
+                    "easing": true
+                }
+            }
+        },
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_TeamPresetGroupScroll"
-        ]
+            "TeamPresetGroupAfterScroll"
+        ],
+        "pre_wait_freezes": 0
     },
     "TeamPresetGroupAfterScroll": {
         "doc": "滑动后重新找分组；列表没变说明已到底，滑动预算用完也停止。",
@@ -124,12 +164,13 @@
         "post_delay": 0,
         "action": "DoNothing",
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "TeamPresetGroupSelected",
             "TeamPresetSelectGroup",
             "TeamPresetGroupAtBottom",
             "TeamPresetGroupRemember",
-            "TeamPresetGroupMissing"
+            "TeamPresetGroupMissing",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ]
     },
     "TeamPresetGroupAtBottom": {
@@ -155,8 +196,9 @@
         },
         "action": "DoNothing",
         "next": [
+            "TeamPresetGroupMissing",
             "[JumpBack]CommonBountyInterrupt",
-            "TeamPresetGroupMissing"
+            "CommonUnknownPopup"
         ]
     },
     "TeamPresetGroupMissing": {
@@ -228,16 +270,18 @@
         },
         "action": "DoNothing",
         "next": [
+            "TeamPresetFindTeam",
             "[JumpBack]CommonBountyInterrupt",
-            "TeamPresetFindTeam"
+            "CommonUnknownPopup"
         ]
     },
     "TeamPresetSelectTeam": {
         "desc": "队伍预设：从多个预设队伍节点中选择分支",
         "action": "DoNothing",
         "next": [
+            "TeamPresetSelectTeamConfigured",
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_TeamPresetSelectTeamConfigured"
+            "CommonUnknownPopup"
         ]
     },
     "TeamPresetSelectTeamConfigured": {
@@ -256,11 +300,10 @@
                 ]
             }
         },
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": "Click",
+        "post_delay": 500,
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_TeamPresetSelectTeamConfigured"
+            "TeamPresetApply"
         ],
         "pre_delay": 0,
         "pre_wait_freezes": 0,
@@ -274,9 +317,10 @@
         "post_delay": 0,
         "action": "DoNothing",
         "next": [
+            "TeamPresetSelectTeamConfigured",
+            "TeamPresetTeamRemember",
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_TeamPresetSelectTeamConfigured",
-            "TeamPresetTeamRemember"
+            "CommonUnknownPopup"
         ]
     },
     "TeamPresetTeamRemember": {
@@ -299,14 +343,15 @@
         },
         "max_hit": 6,
         "next": [
+            "TeamPresetTeamScroll",
             "[JumpBack]CommonBountyInterrupt",
-            "TeamPresetTeamScroll"
+            "CommonUnknownPopup"
         ]
     },
     "TeamPresetTeamScroll": {
         "doc": "用贝塞尔曲线上滑右侧队伍列表，继续找配置的队伍。",
         "pre_delay": 0,
-        "post_delay": 0,
+        "post_delay": 1000,
         "recognition": {
             "type": "And",
             "param": {
@@ -315,11 +360,35 @@
                 ]
             }
         },
-        "action": "DoNothing",
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "BezierSwipe",
+                "custom_action_param": {
+                    "begin": [
+                        720,
+                        420,
+                        40,
+                        24
+                    ],
+                    "end": [
+                        720,
+                        200,
+                        40,
+                        24
+                    ],
+                    "duration": 500,
+                    "duration_random": 80,
+                    "segments": 24,
+                    "deviation": 8,
+                    "easing": true
+                }
+            }
+        },
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_TeamPresetTeamScroll"
-        ]
+            "TeamPresetTeamAfterScroll"
+        ],
+        "pre_wait_freezes": 0
     },
     "TeamPresetTeamAfterScroll": {
         "doc": "滑动后重新找队伍；列表没变说明已到底，滑动预算用完也停止。",
@@ -327,11 +396,12 @@
         "post_delay": 0,
         "action": "DoNothing",
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_TeamPresetSelectTeamConfigured",
+            "TeamPresetSelectTeamConfigured",
             "TeamPresetTeamAtBottom",
             "TeamPresetTeamRemember",
-            "TeamPresetTeamMissing"
+            "TeamPresetTeamMissing",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ]
     },
     "TeamPresetTeamAtBottom": {
@@ -357,8 +427,9 @@
         },
         "action": "DoNothing",
         "next": [
+            "TeamPresetTeamMissing",
             "[JumpBack]CommonBountyInterrupt",
-            "TeamPresetTeamMissing"
+            "CommonUnknownPopup"
         ]
     },
     "TeamPresetTeamMissing": {
@@ -385,10 +456,11 @@
         "desc": "队伍预设：反复点击预设队伍图标并处理确认框，直到全队开始使用",
         "action": "DoNothing",
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "TeamPresetInUse",
-            "[JumpBack]SafeInput_TeamPresetConfirm",
-            "[JumpBack]TeamPresetApplyIcon"
+            "[JumpBack]TeamPresetConfirm",
+            "[JumpBack]TeamPresetApplyIcon",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ]
     },
     "TeamPresetApplyIcon": {
@@ -441,12 +513,9 @@
                 "box_index": 1
             }
         },
-        "action": "DoNothing",
-        "post_delay": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_TeamPresetApplyIcon"
-        ],
+        "action": "Click",
+        "post_delay": 500,
+        "next": [],
         "pre_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
@@ -496,17 +565,15 @@
                 "box_index": 1
             }
         },
-        "action": "DoNothing",
-        "post_delay": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_TeamPresetConfirm"
-        ],
+        "action": "Click",
+        "post_delay": 500,
+        "next": [],
         "pre_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
         "on_error": [],
-        "doc": "队伍预设：确认即将更换全队预设。"
+        "doc": "队伍预设：确认即将更换全队预设。",
+        "max_hit": 3
     },
     "TeamPresetInUse": {
         "desc": "队伍预设：识别到全队正在使用预设的提示",
@@ -526,9 +593,10 @@
         },
         "action": "DoNothing",
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "TeamPresetOut",
-            "TeamPresetShortTeam"
+            "TeamPresetShortTeam",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "doc": "看到“全队正在使用预设御魂（和阴阳术）”：单人模式接着点“出战”（不满 5 人没有出战按钮时停止）；组队模式由组队选项改写成直接关窗口。提示单独出现时在 y≈237（日志 2026-11-13 00:47 [502,237,273,19]）；同时还有“替换阴阳师契灵成功”时两条叠放，这一条被顶到 y≈175-205（2026-11-13 03:14 截图），所以范围覆盖 y 160-275。"
     },
@@ -548,11 +616,13 @@
                 ]
             }
         },
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": "Click",
+        "post_delay": 1000,
         "next": [
+            "TeamPresetVerifyClosed",
+            "TeamPresetOut",
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_TeamPresetOut"
+            "CommonUnknownPopup"
         ],
         "pre_delay": 0,
         "pre_wait_freezes": 0,
@@ -584,7 +654,7 @@
     "TeamPresetClose": {
         "doc": "组队模式：预设御魂已应用（全队正在使用），不点“出战”，点窗口右侧空白处 [969,424,284,120] 关闭窗口（在窗口右边框外、组队/挑战按钮上方）。由组队选项改写 TeamPresetInUse 和 TeamPresetCloseRetry 接到这里；单人模式不经过。最多 3 次。",
         "pre_delay": 0,
-        "post_delay": 0,
+        "post_delay": 1000,
         "recognition": {
             "type": "And",
             "param": {
@@ -593,12 +663,25 @@
                 ]
             }
         },
-        "action": "DoNothing",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    969,
+                    424,
+                    284,
+                    120
+                ]
+            }
+        },
         "max_hit": 3,
         "next": [
+            "TeamPresetVerifyClosed",
+            "TeamPresetClose",
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_TeamPresetClose"
-        ]
+            "CommonUnknownPopup"
+        ],
+        "pre_wait_freezes": 0
     },
     "TeamPresetDone": {
         "pre_delay": 0,
@@ -606,8 +689,9 @@
         "desc": "队伍预设：应用完成后回到调用任务",
         "action": "DoNothing",
         "next": [
+            "[Anchor]TeamPresetReturn",
             "[JumpBack]CommonBountyInterrupt",
-            "[Anchor]TeamPresetReturn"
+            "CommonUnknownPopup"
         ],
         "recognition": {
             "type": "And",
@@ -686,10 +770,11 @@
             }
         },
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "TeamPresetGroupSelected",
             "TeamPresetSelectGroup",
-            "TeamPresetGroupRemember"
+            "TeamPresetGroupRemember",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "doc": "窗口已打开：配置的分组已选中就去找队伍；看得到就点；当前一屏看不到就下滑分组列表继续找。"
     },
@@ -697,8 +782,9 @@
         "pre_delay": 0,
         "post_delay": 0,
         "next": [
+            "TeamPresetWindowReady",
             "[JumpBack]CommonBountyInterrupt",
-            "TeamPresetWindowReady"
+            "CommonUnknownPopup"
         ],
         "timeout": 3000,
         "on_error": [
@@ -708,17 +794,19 @@
     "TeamPresetOpenRetry": {
         "action": "DoNothing",
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "TeamPresetWindowReady",
-            "TeamPresetOpen"
+            "TeamPresetOpen",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ]
     },
     "TeamPresetVerifyClosed": {
         "pre_delay": 0,
         "post_delay": 0,
         "next": [
+            "TeamPresetWindowClosed",
             "[JumpBack]CommonBountyInterrupt",
-            "TeamPresetWindowClosed"
+            "CommonUnknownPopup"
         ],
         "timeout": 3000,
         "on_error": [
@@ -738,16 +826,18 @@
         },
         "inverse": true,
         "next": [
+            "TeamPresetDone",
             "[JumpBack]CommonBountyInterrupt",
-            "TeamPresetDone"
+            "CommonUnknownPopup"
         ]
     },
     "TeamPresetCloseRetry": {
         "action": "DoNothing",
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "TeamPresetWindowClosed",
-            "TeamPresetOut"
+            "TeamPresetOut",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ]
     },
     "TeamPresetContext": {

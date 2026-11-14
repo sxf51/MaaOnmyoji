@@ -12,7 +12,6 @@ from maa.context import Context
 from maa.custom_action import CustomAction
 
 from cBezier import bezier_points, swipe_control_points
-from custom.input_safety import ensure_input_safe
 from .target_count import _parse_params
 
 logger = logging.getLogger("MaaOnmyoji.bezier_swipe")
@@ -98,10 +97,6 @@ class BezierSwipe(CustomAction):
             logger.error("BezierSwipe: %s", exc)
             return CustomAction.RunResult(success=False)
 
-        xs, ys = zip(*track)
-        touch_region = [min(xs), min(ys), max(xs) - min(xs) + 1, max(ys) - min(ys) + 1]
-        if not ensure_input_safe(context, target_node=getattr(argv, "node_name", None), regions=[touch_region]):
-            return CustomAction.RunResult(success=False)
         controller = context.tasker.controller
         interval = duration / (len(track) - 1) / 1000
         success = True

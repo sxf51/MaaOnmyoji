@@ -1,7 +1,6 @@
 {
     "DailyRewardsTask": {
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "NativeNavigationBlocked",
             "NativeResultBlocked",
             "[JumpBack]NativeDailyRewardPopup",
@@ -12,10 +11,12 @@
             "[JumpBack]NativeNavCancelInvite",
             "[JumpBack]NativeNavCancelCreate",
             "[JumpBack]NativeLoading",
-            "[JumpBack]SafeInput_StartupCloseAnnouncement",
-            "[JumpBack]SafeInput_StartupCancelIllustration",
+            "[JumpBack]StartupCloseAnnouncement",
+            "[JumpBack]StartupCancelIllustration",
             "DailyRewardsTaskReady",
-            "[JumpBack]NavigateMail"
+            "[JumpBack]NavigateMail",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ]
     },
     "DailyRewardsClaimAllMail": {
@@ -34,15 +35,17 @@
                 ]
             }
         },
-        "action": "DoNothing",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
         "pre_delay": 0,
         "post_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_DailyRewardsClaimAllMail"
-        ],
+        "next": [],
         "on_error": [],
         "doc": "领取邮件中可一键领取的附件。"
     },
@@ -62,15 +65,17 @@
                 ]
             }
         },
-        "action": "DoNothing",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
         "pre_delay": 0,
         "post_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_DailyRewardsClaim"
-        ],
+        "next": [],
         "on_error": [],
         "doc": "领取花合战任务奖励。"
     },
@@ -90,15 +95,17 @@
                 ]
             }
         },
-        "action": "DoNothing",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
         "pre_delay": 0,
         "post_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_DailyRewardsClaimReward"
-        ],
+        "next": [],
         "on_error": [],
         "doc": "领取花合战奖励页中可领取的奖励。"
     },
@@ -115,17 +122,25 @@
                 ]
             }
         },
-        "action": "DoNothing",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    600,
+                    620,
+                    80,
+                    35
+                ]
+            }
+        },
         "pre_delay": 0,
         "post_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_DailyRewardPopup"
-        ],
+        "next": [],
         "on_error": [],
-        "doc": "关闭奖励展示，返回领奖流程。 范围参考 OAS I_UI_REWARD（“获得奖励”四个大字约在 530,126,211,66），缩小以减少每轮识别量。"
+        "doc": "关闭奖励展示，返回领奖流程。 范围参考 OAS I_UI_REWARD（“获得奖励”四个大字约在 530,126,211,66），缩小以减少每轮识别量。",
+        "max_hit": 150
     },
     "DailyNoResource": {
         "recognition": {
@@ -177,19 +192,20 @@
                 ]
             }
         },
-        "action": "DoNothing",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
         "pre_delay": 0,
         "post_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "DailyPreparationPassed",
-            "[JumpBack]CommonBattleEnteringWait",
-            "SafeInput_DailyPrepare"
-        ],
+        "next": [],
         "on_error": [],
-        "doc": "点击战斗准备按钮。"
+        "doc": "点击战斗准备按钮。",
+        "max_hit": 5
     },
     "DailyBattleResult": {
         "recognition": {
@@ -204,27 +220,30 @@
                 ]
             }
         },
-        "action": "DoNothing",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
         "pre_delay": 0,
         "post_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_DailyBattleResult"
-        ],
+        "next": [],
         "on_error": [],
         "doc": "点击结算页的继续提示。开头的“点击”允许缺字：提示开头常被奖励动画挡住，OCR 读成“击屏幕继续”（实测日志 2026-11-13 02:22），原来要求以“点击”开头会漏掉整屏 7 秒。"
     },
     "NativeMailClaimLoop": {
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "[JumpBack]SafeInput_DailyMailClaimConfirm",
-            "[JumpBack]SafeInput_DailyMailIllustrationCancel",
-            "[JumpBack]SafeInput_DailyRewardPopup",
+            "[JumpBack]DailyMailClaimConfirm",
+            "[JumpBack]DailyMailIllustrationCancel",
+            "[JumpBack]DailyRewardPopup",
             "NativeMailClaim",
             "NativeMailLimitReached",
-            "NativeMailEmpty"
+            "NativeMailEmpty",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "timeout": 20000
     },
@@ -239,18 +258,30 @@
                 "box_index": 1
             }
         },
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "post_delay": 1200,
         "max_hit": 40,
         "next": [
+            "[JumpBack]DailyMailClaimConfirm",
+            "[JumpBack]DailyMailIllustrationCancel",
+            "[JumpBack]DailyRewardPopup",
+            "NativeMailClaim",
+            "NativeMailLimitReached",
+            "NativeMailEmpty",
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NativeMailClaim"
+            "CommonUnknownPopup"
         ],
         "pre_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
         "on_error": [],
-        "doc": "在邮件页领取附件，随后继续检查剩余邮件。"
+        "doc": "在邮件页领取附件，随后继续检查剩余邮件。",
+        "timeout": 20000
     },
     "NativeMailEmpty": {
         "recognition": {
@@ -263,13 +294,14 @@
         },
         "action": "DoNothing",
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "[JumpBack]SafeInput_DailyMailClaimConfirm",
-            "[JumpBack]SafeInput_DailyMailIllustrationCancel",
-            "[JumpBack]SafeInput_DailyRewardPopup",
+            "[JumpBack]DailyMailClaimConfirm",
+            "[JumpBack]DailyMailIllustrationCancel",
+            "[JumpBack]DailyRewardPopup",
             "NativeMailClaim",
             "NativeMailLimitReached",
-            "NativeMailConfirmEmpty"
+            "NativeMailConfirmEmpty",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "post_delay": 1200
     },
@@ -290,11 +322,12 @@
     },
     "NativeTasksClaimLoop": {
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "[JumpBack]SafeInput_DailyRewardPopup",
+            "[JumpBack]DailyRewardPopup",
             "NativeTasksClaim",
             "NativeTasksLimitReached",
-            "NativeTasksEmpty"
+            "NativeTasksEmpty",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "timeout": 20000
     },
@@ -309,18 +342,28 @@
                 "box_index": 1
             }
         },
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "post_delay": 1200,
         "max_hit": 40,
         "next": [
+            "[JumpBack]DailyRewardPopup",
+            "NativeTasksClaim",
+            "NativeTasksLimitReached",
+            "NativeTasksEmpty",
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NativeTasksClaim"
+            "CommonUnknownPopup"
         ],
         "pre_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
         "on_error": [],
-        "doc": "在花合战任务页领取奖励，随后继续检查待领取任务。"
+        "doc": "在花合战任务页领取奖励，随后继续检查待领取任务。",
+        "timeout": 20000
     },
     "NativeTasksEmpty": {
         "recognition": {
@@ -333,11 +376,12 @@
         },
         "action": "DoNothing",
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "[JumpBack]SafeInput_DailyRewardPopup",
+            "[JumpBack]DailyRewardPopup",
             "NativeTasksClaim",
             "NativeTasksLimitReached",
-            "NativeTasksConfirmEmpty"
+            "NativeTasksConfirmEmpty",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "post_delay": 1200
     },
@@ -356,11 +400,12 @@
     },
     "NativeRewardsClaimLoop": {
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "[JumpBack]SafeInput_DailyRewardPopup",
+            "[JumpBack]DailyRewardPopup",
             "NativeRewardsClaim",
             "NativeRewardsLimitReached",
-            "NativeRewardsEmpty"
+            "NativeRewardsEmpty",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "timeout": 20000
     },
@@ -375,18 +420,28 @@
                 "box_index": 1
             }
         },
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "post_delay": 1200,
         "max_hit": 40,
         "next": [
+            "[JumpBack]DailyRewardPopup",
+            "NativeRewardsClaim",
+            "NativeRewardsLimitReached",
+            "NativeRewardsEmpty",
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NativeRewardsClaim"
+            "CommonUnknownPopup"
         ],
         "pre_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
         "on_error": [],
-        "doc": "在花合战奖励页领取奖励，随后继续检查待领取奖励。"
+        "doc": "在花合战奖励页领取奖励，随后继续检查待领取奖励。",
+        "timeout": 20000
     },
     "NativeRewardsEmpty": {
         "recognition": {
@@ -399,11 +454,12 @@
         },
         "action": "DoNothing",
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "[JumpBack]SafeInput_DailyRewardPopup",
+            "[JumpBack]DailyRewardPopup",
             "NativeRewardsClaim",
             "NativeRewardsLimitReached",
-            "NativeRewardsConfirmEmpty"
+            "NativeRewardsConfirmEmpty",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "post_delay": 1200
     },
@@ -417,18 +473,47 @@
             }
         },
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "NativeRewardsScroll",
-            "NativeRewardsDone"
+            "NativeRewardsDone",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ]
     },
     "NativeRewardsScroll": {
         "max_hit": 5,
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "BezierSwipe",
+                "custom_action_param": {
+                    "begin": [
+                        1048,
+                        473,
+                        24,
+                        24
+                    ],
+                    "end": [
+                        628,
+                        473,
+                        24,
+                        24
+                    ],
+                    "duration": 500,
+                    "duration_random": 80,
+                    "segments": 24,
+                    "deviation": 12,
+                    "easing": true
+                }
+            }
+        },
+        "post_delay": 1000,
         "next": [
+            "[JumpBack]DailyRewardPopup",
+            "NativeRewardsClaim",
+            "NativeRewardsLimitReached",
+            "NativeRewardsEmpty",
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NativeRewardsScroll"
+            "CommonUnknownPopup"
         ],
         "pre_delay": 0,
         "pre_wait_freezes": 0,
@@ -442,11 +527,11 @@
                     "PageQuests"
                 ]
             }
-        }
+        },
+        "timeout": 20000
     },
     "NativeRewardsToTasks": {
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "NativeNavigationBlocked",
             "NativeResultBlocked",
             "[JumpBack]NativeDailyRewardPopup",
@@ -457,15 +542,16 @@
             "[JumpBack]NativeNavCancelInvite",
             "[JumpBack]NativeNavCancelCreate",
             "[JumpBack]NativeLoading",
-            "[JumpBack]SafeInput_StartupCloseAnnouncement",
-            "[JumpBack]SafeInput_StartupCancelIllustration",
+            "[JumpBack]StartupCloseAnnouncement",
+            "[JumpBack]StartupCancelIllustration",
             "NativeRewardsToTasksReady",
-            "[JumpBack]NavigateQuestTasks"
+            "[JumpBack]NavigateQuestTasks",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ]
     },
     "NativeRewardsToRewards": {
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "NativeNavigationBlocked",
             "NativeResultBlocked",
             "[JumpBack]NativeDailyRewardPopup",
@@ -476,11 +562,13 @@
             "[JumpBack]NativeNavCancelInvite",
             "[JumpBack]NativeNavCancelCreate",
             "[JumpBack]NativeLoading",
-            "[JumpBack]SafeInput_StartupCloseAnnouncement",
-            "[JumpBack]SafeInput_StartupCancelIllustration",
-            "SafeInput_NativeRewardsSwitchTab",
+            "[JumpBack]StartupCloseAnnouncement",
+            "[JumpBack]StartupCancelIllustration",
+            "NativeRewardsSwitchTab",
             "NativeRewardsToRewardsReady",
-            "[JumpBack]NavigateQuests"
+            "[JumpBack]NavigateQuests",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ]
     },
     "NativeRewardsDone": {
@@ -499,13 +587,14 @@
         },
         "action": "DoNothing",
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "[JumpBack]SafeInput_DailyMailClaimConfirm",
-            "[JumpBack]SafeInput_DailyMailIllustrationCancel",
-            "[JumpBack]SafeInput_DailyRewardPopup",
+            "[JumpBack]DailyMailClaimConfirm",
+            "[JumpBack]DailyMailIllustrationCancel",
+            "[JumpBack]DailyRewardPopup",
             "NativeMailClaim",
             "NativeMailLimitReached",
-            "NativeMailEmpty"
+            "NativeMailEmpty",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "timeout": 20000
     },
@@ -520,11 +609,12 @@
         },
         "action": "DoNothing",
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "[JumpBack]SafeInput_DailyRewardPopup",
+            "[JumpBack]DailyRewardPopup",
             "NativeTasksClaim",
             "NativeTasksLimitReached",
-            "NativeTasksEmpty"
+            "NativeTasksEmpty",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "timeout": 20000
     },
@@ -539,11 +629,12 @@
         },
         "action": "DoNothing",
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "[JumpBack]SafeInput_DailyRewardPopup",
+            "[JumpBack]DailyRewardPopup",
             "NativeRewardsClaim",
             "NativeRewardsLimitReached",
-            "NativeRewardsEmpty"
+            "NativeRewardsEmpty",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "timeout": 20000
     },
@@ -606,17 +697,20 @@
                 "box_index": 1
             }
         },
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": "Click",
+        "post_delay": 1200,
         "next": [
+            "NativeRewardsTabReadyWait",
+            "NativeRewardsSwitchTab",
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_NativeRewardsSwitchTab"
+            "CommonUnknownPopup"
         ],
         "pre_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
         "on_error": [],
-        "doc": "从花合战任务页切换到奖励页。"
+        "doc": "从花合战任务页切换到奖励页。",
+        "max_hit": 3
     },
     "NativeRewardsTabReady": {
         "pre_delay": 0,
@@ -632,35 +726,20 @@
         },
         "action": "DoNothing",
         "next": [
+            "NativeRewardsToRewardsReady",
             "[JumpBack]CommonBountyInterrupt",
-            "NativeRewardsToRewardsReady"
+            "CommonUnknownPopup"
         ],
         "inverse": true
-    },
-    "DailyPreparationPassed": {
-        "pre_delay": 0,
-        "post_delay": 0,
-        "doc": "准备按钮复核期间已进入战斗或结算时，返回原战斗流程。",
-        "recognition": {
-            "type": "Or",
-            "param": {
-                "any_of": [
-                    "PageBattle",
-                    "DailyBattleResult",
-                    "DailyBattleFailed"
-                ]
-            }
-        },
-        "action": "DoNothing",
-        "next": []
     },
     "NativeRewardsTabReadyWait": {
         "pre_delay": 0,
         "post_delay": 0,
         "doc": "等待花合战页签切换，点击失败时重新点击，最多三次。",
         "next": [
+            "NativeRewardsTabReady",
             "[JumpBack]CommonBountyInterrupt",
-            "NativeRewardsTabReady"
+            "CommonUnknownPopup"
         ],
         "timeout": 3000,
         "on_error": [
@@ -670,9 +749,10 @@
     "NativeRewardsTabRetry": {
         "action": "DoNothing",
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "NativeRewardsTabReady",
-            "SafeInput_NativeRewardsSwitchTab"
+            "NativeRewardsSwitchTab",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ]
     },
     "DailyMailClaimConfirm": {
@@ -714,15 +794,18 @@
                 "box_index": 2
             }
         },
-        "action": "DoNothing",
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_DailyMailClaimConfirm"
-        ],
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "next": [],
         "pre_delay": 0,
-        "post_delay": 0,
+        "post_delay": 800,
         "pre_wait_freezes": 0,
-        "on_error": []
+        "on_error": [],
+        "max_hit": 3
     },
     "DailyMailIllustrationCancel": {
         "doc": "取消领取邮件后出现的启用插画提示。",
@@ -763,14 +846,17 @@
                 "box_index": 2
             }
         },
-        "action": "DoNothing",
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_DailyMailIllustrationCancel"
-        ],
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "next": [],
         "pre_delay": 0,
-        "post_delay": 0,
+        "post_delay": 800,
         "pre_wait_freezes": 0,
-        "on_error": []
+        "on_error": [],
+        "max_hit": 3
     }
 }

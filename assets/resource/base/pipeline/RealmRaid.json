@@ -11,7 +11,6 @@
             }
         },
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "NativeNavigationBlocked",
             "NativeResultBlocked",
             "[JumpBack]NativeDailyRewardPopup",
@@ -22,10 +21,12 @@
             "[JumpBack]NativeNavCancelInvite",
             "[JumpBack]NativeNavCancelCreate",
             "[JumpBack]NativeLoading",
-            "[JumpBack]SafeInput_StartupCloseAnnouncement",
-            "[JumpBack]SafeInput_StartupCancelIllustration",
+            "[JumpBack]StartupCloseAnnouncement",
+            "[JumpBack]StartupCancelIllustration",
             "RealmRaidReady",
-            "[JumpBack]NavigateRaid"
+            "[JumpBack]NavigateRaid",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ]
     },
     "RealmRaidCard": {
@@ -66,15 +67,17 @@
                 ]
             }
         },
-        "action": "DoNothing",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
         "pre_delay": 0,
         "post_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_RealmRaidChallenge"
-        ],
+        "next": [],
         "on_error": [],
         "doc": "挑战当前选中的结界突破目标。"
     },
@@ -93,11 +96,12 @@
         "pre_delay": 0,
         "post_delay": 0,
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "[JumpBack]SafeInput_DailyRewardPopup",
+            "[JumpBack]DailyRewardPopup",
             "RealmRaidNoTicket",
             "RealmRaidChoose",
-            "RealmRaidExhaustedPage"
+            "RealmRaidExhaustedPage",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "doc": "原生模板寻找右上角无标识的卡片；选择框由框架保存，漏点和结算验证始终引用同一张卡片。"
     },
@@ -116,8 +120,9 @@
         },
         "action": "DoNothing",
         "next": [
+            "RealmRaidFinish",
             "[JumpBack]CommonBountyInterrupt",
-            "RealmRaidFinish"
+            "CommonUnknownPopup"
         ]
     },
     "RealmRaidTicketEmpty": {
@@ -149,8 +154,9 @@
         },
         "action": "DoNothing",
         "next": [
+            "RealmRaidExhaustedConfirmed",
             "[JumpBack]CommonBountyInterrupt",
-            "RealmRaidExhaustedConfirmed"
+            "CommonUnknownPopup"
         ],
         "inverse": true,
         "doc": "仅由已确认的个人突破页进入：没有未挑战卡片才结束。"
@@ -184,9 +190,10 @@
         },
         "action": "DoNothing",
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "RealmRaidPreset",
-            "RealmRaidScan"
+            "RealmRaidScan",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ]
     },
     "RealmRaidPreset": {
@@ -221,7 +228,7 @@
                             }
                         }
                     },
-                    "SafeInput_TeamPresetOpen": {
+                    "TeamPresetOpen": {
                         "action": {
                             "param": {
                                 "target": [
@@ -291,7 +298,7 @@
                             }
                         }
                     },
-                    "SafeInput_TeamPresetGroupScroll": {
+                    "TeamPresetGroupScroll": {
                         "action": {
                             "type": "Custom",
                             "param": {
@@ -318,7 +325,7 @@
                             }
                         }
                     },
-                    "SafeInput_TeamPresetTeamScroll": {
+                    "TeamPresetTeamScroll": {
                         "action": {
                             "type": "Custom",
                             "param": {
@@ -381,16 +388,18 @@
         },
         "action": "DoNothing",
         "next": [
+            "RealmRaidScan",
             "[JumpBack]CommonBountyInterrupt",
-            "RealmRaidScan"
+            "CommonUnknownPopup"
         ]
     },
     "RealmRaidBattle": {
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "RealmRaidRetreatBegin",
             "[JumpBack]RealmRaidBattleMark",
-            "RealmRaidBattleSettle"
+            "RealmRaidBattleSettle",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "timeout": 300000,
         "doc": "突破战斗快速循环：只放模板类判断。MaaFW 5.14 会对同一 next 列表中的全部 OCR 先做一次合并识别，本地日志中完整战斗列表每轮约1.2秒，导致退出与绿标最多晚1.2秒才被看到。战斗返回按钮只在正式战斗出现，因此按钮可见时只检查主动退出与绿标（二者并列，退出在前，预算未用完的场次不点绿标），都不需要时本轮不匹配，按rate_limit重试；按钮消失（准备、载入、结算、失败页）才进入RealmRaidBattleSettle做OCR判断。",
@@ -413,16 +422,17 @@
         "inverse": true,
         "action": "DoNothing",
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "RealmRaidBattleNoResource",
             "RealmRaidRetreatRetry",
             "RealmRaidFailRetry",
             "RealmRaidBattleFailure",
-            "SafeInput_RealmRaidBattleResult",
+            "RealmRaidBattleResult",
             "[JumpBack]CommonBattleEnteringWait",
             "[JumpBack]DailyPrepare",
-            "[JumpBack]SafeInput_DailyRewardPopup",
-            "RealmRaidBattleResume"
+            "[JumpBack]DailyRewardPopup",
+            "RealmRaidBattleResume",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "rate_limit": 300,
         "timeout": 180000
@@ -462,16 +472,17 @@
                 "custom_action": "ResetCount",
                 "custom_action_param": {
                     "nodes": [
-                        "SafeInput_RealmRaidRetreatExit",
-                        "SafeInput_RealmRaidRetreatConfirm"
+                        "RealmRaidRetreatExit",
+                        "RealmRaidRetreatConfirm"
                     ],
                     "strict": true
                 }
             }
         },
         "next": [
+            "RealmRaidRetreatExit",
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_RealmRaidRetreatExit"
+            "CommonUnknownPopup"
         ],
         "pre_delay": 0,
         "post_delay": 0
@@ -487,14 +498,22 @@
                 ]
             }
         },
-        "action": "DoNothing",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    205,
+                    530,
+                    60,
+                    50
+                ]
+            }
+        },
         "pre_delay": 0,
-        "post_delay": 0,
+        "post_delay": 200,
         "max_hit": 1,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_RealmRaidBattleMark"
-        ]
+        "next": [],
+        "pre_wait_freezes": 0
     },
     "RealmRaidRetreatExit": {
         "doc": "战斗中左上角的返回按钮；输出按钮框供区域点击。该按钮只在正式战斗出现，不再额外OCR战斗阶段，缩短首帧到点击的耗时。",
@@ -506,11 +525,21 @@
                 ]
             }
         },
-        "action": "DoNothing",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
         "next": [
+            "RealmRaidRetreatExitWait",
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_RealmRaidRetreatExit"
-        ]
+            "CommonUnknownPopup"
+        ],
+        "pre_delay": 0,
+        "post_delay": 0,
+        "pre_wait_freezes": 0,
+        "max_hit": 3
     },
     "RealmRaidBattleExitIcon": {
         "doc": "BattleExit_6.png 由本项目1280x720个人突破实战截图裁剪按钮内圈，不含背景，实测战斗帧1.0、准备页与突破页均低于0.41；BattleExit_1~5 与ROI取自 TanyaShue/MaaYYs@3f9a969 战斗/自动结界.json 突破_重新挑战-模板匹配（MIT，许可见同目录MaaYYs-LICENSE.txt），在当前版本普通战斗背景下仅约0.80，按皮肤样式保留；与OAS I_EXIT (14,12,43,41) 为同一按钮。",
@@ -538,9 +567,10 @@
     "RealmRaidRetreatExitWait": {
         "doc": "点返回后约1.3秒才弹出退出确认框，期间不重点返回；确认框出现立即确认。游戏直接进入失败页时交给再次挑战分支。2.5秒内未弹框才转入有界重点。",
         "next": [
+            "RealmRaidRetreatConfirm",
+            "RealmRaidRetreatRetry",
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_RealmRaidRetreatConfirm",
-            "RealmRaidRetreatRetry"
+            "CommonUnknownPopup"
         ],
         "timeout": 2500,
         "pre_delay": 0,
@@ -556,10 +586,11 @@
         "post_delay": 0,
         "rate_limit": 100,
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_RealmRaidRetreatConfirm",
+            "RealmRaidRetreatConfirm",
             "RealmRaidRetreatRetry",
-            "SafeInput_RealmRaidRetreatExit"
+            "RealmRaidRetreatExit",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "timeout": 10000
     },
@@ -601,18 +632,27 @@
                 "box_index": 1
             }
         },
-        "action": "DoNothing",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_RealmRaidRetreatConfirm"
-        ]
+            "RealmRaidRetreatConfirmWait"
+        ],
+        "pre_delay": 0,
+        "post_delay": 500,
+        "pre_wait_freezes": 0,
+        "max_hit": 3
     },
     "RealmRaidRetreatConfirmWait": {
         "doc": "确认退出后等待失败页的再次挑战；确认框仍在时有界重点。",
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "RealmRaidRetreatRetry",
-            "SafeInput_RealmRaidRetreatConfirm"
+            "RealmRaidRetreatConfirm",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "timeout": 15000
     },
@@ -633,16 +673,17 @@
                 "custom_action": "ResetCount",
                 "custom_action_param": {
                     "nodes": [
-                        "SafeInput_RealmRaidRetreatAgain",
-                        "SafeInput_RealmRaidRetreatAgainConfirm"
+                        "RealmRaidRetreatAgain",
+                        "RealmRaidRetreatAgainConfirm"
                     ],
                     "strict": true
                 }
             }
         },
         "next": [
+            "RealmRaidRetreatAgain",
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_RealmRaidRetreatAgain"
+            "CommonUnknownPopup"
         ]
     },
     "RealmRaidFailRetry": {
@@ -662,15 +703,14 @@
                 "custom_action": "ResetCount",
                 "custom_action_param": {
                     "nodes": [
-                        "SafeInput_RealmRaidRetreatAgain",
-                        "SafeInput_RealmRaidRetreatAgainConfirm",
+                        "RealmRaidRetreatAgain",
+                        "RealmRaidRetreatAgainConfirm",
                         "RealmRaidBattleMark",
-                        "SafeInput_RealmRaidBattleMark",
-                        "SafeInput_DailyPrepare",
-                        "SafeInput_RealmRaidBattleResult",
-                        "SafeInput_RealmRaidBattleFailedResult",
+                        "DailyPrepare",
+                        "RealmRaidBattleResult",
+                        "RealmRaidBattleFailedResult",
                         "CommonBattleEnteringWait",
-                        "SafeInput_DailyRewardPopup",
+                        "DailyRewardPopup",
                         "RealmRaidBattleResume"
                     ],
                     "strict": true
@@ -680,8 +720,9 @@
         "pre_delay": 0,
         "post_delay": 0,
         "next": [
+            "RealmRaidRetreatAgain",
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_RealmRaidRetreatAgain"
+            "CommonUnknownPopup"
         ]
     },
     "RealmRaidRetreatAgain": {
@@ -698,19 +739,33 @@
                 ]
             }
         },
-        "action": "DoNothing",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    832,
+                    491,
+                    54,
+                    31
+                ]
+            }
+        },
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_RealmRaidRetreatAgain"
-        ]
+            "RealmRaidRetreatAgainWait"
+        ],
+        "pre_delay": 0,
+        "post_delay": 1500,
+        "pre_wait_freezes": 0,
+        "max_hit": 3
     },
     "RealmRaidRetreatAgainWait": {
         "doc": "点再次挑战后：有确认框先确认；进入载入/准备/战斗或券不足提示后回到突破战斗流程；仍在失败页时有界重点。",
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_RealmRaidRetreatAgainConfirm",
+            "RealmRaidRetreatAgainConfirm",
             "RealmRaidRetreatRestarted",
-            "SafeInput_RealmRaidRetreatAgain"
+            "RealmRaidRetreatAgain",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "timeout": 15000
     },
@@ -752,18 +807,27 @@
                 "box_index": 1
             }
         },
-        "action": "DoNothing",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_RealmRaidRetreatAgainConfirm"
-        ]
+            "RealmRaidRetreatConfirmedWait"
+        ],
+        "pre_delay": 0,
+        "post_delay": 1000,
+        "pre_wait_freezes": 0,
+        "max_hit": 3
     },
     "RealmRaidRetreatConfirmedWait": {
         "doc": "确认再次挑战后只等新一场开始，不再点失败页按钮。",
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "RealmRaidRetreatRestarted",
-            "SafeInput_RealmRaidRetreatAgainConfirm"
+            "RealmRaidRetreatAgainConfirm",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "timeout": 15000
     },
@@ -800,8 +864,9 @@
         },
         "action": "DoNothing",
         "next": [
+            "RealmRaidFinish",
             "[JumpBack]CommonBountyInterrupt",
-            "RealmRaidFinish"
+            "CommonUnknownPopup"
         ]
     },
     "RealmRaidBattleFailure": {
@@ -815,8 +880,9 @@
         },
         "action": "DoNothing",
         "next": [
+            "RealmRaidBattleFailedResult",
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_RealmRaidBattleFailedResult"
+            "CommonUnknownPopup"
         ],
         "timeout": 30000
     },
@@ -829,18 +895,29 @@
                 ]
             }
         },
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "post_delay": 1200,
         "next": [
+            "RealmRaidBattleNoResource",
+            "RealmRaidBattleFailure",
+            "RealmRaidBattleResult",
+            "[JumpBack]DailyRewardPopup",
+            "RealmRaidBattleAfterResult",
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_RealmRaidBattleResult"
+            "CommonUnknownPopup"
         ],
         "timeout": 30000,
         "pre_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
         "on_error": [],
-        "doc": "关闭突破成功结算，返回九宫格验证攻破标记。"
+        "doc": "关闭突破成功结算，返回九宫格验证攻破标记。",
+        "max_hit": 5
     },
     "RealmRaidBattleAfterResult": {
         "pre_delay": 0,
@@ -855,8 +932,9 @@
         },
         "action": "DoNothing",
         "next": [
+            "RealmRaidVerify",
             "[JumpBack]CommonBountyInterrupt",
-            "RealmRaidVerify"
+            "CommonUnknownPopup"
         ]
     },
     "RealmRaidBattleFailedResult": {
@@ -868,17 +946,26 @@
                 ]
             }
         },
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "post_delay": 1200,
         "next": [
+            "RealmRaidBattleFailedResult",
+            "[JumpBack]DailyRewardPopup",
+            "RealmRaidBattleFailedReturn",
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_RealmRaidBattleFailedResult"
+            "CommonUnknownPopup"
         ],
         "pre_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
         "on_error": [],
-        "doc": "关闭突破失败结算，返回九宫格处理后续目标。"
+        "doc": "关闭突破失败结算，返回九宫格处理后续目标。",
+        "max_hit": 5
     },
     "RealmRaidBattleFailedReturn": {
         "pre_delay": 0,
@@ -893,11 +980,12 @@
         },
         "action": "DoNothing",
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "RealmRaidFailStop",
             "RealmRaidFailRefresh",
             "RealmRaidFailRefreshUnavailable",
-            "RealmRaidScan"
+            "RealmRaidScan",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "doc": "真实战败后回到个人突破页，按任务选项处理：默认跳过失败卡片继续（失败卡片右上角有失败角标，选卡时由RealmRaidUnmarkedCorner排除），或刷新后继续、或结束本轮。对应 runhey/OnmyojiAutoScript@2d2f6d8962a5af17c95670c5d0fb2e384b247162 tasks/RealmRaid/script_task.py::run_2 的 WhenAttackFail.CONTINUE / REFRESH / EXIT。"
     },
@@ -916,8 +1004,9 @@
         },
         "action": "DoNothing",
         "next": [
+            "RealmRaidFinish",
             "[JumpBack]CommonBountyInterrupt",
-            "RealmRaidFinish"
+            "CommonUnknownPopup"
         ]
     },
     "RealmRaidFailRefresh": {
@@ -939,16 +1028,17 @@
                 "custom_action": "ResetCount",
                 "custom_action_param": {
                     "nodes": [
-                        "SafeInput_RealmRaidRefresh",
-                        "SafeInput_RealmRaidRefreshConfirm"
+                        "RealmRaidRefresh",
+                        "RealmRaidRefreshConfirm"
                     ],
                     "strict": true
                 }
             }
         },
         "next": [
+            "RealmRaidRefresh",
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_RealmRaidRefresh"
+            "CommonUnknownPopup"
         ]
     },
     "RealmRaidFailRefreshUnavailable": {
@@ -966,8 +1056,9 @@
         },
         "action": "DoNothing",
         "next": [
+            "RealmRaidFinish",
             "[JumpBack]CommonBountyInterrupt",
-            "RealmRaidFinish"
+            "CommonUnknownPopup"
         ]
     },
     "RealmRaidExhaustedRefresh": {
@@ -989,16 +1080,17 @@
                 "custom_action": "ResetCount",
                 "custom_action_param": {
                     "nodes": [
-                        "SafeInput_RealmRaidRefresh",
-                        "SafeInput_RealmRaidRefreshConfirm"
+                        "RealmRaidRefresh",
+                        "RealmRaidRefreshConfirm"
                     ],
                     "strict": true
                 }
             }
         },
         "next": [
+            "RealmRaidRefresh",
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_RealmRaidRefresh"
+            "CommonUnknownPopup"
         ]
     },
     "RealmRaidRefreshButton": {
@@ -1028,20 +1120,27 @@
                 "box_index": 1
             }
         },
-        "action": "DoNothing",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
         "pre_delay": 0,
-        "post_delay": 0,
+        "post_delay": 1000,
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_RealmRaidRefresh"
-        ]
+            "RealmRaidRefreshWait"
+        ],
+        "pre_wait_freezes": 0,
+        "max_hit": 3
     },
     "RealmRaidRefreshWait": {
         "doc": "点刷新后等待确认框；按钮仍在时有界重点。",
         "next": [
+            "RealmRaidRefreshConfirm",
+            "RealmRaidRefresh",
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_RealmRaidRefreshConfirm",
-            "SafeInput_RealmRaidRefresh"
+            "CommonUnknownPopup"
         ],
         "timeout": 5000
     },
@@ -1083,18 +1182,27 @@
                 "box_index": 1
             }
         },
-        "action": "DoNothing",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_RealmRaidRefreshConfirm"
-        ]
+            "RealmRaidRefreshConfirmWait"
+        ],
+        "pre_delay": 0,
+        "post_delay": 1000,
+        "pre_wait_freezes": 0,
+        "max_hit": 3
     },
     "RealmRaidRefreshConfirmWait": {
         "doc": "确认刷新后等待确认框消失；仍在时有界重点。",
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "RealmRaidRefreshClosed",
-            "SafeInput_RealmRaidRefreshConfirm"
+            "RealmRaidRefreshConfirm",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "timeout": 5000
     },
@@ -1111,8 +1219,9 @@
         },
         "inverse": true,
         "next": [
+            "RealmRaidRefreshed",
             "[JumpBack]CommonBountyInterrupt",
-            "RealmRaidRefreshed"
+            "CommonUnknownPopup"
         ]
     },
     "RealmRaidRefreshed": {
@@ -1129,8 +1238,9 @@
         },
         "action": "DoNothing",
         "next": [
+            "RealmRaidScan",
             "[JumpBack]CommonBountyInterrupt",
-            "RealmRaidScan"
+            "CommonUnknownPopup"
         ]
     },
     "RealmRaidNickname": {
@@ -1150,17 +1260,19 @@
     },
     "RealmRaidWaitTarget": {
         "next": [
+            "RealmRaidAttack",
+            "RealmRaidSelect",
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_RealmRaidAttack",
-            "SafeInput_RealmRaidSelect"
+            "CommonUnknownPopup"
         ],
         "timeout": 5000
     },
     "RealmRaidWaitBattleStart": {
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "RealmRaidBattleStarted",
-            "SafeInput_RealmRaidAttack"
+            "RealmRaidAttack",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "timeout": 15000
     },
@@ -1189,10 +1301,11 @@
         "pre_delay": 0,
         "post_delay": 0,
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "[JumpBack]SafeInput_DailyRewardPopup",
+            "[JumpBack]DailyRewardPopup",
             "RealmRaidSuccess",
-            "RealmRaidSuccessBoardReset"
+            "RealmRaidSuccessBoardReset",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "timeout": 5000
     },
@@ -1282,8 +1395,9 @@
         },
         "action": "DoNothing",
         "next": [
+            "RealmRaidValidateChoice",
             "[JumpBack]CommonBountyInterrupt",
-            "RealmRaidValidateChoice"
+            "CommonUnknownPopup"
         ]
     },
     "RealmRaidSelect": {
@@ -1298,11 +1412,25 @@
                 "box_index": 1
             }
         },
-        "action": "DoNothing",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true,
+                "target_offset": [
+                    90,
+                    30,
+                    -157,
+                    -85
+                ]
+            }
+        },
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_RealmRaidSelect"
-        ]
+            "RealmRaidWaitTarget"
+        ],
+        "pre_delay": 0,
+        "post_delay": 1000,
+        "pre_wait_freezes": 0,
+        "max_hit": 3
     },
     "RealmRaidAttack": {
         "recognition": {
@@ -1313,11 +1441,19 @@
                 ]
             }
         },
-        "action": "DoNothing",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_RealmRaidAttack"
-        ]
+            "RealmRaidWaitBattleStart"
+        ],
+        "pre_delay": 0,
+        "post_delay": 1000,
+        "pre_wait_freezes": 0,
+        "max_hit": 3
     },
     "RealmRaidValidateChoice": {
         "recognition": {
@@ -1336,16 +1472,15 @@
                 "custom_action": "ResetCount",
                 "custom_action_param": {
                     "nodes": [
-                        "SafeInput_RealmRaidSelect",
-                        "SafeInput_RealmRaidAttack",
+                        "RealmRaidSelect",
+                        "RealmRaidAttack",
                         "RealmRaidBattleMark",
-                        "SafeInput_RealmRaidBattleMark",
                         "RealmRaidFailRetry",
-                        "SafeInput_DailyPrepare",
-                        "SafeInput_RealmRaidBattleResult",
-                        "SafeInput_RealmRaidBattleFailedResult",
+                        "DailyPrepare",
+                        "RealmRaidBattleResult",
+                        "RealmRaidBattleFailedResult",
                         "CommonBattleEnteringWait",
-                        "SafeInput_DailyRewardPopup",
+                        "DailyRewardPopup",
                         "RealmRaidBattleResume"
                     ],
                     "strict": true
@@ -1353,8 +1488,9 @@
             }
         },
         "next": [
+            "RealmRaidSelect",
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_RealmRaidSelect"
+            "CommonUnknownPopup"
         ],
         "doc": "确认选中卡片的昵称，再重置本卡点击预算、每场一次的绿标与战败重试次数；不改变成功次数。"
     },
@@ -1383,8 +1519,9 @@
             }
         },
         "next": [
+            "RealmRaidExhausted",
             "[JumpBack]CommonBountyInterrupt",
-            "RealmRaidExhausted"
+            "CommonUnknownPopup"
         ],
         "timeout": 3000
     },
@@ -1400,9 +1537,10 @@
             }
         },
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "RealmRaidExhaustedRefresh",
-            "RealmRaidFinish"
+            "RealmRaidFinish",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "doc": "无候选后再确认仍在个人突破页，避免过场或未知画面被当成本轮结束；刷新模式下先尝试刷新。"
     },

@@ -16,8 +16,9 @@
             }
         },
         "next": [
+            "StartupLaunch",
             "[JumpBack]CommonBountyInterrupt",
-            "StartupLaunch"
+            "CommonUnknownPopup"
         ]
     },
     "StartupLaunch": {
@@ -30,8 +31,9 @@
         },
         "post_delay": 3000,
         "next": [
+            "Startup",
             "[JumpBack]CommonBountyInterrupt",
-            "Startup"
+            "CommonUnknownPopup"
         ],
         "on_error": [
             "StartupLaunchError"
@@ -42,8 +44,9 @@
         "doc": "启动失败的独立错误入口；保留购买保护，不与正常 next 重复路由。",
         "action": "DoNothing",
         "next": [
+            "SelectPackage",
             "[JumpBack]CommonBountyInterrupt",
-            "SelectPackage"
+            "CommonUnknownPopup"
         ]
     },
     "Startup": {
@@ -51,17 +54,18 @@
         "post_wait_freezes": 300,
         "timeout": 60000,
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "StartupHome",
-            "[JumpBack]SafeInput_StartupCloseAnnouncement",
-            "[JumpBack]SafeInput_StartupCancelIllustration",
+            "[JumpBack]StartupCloseAnnouncement",
+            "[JumpBack]StartupCancelIllustration",
             "[JumpBack]StartupUpdateConfirm",
             "[JumpBack]StartupDownloading",
             "startupMain",
-            "[JumpBack]SafeInput_ReturnMainHomeButton",
-            "[JumpBack]SafeInput_ReturnMainBackButton",
-            "[JumpBack]SafeInput_CommonNetworkRetry",
-            "[JumpBack]StartupSkipAnimation"
+            "[JumpBack]ReturnMainHomeButton",
+            "[JumpBack]ReturnMainBackButton",
+            "[JumpBack]CommonNetworkRetry",
+            "[JumpBack]StartupSkipAnimation",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ]
     },
     "StartupUpdateConfirm": {
@@ -77,15 +81,12 @@
                 "box_index": 1
             }
         },
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": "Click",
+        "post_delay": 1500,
         "pre_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_StartupUpdateConfirm"
-        ],
+        "next": [],
         "on_error": [],
         "doc": "在已确认更新提示的窗口中点击更新、下载或重试。"
     },
@@ -123,15 +124,17 @@
     "StartupSkipAnimation": {
         "desc": "点击屏幕跳过启动动画",
         "max_hit": 5,
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "post_delay": 1500,
         "pre_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_StartupSkipAnimation"
-        ],
+        "next": [],
         "on_error": [],
         "doc": "仅点击明确识别到的跳过按钮；没有跳过标记时等待，不再盲点屏幕。",
         "recognition": {
@@ -165,15 +168,16 @@
         },
         "action": "DoNothing",
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "StartupHome",
-            "[JumpBack]SafeInput_StartupCloseAnnouncement",
-            "[JumpBack]SafeInput_StartupCancelIllustration",
+            "[JumpBack]StartupCloseAnnouncement",
+            "[JumpBack]StartupCancelIllustration",
             "[JumpBack]StartupCheckServer",
-            "[JumpBack]SafeInput_StartupOpenServerList",
-            "[JumpBack]SafeInput_StartupSelectServer",
+            "[JumpBack]StartupOpenServerList",
+            "[JumpBack]StartupSelectServer",
             "[JumpBack]StartupDownloading",
-            "[JumpBack]SafeInput_CommonNetworkRetry"
+            "[JumpBack]CommonNetworkRetry",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ]
     },
     "StartupOpenServerList": {
@@ -192,17 +196,15 @@
                 ]
             }
         },
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": "Click",
+        "post_delay": 8000,
         "pre_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_StartupOpenServerList"
-        ],
+        "next": [],
         "on_error": [],
-        "doc": "打开区服选择列表。"
+        "doc": "打开区服选择列表。",
+        "max_hit": 5
     },
     "StartupSelectServer": {
         "desc": "选择区域",
@@ -220,17 +222,15 @@
                 ]
             }
         },
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": "Click",
+        "post_delay": 2000,
         "pre_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_StartupSelectServer"
-        ],
+        "next": [],
         "on_error": [],
-        "doc": "选择配置指定的区服。"
+        "doc": "选择配置指定的区服。",
+        "max_hit": 5
     },
     "StartupCheckServer": {
         "desc": "检查是否已选择区服",
@@ -249,10 +249,11 @@
             }
         },
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "StartupHome",
-            "SafeInput_StartupEnterGame",
-            "StartupDownloading"
+            "StartupEnterGame",
+            "StartupDownloading",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ]
     },
     "StartupEnterGame": {
@@ -271,15 +272,12 @@
                 ]
             }
         },
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": "Click",
+        "post_delay": 2000,
         "pre_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_StartupEnterGame"
-        ],
+        "next": [],
         "on_error": [],
         "doc": "进入已选定的服务器，等待庭院加载。"
     },
@@ -360,7 +358,6 @@
     },
     "ReturnMain": {
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "NativeNavigationBlocked",
             "NativeResultBlocked",
             "[JumpBack]NativeDailyRewardPopup",
@@ -371,10 +368,12 @@
             "[JumpBack]NativeNavCancelInvite",
             "[JumpBack]NativeNavCancelCreate",
             "[JumpBack]NativeLoading",
-            "[JumpBack]SafeInput_StartupCloseAnnouncement",
-            "[JumpBack]SafeInput_StartupCancelIllustration",
+            "[JumpBack]StartupCloseAnnouncement",
+            "[JumpBack]StartupCancelIllustration",
             "NativeAtHome",
-            "[JumpBack]NavigateHome"
+            "[JumpBack]NavigateHome",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ]
     },
     "ReturnMainHomeButton": {
@@ -392,17 +391,15 @@
                 "threshold": 0.8
             }
         },
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": "Click",
+        "post_delay": 1000,
         "pre_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_ReturnMainHomeButton"
-        ],
+        "next": [],
         "on_error": [],
-        "doc": "点击首页图标，返回庭院。"
+        "doc": "点击首页图标，返回庭院。",
+        "max_hit": 30
     },
     "ReturnMainBackButton": {
         "desc": "返回上一级",
@@ -419,17 +416,15 @@
                 "threshold": 0.8
             }
         },
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": "Click",
+        "post_delay": 1000,
         "pre_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_ReturnMainBackButton"
-        ],
+        "next": [],
         "on_error": [],
-        "doc": "返回上一级页面，继续查找庭院入口。"
+        "doc": "返回上一级页面，继续查找庭院入口。",
+        "max_hit": 30
     },
     "ExitXianTing": {
         "desc": "退出闲庭",
@@ -446,15 +441,12 @@
                 "threshold": 0.8
             }
         },
-        "action": "DoNothing",
-        "post_delay": 0,
+        "action": "Click",
+        "post_delay": 1000,
         "pre_delay": 0,
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_ExitXianTing"
-        ],
+        "next": [],
         "on_error": [],
         "doc": "退出闲庭，返回庭院。"
     },
@@ -534,15 +526,18 @@
                 "box_index": 1
             }
         },
-        "action": "DoNothing",
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_StartupCloseAnnouncement"
-        ],
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "next": [],
         "pre_delay": 0,
-        "post_delay": 0,
+        "post_delay": 800,
         "pre_wait_freezes": 0,
-        "on_error": []
+        "on_error": [],
+        "max_hit": 5
     },
     "StartupCancelIllustration": {
         "doc": "取消启动时可选的下载插画提示。",
@@ -582,14 +577,17 @@
                 "box_index": 1
             }
         },
-        "action": "DoNothing",
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_StartupCancelIllustration"
-        ],
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "next": [],
         "pre_delay": 0,
-        "post_delay": 0,
+        "post_delay": 800,
         "pre_wait_freezes": 0,
-        "on_error": []
+        "on_error": [],
+        "max_hit": 3
     }
 }

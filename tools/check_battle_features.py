@@ -44,8 +44,6 @@ def main():
             pipeline_override=enabled)
         case('mark never clicks during deployment or preparation','CommonBattleMark',{'PageBattleEntering','DailyPrepare'},
              succeeds=False,pipeline_override=enabled)
-        case('mark obeys local input protection','CommonBattleMark',{'PageBattle','TouchAreaRisk'},
-             succeeds=False,pipeline_override=enabled)
         buff_on=stage|{'MitamaBuffPanel','MitamaCheckBuffStatusOpen'}
         buff_off=stage|{'MitamaBuffPanel','MitamaCheckBuffStatusClose'}
         case('failed selection closes enabled soul buff and preserves failure','MitamaSession',stage,[
@@ -72,7 +70,7 @@ def main():
         case('stuck resource popup stops before touching background buff','AwakeningAbortCleanup',blocked,
              [('NativeNavCancelNoResource',blocked)]*3,succeeds=False,
              pipeline_override={'NativeNavCancelNoResource':{'max_hit':3},
-                                'SafeInput_NativeNavCancelNoResource':{'max_hit':3},
+                                'NativeNavCancelNoResource':{'max_hit':3},
                                 'AwakeningDisableBuff':{'enabled':True}})
         case('cleanup waits for existing battle and closes result without counting','MitamaAbortCleanup',{'PageBattle'},[
             ('BattleCleanupResult',buff_on),('MitamaDisableBuffClick',buff_off),

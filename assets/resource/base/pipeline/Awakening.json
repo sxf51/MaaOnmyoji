@@ -13,14 +13,14 @@
             }
         },
         "next": [
+            "AwakeningSession",
             "[JumpBack]CommonBountyInterrupt",
-            "AwakeningSession"
+            "CommonUnknownPopup"
         ]
     },
     "AwakeningNavigate": {
         "doc": "从当前页面进入觉醒菜单或层数页。",
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "AwakeningTeamResume",
             "NativeNavigationBlocked",
             "NativeResultBlocked",
@@ -32,10 +32,12 @@
             "[JumpBack]NativeNavCancelInvite",
             "[JumpBack]NativeNavCancelCreate",
             "[JumpBack]NativeLoading",
-            "[JumpBack]SafeInput_StartupCloseAnnouncement",
-            "[JumpBack]SafeInput_StartupCancelIllustration",
+            "[JumpBack]StartupCloseAnnouncement",
+            "[JumpBack]StartupCancelIllustration",
             "AwakeningNavigationReady",
-            "[JumpBack]NavigateAwakening"
+            "[JumpBack]NavigateAwakening",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "timeout": 60000
     },
@@ -125,9 +127,10 @@
             "TeamLeaderNoResourceTarget": "AwakeningNoResource"
         },
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "AwakeningEnableBuff",
-            "AwakeningBattleModeDestination"
+            "AwakeningBattleModeDestination",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ]
     },
     "AwakeningNavigationReady": {
@@ -164,11 +167,12 @@
     "AwakeningSelectType": {
         "doc": "当前麒麟不符合配置时，切换到指定麒麟。",
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "[JumpBack]SafeInput_AwakeningDismissBuffPanel",
+            "[JumpBack]AwakeningDismissBuffPanel",
             "AwakeningTypeReady",
-            "SafeInput_AwakeningOpenType",
-            "SafeInput_AwakeningSwitchType"
+            "AwakeningOpenType",
+            "AwakeningSwitchType",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "timeout": 15000
     },
@@ -198,15 +202,25 @@
                 ]
             }
         },
-        "action": "DoNothing",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    130,
+                    180,
+                    150,
+                    230
+                ]
+            }
+        },
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_AwakeningOpenType"
+            "AwakeningSelectType"
         ],
         "pre_delay": 0,
-        "post_delay": 0,
+        "post_delay": 1000,
         "pre_wait_freezes": 0,
-        "on_error": []
+        "on_error": [],
+        "max_hit": 3
     },
     "AwakeningSwitchType": {
         "doc": "在层数页左侧切换到配置的麒麟。",
@@ -218,15 +232,25 @@
                 ]
             }
         },
-        "action": "DoNothing",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    22,
+                    98,
+                    44,
+                    125
+                ]
+            }
+        },
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_AwakeningSwitchType"
+            "AwakeningSelectType"
         ],
         "pre_delay": 0,
-        "post_delay": 0,
+        "post_delay": 1000,
         "pre_wait_freezes": 0,
-        "on_error": []
+        "on_error": [],
+        "max_hit": 3
     },
     "AwakeningLayerText": {
         "doc": "识别配置的觉醒层数文字。",
@@ -300,11 +324,12 @@
     "AwakeningSearchLayer": {
         "doc": "查找配置层数；选中后才进入战前准备。",
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "AwakeningLayerReady",
-            "SafeInput_AwakeningSelectLayer",
+            "AwakeningSelectLayer",
             "AwakeningLayerScrollDown",
-            "AwakeningLayerScrollUp"
+            "AwakeningLayerScrollUp",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "timeout": 20000
     },
@@ -338,15 +363,20 @@
                 "box_index": 2
             }
         },
-        "action": "DoNothing",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_AwakeningSelectLayer"
+            "AwakeningSearchLayer"
         ],
         "pre_delay": 0,
-        "post_delay": 0,
+        "post_delay": 1000,
         "pre_wait_freezes": 0,
-        "on_error": []
+        "on_error": [],
+        "max_hit": 3
     },
     "AwakeningLayerScrollDown": {
         "doc": "滚动觉醒层数列表，查找目标层数。",
@@ -359,13 +389,36 @@
                 ]
             }
         },
-        "action": "DoNothing",
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "BezierSwipe",
+                "custom_action_param": {
+                    "begin": [
+                        165,
+                        570,
+                        40,
+                        45
+                    ],
+                    "end": [
+                        165,
+                        150,
+                        40,
+                        45
+                    ],
+                    "duration": 500,
+                    "duration_random": 80,
+                    "segments": 24,
+                    "deviation": 6,
+                    "easing": true
+                }
+            }
+        },
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_AwakeningLayerScrollDown"
+            "AwakeningSearchLayer"
         ],
         "pre_delay": 0,
-        "post_delay": 0,
+        "post_delay": 1000,
         "pre_wait_freezes": 0,
         "on_error": [],
         "max_hit": 4
@@ -381,13 +434,36 @@
                 ]
             }
         },
-        "action": "DoNothing",
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "BezierSwipe",
+                "custom_action_param": {
+                    "begin": [
+                        165,
+                        150,
+                        40,
+                        45
+                    ],
+                    "end": [
+                        165,
+                        570,
+                        40,
+                        45
+                    ],
+                    "duration": 500,
+                    "duration_random": 80,
+                    "segments": 24,
+                    "deviation": 6,
+                    "easing": true
+                }
+            }
+        },
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_AwakeningLayerScrollUp"
+            "AwakeningSearchLayer"
         ],
         "pre_delay": 0,
-        "post_delay": 0,
+        "post_delay": 1000,
         "pre_wait_freezes": 0,
         "on_error": [],
         "max_hit": 4
@@ -396,19 +472,21 @@
         "doc": "按顺序进入首个启用的准备步骤；每步完成后直接接后续步骤，选项关闭的步骤由 enabled 原生跳过。",
         "action": "DoNothing",
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "AwakeningLockTeam",
             "AwakeningPreset",
             "AwakeningEnableBuff",
-            "AwakeningBattleModeDestination"
+            "AwakeningBattleModeDestination",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ]
     },
     "AwakeningLockTeam": {
         "doc": "确认阵容锁定；未锁定时点击锁图标。",
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "AwakeningLockedTeam",
-            "[JumpBack]SafeInput_AwakeningUnlockTeam"
+            "[JumpBack]AwakeningUnlockTeam",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "action": "DoNothing"
     },
@@ -430,10 +508,11 @@
         },
         "action": "DoNothing",
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "AwakeningPreset",
             "AwakeningEnableBuff",
-            "AwakeningBattleModeDestination"
+            "AwakeningBattleModeDestination",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ]
     },
     "AwakeningUnlockTeam": {
@@ -462,15 +541,18 @@
                 "box_index": 1
             }
         },
-        "action": "DoNothing",
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_AwakeningUnlockTeam"
-        ],
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "next": [],
         "pre_delay": 0,
-        "post_delay": 0,
+        "post_delay": 1000,
         "pre_wait_freezes": 0,
-        "on_error": []
+        "on_error": [],
+        "max_hit": 3
     },
     "AwakeningBattleModeDestination": {
         "doc": "准备完成后进入单人或组队；“觉醒组队”选项改写 next。",
@@ -478,8 +560,9 @@
         "post_delay": 0,
         "action": "DoNothing",
         "next": [
+            "AwakeningBattleEntry",
             "[JumpBack]CommonBountyInterrupt",
-            "AwakeningBattleEntry"
+            "CommonUnknownPopup"
         ]
     },
     "AwakeningTeamEntry": {
@@ -509,9 +592,10 @@
             "TeamLeaderNoResourceTarget": "AwakeningNoResource"
         },
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "TeamLeaderResumeRoom",
-            "SafeInput_TeamLeaderOpen"
+            "TeamLeaderOpen",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ]
     },
     "AwakeningBattleEntry": {
@@ -522,27 +606,27 @@
                 "custom_action": "ResetCount",
                 "custom_action_param": {
                     "nodes": [
-                        "SafeInput_AwakeningChallenge",
-                        "SafeInput_CommonBattleEnableAuto",
-                        "SafeInput_CommonNetworkRetry",
-                        "SafeInput_CommonRewardOverflow",
-                        "SafeInput_MitamaTreasurePopup",
+                        "AwakeningChallenge",
+                        "CommonBattleEnableAuto",
+                        "CommonNetworkRetry",
+                        "CommonRewardOverflow",
+                        "MitamaTreasurePopup",
                         "CommonBattleMark",
-                        "SafeInput_CommonBattleMark",
-                        "SafeInput_DailyPrepare",
-                        "SafeInput_AwakeningBattleResult",
+                        "DailyPrepare",
+                        "AwakeningBattleResult",
                         "CommonBattleWait",
                         "CommonBattleEnteringWait",
                         "CommonCutscene",
-                        "SafeInput_DailyRewardPopup"
+                        "DailyRewardPopup"
                     ]
                 }
             }
         },
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "AwakeningNoResource",
-            "SafeInput_AwakeningChallenge"
+            "AwakeningChallenge",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "pre_delay": 0,
         "post_delay": 0
@@ -561,8 +645,9 @@
         },
         "action": "DoNothing",
         "next": [
+            "NativeFlowFailed",
             "[JumpBack]CommonBountyInterrupt",
-            "NativeFlowFailed"
+            "CommonUnknownPopup"
         ]
     },
     "AwakeningChallengeButton": {
@@ -591,23 +676,29 @@
                 "box_index": 1
             }
         },
-        "action": "DoNothing",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_AwakeningChallenge"
+            "AwakeningWaitBattleStart"
         ],
         "pre_delay": 0,
-        "post_delay": 0,
+        "post_delay": 1000,
         "pre_wait_freezes": 0,
-        "on_error": []
+        "on_error": [],
+        "max_hit": 3
     },
     "AwakeningWaitBattleStart": {
         "doc": "等待过场、布阵载入、准备、正式战斗或结算；仅原挑战目标仍存在时允许有界重试。",
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "AwakeningNoResource",
             "AwakeningBattleStarted",
-            "SafeInput_AwakeningChallenge"
+            "AwakeningChallenge",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "timeout": 60000
     },
@@ -637,20 +728,21 @@
     "AwakeningBattle": {
         "doc": "处理准备、自动战斗、结算与特殊奖励，不将等待画面计为胜利。",
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
+            "[JumpBack]CommonBattleEnableAuto",
+            "[JumpBack]CommonBattleMark",
+            "[JumpBack]CommonBattleWait",
             "AwakeningNoResource",
             "[JumpBack]MitamaTreasurePopup",
             "AwakeningBattleFailure",
             "[JumpBack]CommonRewardOverflow",
             "AwakeningDropStatistics",
-            "SafeInput_AwakeningBattleResult",
+            "AwakeningBattleResult",
             "[JumpBack]CommonBattleEnteringWait",
             "[JumpBack]DailyPrepare",
-            "[JumpBack]CommonBattleEnableAuto",
-            "[JumpBack]CommonBattleMark",
-            "[JumpBack]CommonBattleWait",
-            "[JumpBack]SafeInput_DailyRewardPopup",
-            "[JumpBack]CommonNetworkRetry"
+            "[JumpBack]DailyRewardPopup",
+            "[JumpBack]CommonNetworkRetry",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "timeout": 180000,
         "pre_delay": 0,
@@ -666,18 +758,28 @@
                 ]
             }
         },
-        "action": "DoNothing",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "[JumpBack]MitamaTreasurePopup",
+            "AwakeningBattleFailure",
             "AwakeningDropStatistics",
-            "SafeInput_AwakeningBattleResult"
+            "AwakeningBattleResult",
+            "[JumpBack]DailyRewardPopup",
+            "AwakeningAfterResult",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "pre_delay": 0,
-        "post_delay": 0,
+        "post_delay": 600,
         "pre_wait_freezes": 0,
         "on_error": [],
-        "post_wait_freezes": 0
+        "post_wait_freezes": 0,
+        "max_hit": 5
     },
     "AwakeningAfterResult": {
         "doc": "确认成功结算已返回正确麒麟和层数后，累计成功次数并决定继续或收尾；继续时仍重置每场挑战的点击预算。",
@@ -764,8 +866,9 @@
         },
         "action": "DoNothing",
         "next": [
+            "AwakeningFailedBattleResult",
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_AwakeningFailedBattleResult"
+            "CommonUnknownPopup"
         ],
         "timeout": 30000
     },
@@ -779,15 +882,23 @@
                 ]
             }
         },
-        "action": "DoNothing",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
         "next": [
+            "AwakeningFailedReturn",
+            "AwakeningFailedBattleResult",
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_AwakeningFailedBattleResult"
+            "CommonUnknownPopup"
         ],
         "pre_delay": 0,
-        "post_delay": 0,
+        "post_delay": 1500,
         "pre_wait_freezes": 0,
-        "on_error": []
+        "on_error": [],
+        "max_hit": 5
     },
     "AwakeningOpenBuffMenu": {
         "doc": "在觉醒层数页匹配竖排加成图标并打开菜单，忽略右上角状态标记。",
@@ -801,14 +912,17 @@
                 "box_index": 1
             }
         },
-        "action": "DoNothing",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
         "pre_delay": 0,
-        "post_delay": 0,
+        "post_delay": 1000,
         "pre_wait_freezes": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_AwakeningOpenBuffMenu"
-        ]
+        "next": [],
+        "max_hit": 4
     },
     "AwakeningFailedReturn": {
         "pre_delay": 0,
@@ -919,10 +1033,11 @@
     "AwakeningEnableBuff": {
         "doc": "确认觉醒加成已开启，仅操作觉醒材料一行。",
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "AwakeningBuffEnabled",
-            "[JumpBack]SafeInput_AwakeningEnableBuffClick",
-            "[JumpBack]SafeInput_AwakeningOpenBuffMenu"
+            "[JumpBack]AwakeningEnableBuffClick",
+            "[JumpBack]AwakeningOpenBuffMenu",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "action": "DoNothing",
         "enabled": false
@@ -939,8 +1054,9 @@
         },
         "action": "DoNothing",
         "next": [
+            "AwakeningCloseBuffAfterEnable",
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_AwakeningCloseBuffAfterEnable"
+            "CommonUnknownPopup"
         ]
     },
     "AwakeningEnableBuffClick": {
@@ -953,14 +1069,22 @@
                 ]
             }
         },
-        "action": "DoNothing",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    775,
+                    140,
+                    110,
+                    35
+                ]
+            }
+        },
         "pre_delay": 0,
-        "post_delay": 0,
+        "post_delay": 1000,
         "pre_wait_freezes": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_AwakeningEnableBuffClick"
-        ]
+        "next": [],
+        "max_hit": 3
     },
     "AwakeningCloseBuffAfterEnable": {
         "doc": "点击加成面板旁的空白区域，返回觉醒层数页。",
@@ -973,21 +1097,32 @@
                 ]
             }
         },
-        "action": "DoNothing",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    940,
+                    300,
+                    100,
+                    130
+                ]
+            }
+        },
         "pre_delay": 0,
-        "post_delay": 0,
+        "post_delay": 1000,
         "pre_wait_freezes": 0,
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_AwakeningCloseBuffAfterEnable"
-        ]
+            "AwakeningWaitBuffClosedForPreparation"
+        ],
+        "max_hit": 3
     },
     "AwakeningWaitBuffClosedForPreparation": {
         "doc": "确认加成面板已关闭，未关闭时最多重试三次。",
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "AwakeningBuffClosedForPreparation",
-            "SafeInput_AwakeningCloseBuffAfterEnable"
+            "AwakeningCloseBuffAfterEnable",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "timeout": 5000
     },
@@ -1005,16 +1140,18 @@
         "inverse": true,
         "action": "DoNothing",
         "next": [
+            "AwakeningBattleModeDestination",
             "[JumpBack]CommonBountyInterrupt",
-            "AwakeningBattleModeDestination"
+            "CommonUnknownPopup"
         ]
     },
     "AwakeningDisableBuff": {
         "doc": "收尾关闭加成：已在选层页或探索页就地关闭，其他页面（如组队房间）先回探索页。",
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "AwakeningDisableBuffReady",
-            "[JumpBack]NavigateExplore"
+            "[JumpBack]NavigateExplore",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "action": "DoNothing",
         "enabled": false
@@ -1032,10 +1169,11 @@
             }
         },
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "AwakeningBuffDisabled",
-            "[JumpBack]SafeInput_AwakeningDisableBuffClick",
-            "[JumpBack]SafeInput_AwakeningOpenBuffMenu"
+            "[JumpBack]AwakeningDisableBuffClick",
+            "[JumpBack]AwakeningOpenBuffMenu",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ]
     },
     "AwakeningBuffDisabled": {
@@ -1050,8 +1188,9 @@
         },
         "action": "DoNothing",
         "next": [
+            "AwakeningCloseBuffAfterDisable",
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_AwakeningCloseBuffAfterDisable"
+            "CommonUnknownPopup"
         ]
     },
     "AwakeningDisableBuffClick": {
@@ -1064,14 +1203,22 @@
                 ]
             }
         },
-        "action": "DoNothing",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    775,
+                    140,
+                    110,
+                    35
+                ]
+            }
+        },
         "pre_delay": 0,
-        "post_delay": 0,
+        "post_delay": 1000,
         "pre_wait_freezes": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_AwakeningDisableBuffClick"
-        ]
+        "next": [],
+        "max_hit": 3
     },
     "AwakeningCloseBuffAfterDisable": {
         "doc": "点击加成面板旁的空白区域，返回觉醒层数页。",
@@ -1084,21 +1231,32 @@
                 ]
             }
         },
-        "action": "DoNothing",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    940,
+                    300,
+                    100,
+                    130
+                ]
+            }
+        },
         "pre_delay": 0,
-        "post_delay": 0,
+        "post_delay": 1000,
         "pre_wait_freezes": 0,
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_AwakeningCloseBuffAfterDisable"
-        ]
+            "AwakeningWaitBuffClosedForFinish"
+        ],
+        "max_hit": 3
     },
     "AwakeningWaitBuffClosedForFinish": {
         "doc": "确认加成面板已关闭，未关闭时最多重试三次。",
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "AwakeningBuffClosedForFinish",
-            "SafeInput_AwakeningCloseBuffAfterDisable"
+            "AwakeningCloseBuffAfterDisable",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "timeout": 5000
     },
@@ -1116,8 +1274,9 @@
         "inverse": true,
         "action": "DoNothing",
         "next": [
+            "AwakeningFinishDone",
             "[JumpBack]CommonBountyInterrupt",
-            "AwakeningFinishDone"
+            "CommonUnknownPopup"
         ]
     },
     "AwakeningDismissBuffPanel": {
@@ -1131,14 +1290,22 @@
                 ]
             }
         },
-        "action": "DoNothing",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    1000,
+                    400,
+                    120,
+                    100
+                ]
+            }
+        },
         "pre_delay": 0,
-        "post_delay": 0,
+        "post_delay": 1000,
         "pre_wait_freezes": 0,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_AwakeningDismissBuffPanel"
-        ]
+        "next": [],
+        "max_hit": 3
     },
     "AwakeningFinishCleanup": {
         "pre_delay": 0,
@@ -1146,9 +1313,10 @@
         "doc": "收尾：加成关闭步骤启用时先执行，否则直接结束。",
         "action": "DoNothing",
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "AwakeningDisableBuff",
-            "AwakeningFinishDone"
+            "AwakeningFinishDone",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ]
     },
     "AwakeningFinishDone": {
@@ -1189,7 +1357,7 @@
                             }
                         }
                     },
-                    "SafeInput_TeamPresetOpen": {
+                    "TeamPresetOpen": {
                         "action": {
                             "param": {
                                 "target": [
@@ -1225,9 +1393,10 @@
         },
         "action": "DoNothing",
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "AwakeningEnableBuff",
-            "AwakeningBattleModeDestination"
+            "AwakeningBattleModeDestination",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ]
     },
     "AwakeningChallenging": {
@@ -1268,8 +1437,9 @@
             }
         },
         "next": [
+            "AwakeningBattleResult",
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_AwakeningBattleResult"
+            "CommonUnknownPopup"
         ],
         "pre_delay": 2000
     },
@@ -1284,28 +1454,28 @@
                 "custom_action_param": {
                     "scope": "Awakening",
                     "cleanup_override": {
-                        "SafeInput_AwakeningOpenBuffMenu": {
+                        "AwakeningOpenBuffMenu": {
                             "max_hit": 3
                         },
-                        "SafeInput_AwakeningEnableBuffClick": {
+                        "AwakeningEnableBuffClick": {
                             "max_hit": 3
                         },
-                        "SafeInput_AwakeningCloseBuffAfterEnable": {
+                        "AwakeningCloseBuffAfterEnable": {
                             "max_hit": 3
                         },
-                        "SafeInput_AwakeningDisableBuffClick": {
+                        "AwakeningDisableBuffClick": {
                             "max_hit": 3
                         },
-                        "SafeInput_AwakeningCloseBuffAfterDisable": {
+                        "AwakeningCloseBuffAfterDisable": {
                             "max_hit": 3
                         },
-                        "SafeInput_AwakeningDismissBuffPanel": {
+                        "AwakeningDismissBuffPanel": {
                             "max_hit": 3
                         },
-                        "SafeInput_BattleCleanupResult": {
+                        "BattleCleanupResult": {
                             "max_hit": 3
                         },
-                        "SafeInput_MitamaTreasurePopup": {
+                        "MitamaTreasurePopup": {
                             "max_hit": 3
                         },
                         "NavigateMitamaStage": {
@@ -1326,16 +1496,7 @@
                         "DailyRewardPopup": {
                             "max_hit": 3
                         },
-                        "SafeInput_NativeNavCancelNoResource": {
-                            "max_hit": 3
-                        },
-                        "SafeInput_DailyPrepare": {
-                            "max_hit": 3
-                        },
-                        "SafeInput_DailyRewardPopup": {
-                            "max_hit": 3
-                        },
-                        "SafeInput_CommonBattleEnableAuto": {
+                        "CommonBattleEnableAuto": {
                             "max_hit": 3
                         },
                         "NavigateExplore": {

@@ -175,7 +175,7 @@
         ]
     },
     "ExampleAwakeningWithPreset": {
-        "doc": "觉醒换队示例：启用任务前预设，成功一次后结束。分组和队伍在 tasks/Awakening.json 的 觉醒预设分组与队伍 中配置，并同时更新共享节点的文字及选中识别；默认关闭觉醒加成，可通过 觉醒材料加成 单独开启。不要直接调用 TeamPresetRun 或 SafeInput 节点，正式任务会配置页面上下文和返回锚点。",
+        "doc": "觉醒换队示例：启用任务前预设，成功一次后结束。分组和队伍在 tasks/Awakening.json 的 觉醒预设分组与队伍 中配置，并同时更新共享节点的文字及选中识别；默认关闭觉醒加成，可通过 觉醒材料加成 单独开启。不要直接调用 TeamPresetRun，正式任务会配置页面上下文和返回锚点。",
         "action": {
             "type": "Custom",
             "param": {
@@ -208,22 +208,11 @@
         "next": ["MitamaChallenge"]
     },
     "ExampleBountyAwareNavigation": {
-        "doc": "跨页面协作邀请示例：邀请出现时先走 CommonBountyInterrupt，默认拒绝并确认关闭，再通过 JumpBack 返回当前导航。生产任务和动态次数/准备路由已统一加入此优先分支，无需为每个页面另写拒绝流程。",
-        "next": ["[JumpBack]CommonBountyInterrupt", "NavigateHome"]
-    },
-    "ExampleSameFrameGuardedMitama": {
-        "doc": "同帧候选队列示例：仅在已到达目标御魂挑战页且准备完成后使用，成功一次后结束。next 在同一张图上先判断协作邀请，再由挑战目标的 InputTarget 检查实际点击范围后点击。SafeInput 节点仅作为完整安全队列的候选，不能单独作为任务入口；完整导航和准备仍使用 MitamaTask。",
-        "action": {
-            "type": "Custom",
-            "param": {
-                "custom_action": "TargetCountInit",
-                "custom_action_param": {"target_count": 1}
-            }
-        },
-        "next": ["[JumpBack]CommonBountyInterrupt", "SafeInput_MitamaChallenge"]
+        "doc": "跨页面协作邀请示例：协作邀请出现频率低，放在高频节点之后；高频节点都没命中时再走 CommonBountyInterrupt，默认拒绝并确认关闭，再通过 JumpBack 返回当前导航。最后的 CommonUnknownPopup 遇到没有规则的确定/取消弹窗时停止任务。",
+        "next": ["NavigateHome", "[JumpBack]CommonBountyInterrupt", "CommonUnknownPopup"]
     },
     "ExampleControlDispatch": {
-        "doc": "纯控制调度示例：已在御魂挑战页并完成准备时，初始化成功次数并重置重试预算；两步只改内存数据。最后在同一张截图中检查协作邀请和挑战目标，成功一次后结束。完整任务仍使用 MitamaTask。",
+        "doc": "纯控制调度示例：已在御魂挑战页并完成准备时，初始化成功次数并重置重试预算；两步只改内存数据。最后先识别挑战目标，没命中时再检查协作邀请，成功一次后结束。完整任务仍使用 MitamaTask。",
         "action": {
             "type": "Custom",
             "param": {
@@ -234,26 +223,15 @@
         "next": ["ExampleControlReset"]
     },
     "ExampleControlReset": {
-        "doc": "重置挑战重试预算后进入完整的画面识别队列。只有已知的纯控制动作允许直连；视觉条件、点击、滑动和未知自定义动作均保留保护队列。",
+        "doc": "重置挑战重试预算后进入完整的画面识别队列。只有已知的纯控制动作允许直连；视觉候选队列在末尾检查协作邀请和未知弹窗。",
         "action": {
             "type": "Custom",
             "param": {
                 "custom_action": "ResetCount",
-                "custom_action_param": {"nodes": ["SafeInput_MitamaChallenge"], "strict": true}
+                "custom_action_param": {"nodes": ["MitamaChallenge"], "strict": true}
             }
         },
-        "next": ["[JumpBack]CommonBountyInterrupt", "SafeInput_MitamaChallenge"]
-    },
-    "ExampleLocalInputChallenge": {
-        "doc": "局部输入保护示例：已到达御魂挑战页并完成准备时，成功一次后结束。先处理协作邀请，再由 InputTarget 在同一张图上匹配 MitamaChallenge，按运行时 action.target 和 target_offset 得到完整随机点击范围，仅检查该范围及按钮边缘；不扫描整页购买词。确认操作必须另有对应业务提示。完整流程仍从 MitamaTask 开始。",
-        "action": {
-            "type": "Custom",
-            "param": {
-                "custom_action": "TargetCountInit",
-                "custom_action_param": {"target_count": 1}
-            }
-        },
-        "next": ["[JumpBack]CommonBountyInterrupt", "SafeInput_MitamaChallenge"]
+        "next": ["MitamaChallenge", "[JumpBack]CommonBountyInterrupt", "CommonUnknownPopup"]
     },
     "ExampleRealmRaidFeatureCards": {
         "doc": "从当前页面进入个人突破；按卡片边框、五个圆圈外缘和右上角空白的原生蒙版模板选卡，再核对昵称；有标识的卡片跳过，漏点最多三次，核对本卡攻破印记才计数；不刷新、不买券。次数使用结界突破任务选项。",
@@ -303,9 +281,7 @@
                 "custom_action": "NodeOverride",
                 "custom_action_param": {
                     "CommonBattleMark": {
-                        "enabled": true
-                    },
-                    "SafeInput_CommonBattleMark": {
+                        "enabled": true,
                         "action": {
                             "param": {
                                 "target": [

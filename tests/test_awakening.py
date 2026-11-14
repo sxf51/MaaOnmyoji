@@ -27,7 +27,7 @@ class AwakeningTest(unittest.TestCase):
             override=case['pipeline_override']
             expected=override['AwakeningTargetType']['recognition']['param']['expected']
             self.assertIsNotNone(re.fullmatch(expected,case['name']))
-            for node in ('SafeInput_AwakeningOpenType','SafeInput_AwakeningSwitchType'):
+            for node in ('AwakeningOpenType','AwakeningSwitchType'):
                 region=override[node]['action']['param']['target']
                 self.assertGreater(region[2],1)
                 self.assertGreater(region[3],1)
@@ -55,7 +55,7 @@ class AwakeningTest(unittest.TestCase):
 
     def test_success_only_after_settlement_and_correct_stage(self):
         self.assertNotIn('AwakeningAfterResult',self.nodes['AwakeningBattle']['next'])
-        self.assertIn('AwakeningAfterResult',self.nodes['SafeInput_AwakeningBattleResult']['next'])
+        self.assertIn('AwakeningAfterResult',self.nodes['AwakeningBattleResult']['next'])
         self.assertEqual(self.nodes['AwakeningAfterResult']['recognition']['param']['all_of'],
             ['PageAwakeningStage','AwakeningLayerSelected'])
         self.assertEqual(self.nodes['AwakeningLayerSelected']['recognition']['param']['all_of'][:2],
@@ -64,8 +64,8 @@ class AwakeningTest(unittest.TestCase):
 
     def test_retry_limit_resets_per_battle(self):
         reset=self.nodes['AwakeningBattleEntry']['action']['param']['custom_action_param']['nodes']
-        self.assertIn('SafeInput_AwakeningChallenge',reset)
-        self.assertEqual(self.nodes['SafeInput_AwakeningChallenge']['max_hit'],3)
+        self.assertIn('AwakeningChallenge',reset)
+        self.assertEqual(self.nodes['AwakeningChallenge']['max_hit'],3)
         params=self.nodes['AwakeningAfterResult']['action']['param']['custom_action_param']
         self.assertEqual(params['continue_node'],'AwakeningBattleEntry')
 
@@ -87,7 +87,7 @@ class AwakeningTest(unittest.TestCase):
         wait=self.nodes['CommonBattleEnteringWait']
         self.assertEqual(wait['action'],'DoNothing')
         self.assertEqual(wait['timeout'],60000)
-        self.assertEqual(wait['next'],['[JumpBack]CommonBountyInterrupt','CommonBattleEnteringGone'])
+        self.assertEqual(wait['next'],['CommonBattleEnteringGone', '[JumpBack]CommonBountyInterrupt', 'CommonUnknownPopup'])
         self.assertTrue(self.nodes['CommonBattleEnteringGone']['inverse'])
         for name in ('PageLoading','PageBattleEntering'):
             self.assertIn(name,self.nodes['AwakeningBattleStarted']['recognition']['param']['any_of'])

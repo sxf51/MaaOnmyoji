@@ -52,19 +52,42 @@ class CommonActivityPipelineTest(unittest.TestCase):
         self.assertEqual(params["continue_node"], "CommonActivityPreparation")
         self.assertEqual(params["finish_node"], "CommonActivityFinish")
 
-    def test_count_only_after_continue_click_returns_to_challenge(self) -> None:
+    def test_battle_arms_counter_and_challenge_page_counts(self) -> None:
         pipeline = json.loads((ROOT / "assets/resource/base/pipeline/CommonActivity.json").read_text(encoding="utf-8"))
-        safety = json.loads((ROOT / "assets/resource/base/pipeline/InputSafety.json").read_text(encoding="utf-8"))
-        # Only the continue click leads to FinishOnce, and FinishOnce must see the challenge button text again.
-        self.assertEqual(safety["SafeInput_CommonActivityBattleResult"]["next"][-1], "CommonActivityFinishOnce")
-        self.assertEqual(pipeline["CommonActivityFinishOnce"]["recognition"]["param"]["all_of"], ["CommonActivityChallenge"])
-        counters = [name for name, node in {**pipeline, **safety}.items()
-                    if isinstance(node.get("action"), dict)
-                    and node["action"].get("param", {}).get("custom_action") == "TargetCountProgress"
-                    and name.startswith(("CommonActivity", "SafeInput_CommonActivity"))]
-        reachable = {n for node in {**pipeline, **safety}.values() for n in node.get("next", [])}
-        self.assertEqual([c for c in counters if c in reachable], ["CommonActivityFinishOnce"])
+        # Seeing the battle arms the FSM; returning to the challenge page counts once.
+        arm = pipeline["CommonActivityChallenging"]["action"]["param"]["custom_action"]
+        self.assertEqual(arm, "TargetCountArm")
+        finish = pipeline["CommonActivityFinishOnce"]
+        self.assertEqual(finish["recognition"]["param"]["all_of"], ["CommonActivityChallenge"])
+        params = finish["action"]["param"]["custom_action_param"]
+        self.assertTrue(params["require_armed"])
+        self.assertEqual(params["idle_node"], "CommonActivityChallenge")
+        counters = [name for name, node in pipeline.items() if isinstance(node.get("action"), dict)
+                    and node["action"].get("param", {}).get("custom_action") == "TargetCountProgress"]
+        self.assertEqual(counters, ["CommonActivityFinishOnce"])
 
+    def test_one_shared_list_ordered_by_frequency(self) -> None:
+        pipeline = json.loads((ROOT / "assets/resource/base/pipeline/CommonActivity.json").read_text(encoding="utf-8"))
+        hub = pipeline["CommonActivityTask"]["next"]
+        for name in ("CommonActivityChallenge", "CommonActivityBattleResult", "CommonActivityVictory"):
+            self.assertEqual(pipeline[name]["next"], hub, name)
+        order = ["[JumpBack]CommonActivityChallenging", "CommonActivityBattleFailure", "CommonActivityBattleResult",
+                 "CommonActivityVictory", "CommonActivityInsufficientAP", "CommonActivityFinishOnce",
+                 "[JumpBack]CommonActivityPrepare", "[JumpBack]CommonBountyInterrupt", "CommonUnknownPopup"]
+        self.assertEqual([hub.index(n) for n in order], sorted(hub.index(n) for n in order))
+        # Auto switching needs the battle page too, so it must precede the battle wait.
+        self.assertLess(hub.index("[JumpBack]CommonClickAuto"), hub.index("[JumpBack]CommonActivityChallenging"))
+
+    def test_victory_without_continue_text_clicks_safe_area(self) -> None:
+        pipeline = json.loads((ROOT / "assets/resource/base/pipeline/CommonActivity.json").read_text(encoding="utf-8"))
+        victory = pipeline["CommonActivityVictory"]
+        self.assertEqual(victory["recognition"]["param"]["template"], "Common/BattleWin.png")
+        self.assertTrue((ROOT / "assets/resource/base/image/Common/BattleWin.png").exists())
+        x, y, w, h = victory["action"]["param"]["target"]
+        # Right-side blank area (OAS C_REWARD_3), clear of the reward counter near (970-1110, 530-590).
+        self.assertGreaterEqual(x, 1092)
+        self.assertLessEqual(y + h, 520)
+        self.assertIn("CommonActivityVictory", pipeline["CommonActivityPreparation"]["action"]["param"]["custom_action_param"]["nodes"])
 
 if __name__ == "__main__":
     unittest.main()

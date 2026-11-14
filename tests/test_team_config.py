@@ -8,6 +8,16 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
 from validate_schema import load_jsonc
 
 
+
+def _all_nodes():
+    """Clicks now live on the recognized nodes; read every production pipeline."""
+    root = Path(__file__).resolve().parents[1] / "assets/resource/base/pipeline"
+    nodes = {}
+    for path in root.glob("*.json"):
+        if path.name != "Example.json":
+            nodes.update(json.loads(path.read_text(encoding="utf-8")))
+    return nodes
+
 class TeamRouteTest(unittest.TestCase):
     ROOT = Path(__file__).resolve().parents[1]
 
@@ -22,13 +32,13 @@ class TeamRouteTest(unittest.TestCase):
         self.assertNotIn("身份", task["option"])
         cases = {case["name"]: case for case in task["option"]["是否组队"]["cases"]}
         self.assertEqual(cases["Yes"]["option"], ["队友"])
-        self.assertEqual(cases["Yes"]["pipeline_override"]["MitamaBattleModeDestination"]["next"][-1], "MitamaTeamEntry")
+        self.assertEqual(cases["Yes"]["pipeline_override"]["MitamaBattleModeDestination"]["next"][-3], "MitamaTeamEntry")
         awakening = load_jsonc(self.ROOT / "assets/tasks/Awakening.json")
         self.assertNotIn("身份", awakening["option"])
         cases = {case["name"]: case for case in awakening["option"]["觉醒组队"]["cases"]}
         self.assertEqual(cases["Yes"]["option"], ["觉醒队友"])
-        self.assertEqual(cases["Yes"]["pipeline_override"]["AwakeningBattleModeDestination"]["next"][-1], "AwakeningTeamEntry")
-        self.assertEqual(cases["No"]["pipeline_override"]["AwakeningBattleModeDestination"]["next"][-1], "AwakeningBattleEntry")
+        self.assertEqual(cases["Yes"]["pipeline_override"]["AwakeningBattleModeDestination"]["next"][-3], "AwakeningTeamEntry")
+        self.assertEqual(cases["No"]["pipeline_override"]["AwakeningBattleModeDestination"]["next"][-3], "AwakeningBattleEntry")
         self.assertIn("觉醒组队", awakening["task"][0]["option"])
         self.assertEqual(awakening["option"]["觉醒队友"]["pipeline_override"]["TeamLeaderTeammateName"]["recognition"]["param"]["expected"],
                          "^{觉醒队友昵称}$")
@@ -38,11 +48,11 @@ class TeamRouteTest(unittest.TestCase):
 
     def test_team_count_routes_are_complete_and_continue_as_leader(self):
         nodes = self.nodes("Mitama.json")
-        self.assertEqual(nodes["TeamLeaderComplete"]["next"][-1], "TeamLeaderCountDetermine")
+        self.assertEqual(nodes["TeamLeaderComplete"]["next"][-3], "TeamLeaderCountDetermine")
         self.assertEqual(nodes["TeamLeaderCountDetermine"]["action"]["param"]["custom_action_param"],
                          {"decision_node": "TeamLeaderCountDetermine", "continue_node": "TeamLeaderBattleEntry",
                           "finish_node": "TeamLeaderFinish"})
-        self.assertEqual(nodes["TeamLeaderFinish"]["next"][-1], "[Anchor]TeamLeaderFinishTarget")
+        self.assertEqual(nodes["TeamLeaderFinish"]["next"][-3], "[Anchor]TeamLeaderFinishTarget")
         self.assertEqual(nodes["TeamLeaderBattleEntry"]["next"], ["TeamLeaderFight"])
 
     def test_each_dungeon_sets_where_the_shared_flow_ends(self):
@@ -52,7 +62,7 @@ class TeamRouteTest(unittest.TestCase):
         for name, nodes, scope, finish, no_resource in expected:
             entry = nodes[name]
             self.assertEqual(entry["anchor"], {"TeamLeaderFinishTarget": finish, "TeamLeaderNoResourceTarget": no_resource})
-            self.assertEqual(entry["next"][-1], "SafeInput_TeamLeaderOpen")
+            self.assertEqual(entry["next"][-3], "TeamLeaderOpen")
             statistics = entry["action"]["param"]["custom_action_param"]["TeamLeaderDropStatistics"]
             self.assertEqual(statistics["action"]["param"]["custom_action_param"]["scope"], scope)
 
@@ -64,7 +74,7 @@ class TeamRouteTest(unittest.TestCase):
     def test_awakening_buff_cleanup_works_from_explore(self):
         nodes = self.nodes("Awakening.json")
         self.assertEqual(nodes["AwakeningDisableBuff"]["next"],
-                         ["[JumpBack]CommonBountyInterrupt", "AwakeningDisableBuffReady", "[JumpBack]NavigateExplore"])
+                         ["AwakeningDisableBuffReady", "[JumpBack]NavigateExplore", "[JumpBack]CommonBountyInterrupt", "CommonUnknownPopup"])
         self.assertEqual(nodes["AwakeningDisableBuffReady"]["recognition"]["param"]["all_of"], ["AwakeningBuffPage"])
         self.assertEqual(nodes["AwakeningBuffPage"]["recognition"]["param"]["any_of"], ["PageAwakeningStage", "PageExplore"])
         for name in ("AwakeningOpenBuffMenu", "AwakeningBuffOff", "AwakeningBuffOn", "AwakeningCloseBuffAfterDisable",
@@ -118,15 +128,15 @@ class TeamRouteTest(unittest.TestCase):
             self.assertFalse(resume["enabled"])
             self.assertEqual(resume["max_hit"], 1)
             self.assertNotIn(prefix + "TeamResumeConfigure", nodes)
-            self.assertEqual(nodes[prefix + "Navigate"]["next"][1], prefix + "TeamResume")
+            self.assertEqual(nodes[prefix + "Navigate"]["next"][0], prefix + "TeamResume")
             self.assertEqual(nodes[prefix + "TeamResume"]["anchor"], nodes[prefix + "TeamEntry"]["anchor"])
         self.assertEqual(mitama["TeamLeaderStart"]["recognition"]["param"]["all_of"],
                          ["PageTeamRoom", "TeamLeaderRoomTeammate", "TeamLeaderRoomTeammate2", "TeamLeaderStartButton"])
 
     def test_member_nodes_left_the_dungeon_pipeline(self):
-        names = set(self.nodes("Mitama.json")) | set(self.nodes("InputSafety.json"))
+        names = set(self.nodes("Mitama.json")) | set(_all_nodes())
         for removed in ("MitamaTeamMember", "MitamaMemberFight", "MitamaMemberBattleEntry", "MitamaRoomMemberReady",
-                        "MitamaAcceptNamedInvitation", "SafeInput_MitamaAcceptNamedInvitation", "SafeInput_MitamaRoomMemberReady"):
+                        "MitamaAcceptNamedInvitation", "MitamaAcceptNamedInvitation", "MitamaRoomMemberReady"):
             self.assertNotIn(removed, names)
 
     def test_member_task_is_registered_and_generic(self):
@@ -178,15 +188,14 @@ class TeamRouteTest(unittest.TestCase):
         for text in ("x8", "快", "五享受回归特权加成", "挑战次数"):
             self.assertNotRegex(text, expected)
 
-    def test_settlement_clicks_never_go_through_the_public_node(self):
-        # Recognizing twice costs about 1.5 seconds per click and let the page change in between.
-        mitama, awakening, safety = self.nodes("Mitama.json"), self.nodes("Awakening.json"), self.nodes("InputSafety.json")
+    def test_settlement_click_runs_after_drop_statistics(self):
+        # The result node clicks on the same recognition; statistics must read the page first.
+        mitama, awakening, safety = self.nodes("Mitama.json"), self.nodes("Awakening.json"), _all_nodes()
         for nodes, loop, public, stats in ((mitama, "TeamLeaderBattle", "TeamLeaderBattleResult", "TeamLeaderDropStatistics"),
                                            (mitama, "MitamaBattle", "MitamaBattleResult", "MitamaSoloDropStatistics"),
                                            (awakening, "AwakeningBattle", "AwakeningBattleResult", "AwakeningDropStatistics")):
-            click = "SafeInput_" + public
+            click = public
             for routes in (nodes[loop]["next"], safety[click]["next"]):
-                self.assertNotIn(public, routes)
                 self.assertLess(routes.index(stats), routes.index(click), public)
             self.assertEqual(safety[click]["post_delay"], 600)
 
@@ -199,7 +208,7 @@ class TeamRouteTest(unittest.TestCase):
     def test_mitama_entry_navigates_once_and_never_rescans(self):
         nodes = self.nodes("Mitama.json")
         self.assertEqual(nodes["MitamaNavigate"]["next"],
-                         ["[JumpBack]CommonBountyInterrupt", "MitamaTeamResume", "[JumpBack]MitamaNavigateOnce", "MitamaNavigateReady"])
+                         ["MitamaTeamResume", "[JumpBack]MitamaNavigateOnce", "MitamaNavigateReady", "[JumpBack]CommonBountyInterrupt", "CommonUnknownPopup"])
         self.assertEqual((nodes["MitamaNavigateOnce"]["max_hit"], nodes["MitamaNavigateOnce"]["next"]), (1, ["NavigateMitamaStage"]))
 
     def test_preparation_control_nodes_do_not_wait(self):
@@ -224,7 +233,7 @@ class TeamRouteTest(unittest.TestCase):
         self.assertGreaterEqual(y + height, 373)
         for name in ("TeamLeaderComplete", "TeamLeaderFight"):
             routes = nodes[name]["next"]
-            self.assertLess(routes.index("[JumpBack]SafeInput_TeamLeaderReinviteTick"), routes.index("[JumpBack]SafeInput_TeamLeaderReinvite"))
+            self.assertLess(routes.index("[JumpBack]TeamLeaderReinviteTick"), routes.index("[JumpBack]TeamLeaderReinvite"))
 
     def test_buff_cleanup_never_requires_the_stage_page(self):
         # The simulation stubs composite checks, so walk the real references here.
@@ -249,7 +258,7 @@ class TeamRouteTest(unittest.TestCase):
 
     def test_buff_cleanup_stays_out_of_the_mitama_pages(self):
         nodes = self.nodes("Mitama.json")
-        self.assertEqual(nodes["MitamaDisableBuff"]["next"][-1], "[JumpBack]NavigateExplore")
+        self.assertEqual(nodes["MitamaDisableBuff"]["next"][-3], "[JumpBack]NavigateExplore")
         self.assertEqual(nodes["MitamaBuffPage"]["recognition"]["param"]["any_of"], ["PageMitamaStage", "PageExplore"])
         # Finishing decides where to close by MitamaBuffPage, so a room is left before closing.
         self.assertEqual(nodes["MitamaDisableBuffReady"]["recognition"]["param"]["all_of"], ["MitamaBuffPage"])
@@ -261,14 +270,14 @@ class TeamRouteTest(unittest.TestCase):
         # Enabling happens on the stage page, or in the room when an existing team is resumed.
         self.assertIn("MitamaBuffAnyPage", nodes["MitamaEnableBuffClick"]["recognition"]["param"]["all_of"])
         support = self.nodes("BattleSupport.json")
-        self.assertEqual(support["MitamaAbortRecover"]["next"][-1], "[JumpBack]NavigateExplore")
+        self.assertEqual(support["MitamaAbortRecover"]["next"][-3], "[JumpBack]NavigateExplore")
 
     def test_reinvite_is_checked_before_the_generic_cancel(self):
         nodes = self.nodes("Mitama.json")
         routes = nodes["TeamLeaderComplete"]["next"]
-        self.assertLess(routes.index("[JumpBack]SafeInput_TeamLeaderReinvite"), routes.index("[JumpBack]SafeInput_CommonConfirm"))
+        self.assertLess(routes.index("[JumpBack]TeamLeaderReinvite"), routes.index("[JumpBack]CommonConfirm"))
         routes = nodes["TeamLeaderFight"]["next"]
-        self.assertLess(routes.index("[JumpBack]SafeInput_TeamLeaderReinvite"), routes.index("SafeInput_TeamLeaderStart"))
+        self.assertLess(routes.index("[JumpBack]TeamLeaderReinvite"), routes.index("TeamLeaderStart"))
         self.assertEqual(nodes["TeamLeaderReinvite"]["recognition"]["param"]["box_index"], 1)
 
 
@@ -321,16 +330,15 @@ class NativeTeamConfigTest(unittest.TestCase):
         nodes = self.leader()
         search = nodes["TeamLeaderInviteSearch"]["next"]
         self.assertIn("[Anchor]TeamLeaderSelectTarget", search)
-        self.assertNotIn("SafeInput_TeamLeaderSelectTeammate", search)
-        self.assertEqual(nodes["TeamLeaderRoomReady"]["anchor"], {"TeamLeaderSelectTarget": "SafeInput_TeamLeaderSelectTeammate"})
-        self.assertEqual(nodes["TeamLeaderInviteAgain"]["anchor"], {"TeamLeaderSelectTarget": "SafeInput_TeamLeaderSelectTeammate2"})
+        self.assertNotIn("TeamLeaderSelectTeammate", search)
+        self.assertEqual(nodes["TeamLeaderRoomReady"]["anchor"], {"TeamLeaderSelectTarget": "TeamLeaderSelectTeammate"})
+        self.assertEqual(nodes["TeamLeaderInviteAgain"]["anchor"], {"TeamLeaderSelectTarget": "TeamLeaderSelectTeammate2"})
         self.assertEqual(nodes["TeamLeaderSelectTeammate2"]["recognition"]["param"]["all_of"], ["PageTeamInvite", "TeamLeaderTeammate2Name"])
         self.assertEqual(nodes["TeamLeaderTeammate2Name"]["recognition"]["param"]["roi"],
                          nodes["TeamLeaderTeammateName"]["recognition"]["param"]["roi"])
-        safety = json.loads((self.ROOT / "assets/resource/base/pipeline/InputSafety.json").read_text(encoding="utf-8"))
-        guard = json.dumps(safety["SafeInput_TeamLeaderSelectTeammate2"])
-        self.assertEqual(guard.replace("TeamLeaderSelectTeammate2", "TeamLeaderSelectTeammate"),
-                         json.dumps(safety["SafeInput_TeamLeaderSelectTeammate"]))
+        safety = _all_nodes()
+        for field in ("action", "next", "max_hit", "post_delay"):
+            self.assertEqual(safety["TeamLeaderSelectTeammate2"].get(field), safety["TeamLeaderSelectTeammate"].get(field), field)
 
     def test_second_round_runs_only_while_the_second_teammate_is_missing(self):
         nodes = self.leader()
@@ -342,10 +350,10 @@ class NativeTeamConfigTest(unittest.TestCase):
         # A new room may invite again.
         self.assertEqual(nodes["TeamLeaderRoomReady"]["action"]["param"]["custom_action_param"]["nodes"], ["TeamLeaderInviteAgain"])
         # The name area is only read once the room is back; Fight is a direct hit and must not be reachable earlier.
-        self.assertEqual(nodes["TeamLeaderInviteNext"]["next"], ["[JumpBack]CommonBountyInterrupt", "TeamLeaderInviteRoundCheck", "TeamLeaderInviteStillOpen"])
+        self.assertEqual(nodes["TeamLeaderInviteNext"]["next"], ["TeamLeaderInviteRoundCheck", "TeamLeaderInviteStillOpen", "[JumpBack]CommonBountyInterrupt", "CommonUnknownPopup"])
         check = nodes["TeamLeaderInviteRoundCheck"]
         self.assertEqual(check["recognition"]["param"]["all_of"], ["PageTeamRoom"])
-        self.assertEqual(check["next"], ["[JumpBack]CommonBountyInterrupt", "TeamLeaderInviteAgain", "TeamLeaderFight"])
+        self.assertEqual(check["next"], ["TeamLeaderInviteAgain", "TeamLeaderFight", "[JumpBack]CommonBountyInterrupt", "CommonUnknownPopup"])
 
     def test_room_target_follows_each_selected_layer(self):
         mitama = load_jsonc(self.ROOT / "assets/tasks/Mitama.json")["option"]["选择关卡"]["cases"]
@@ -380,32 +388,32 @@ class NativeTeamConfigTest(unittest.TestCase):
     def test_invite_panel_opens_from_an_empty_slot(self):
         nodes = self.leader()
         self.assertEqual(nodes["TeamLeaderInviteSlot"]["next"],
-                         ["[JumpBack]CommonBountyInterrupt", "TeamLeaderInviteSlotRight", "TeamLeaderInviteSlotMiddle",
-                          "TeamLeaderInviteSlotFull"])
-        for side, click in (("Right", "SafeInput_TeamLeaderOpenInvite"), ("Middle", "SafeInput_TeamLeaderOpenInviteMiddle")):
+                         ["TeamLeaderInviteSlotRight", "TeamLeaderInviteSlotMiddle",
+                          "TeamLeaderInviteSlotFull", "[JumpBack]CommonBountyInterrupt", "CommonUnknownPopup"])
+        for side, click in (("Right", "TeamLeaderOpenInvite"), ("Middle", "TeamLeaderOpenInviteMiddle")):
             slot = nodes["TeamLeaderInviteSlot" + side]
             self.assertTrue(slot["inverse"])
             self.assertNotIn("expected", slot["recognition"]["param"])
-            self.assertEqual(slot["next"][-1], click)
+            self.assertEqual(slot["next"][-3], click)
         for name in ("TeamLeaderRoomReady", "TeamLeaderInviteAgain", "TeamLeaderReinviteFirst"):
-            self.assertEqual(nodes[name]["next"][-1], "TeamLeaderInviteSlot", name)
+            self.assertEqual(nodes[name]["next"][-3], "TeamLeaderInviteSlot", name)
 
     def test_missing_teammates_are_invited_again_with_a_limit(self):
         nodes = self.leader()
         fight = nodes["TeamLeaderFight"]["next"]
-        self.assertEqual(fight[-3:], ["[JumpBack]TeamLeaderWaitTeammate", "TeamLeaderInviteMissing", "TeamLeaderTeammateNoShow"])
-        self.assertLess(fight.index("SafeInput_TeamLeaderStart"), fight.index("[JumpBack]TeamLeaderWaitTeammate"))
+        self.assertEqual(fight[-5:], ["[JumpBack]TeamLeaderWaitTeammate", "TeamLeaderInviteMissing", "TeamLeaderTeammateNoShow", "[JumpBack]CommonBountyInterrupt", "CommonUnknownPopup"])
+        self.assertLess(fight.index("TeamLeaderStart"), fight.index("[JumpBack]TeamLeaderWaitTeammate"))
         wait = nodes["TeamLeaderWaitTeammate"]
         self.assertEqual((wait["max_hit"], wait["post_delay"]), (10, 1000))
         missing = nodes["TeamLeaderInviteMissing"]
         self.assertEqual(missing["max_hit"], 3)
-        self.assertEqual(missing["next"], ["[JumpBack]CommonBountyInterrupt", "TeamLeaderReinviteFirst", "TeamLeaderInviteAgain", "TeamLeaderFight"])
+        self.assertEqual(missing["next"], ["TeamLeaderReinviteFirst", "TeamLeaderInviteAgain", "TeamLeaderFight", "[JumpBack]CommonBountyInterrupt", "CommonUnknownPopup"])
         resets = missing["action"]["param"]["custom_action_param"]["nodes"]
-        for name in ("TeamLeaderWaitTeammate", "TeamLeaderInviteAgain", "SafeInput_TeamLeaderInviteOpenFriends"):
+        for name in ("TeamLeaderWaitTeammate", "TeamLeaderInviteAgain", "TeamLeaderInviteOpenFriends"):
             self.assertIn(name, resets)
         first = nodes["TeamLeaderReinviteFirst"]
         self.assertTrue(first["inverse"])
-        self.assertEqual(first["anchor"], {"TeamLeaderSelectTarget": "SafeInput_TeamLeaderSelectTeammate"})
+        self.assertEqual(first["anchor"], {"TeamLeaderSelectTarget": "TeamLeaderSelectTeammate"})
         entry = nodes["TeamLeaderBattleEntry"]["action"]["param"]["custom_action_param"]["nodes"]
         self.assertIn("TeamLeaderWaitTeammate", entry)
         self.assertIn("TeamLeaderInviteMissing", entry)
@@ -438,33 +446,33 @@ class NativeTeamConfigTest(unittest.TestCase):
 
     def test_teammate_joining_after_being_judged_missing_does_not_stop(self):
         nodes = self.leader()
-        self.assertEqual(nodes["TeamLeaderInviteSlot"]["next"][-1], "TeamLeaderInviteSlotFull")
-        self.assertEqual(nodes["TeamLeaderInviteSlotFull"]["next"][-1], "TeamLeaderFight")
+        self.assertEqual(nodes["TeamLeaderInviteSlot"]["next"][-3], "TeamLeaderInviteSlotFull")
+        self.assertEqual(nodes["TeamLeaderInviteSlotFull"]["next"][-3], "TeamLeaderFight")
         missing = nodes["TeamLeaderInviteTeammateMissing"]
         self.assertEqual(missing["recognition"]["param"]["all_of"], ["PageTeamInvite", "NavCancelInvite"])
-        self.assertEqual(missing["next"][-1], "SafeInput_TeamLeaderInviteTeammateMissing")
-        safety = json.loads((self.ROOT / "assets/resource/base/pipeline/InputSafety.json").read_text(encoding="utf-8"))
-        self.assertEqual(safety["SafeInput_TeamLeaderInviteTeammateMissing"]["next"][-1], "TeamLeaderInviteClosed")
-        self.assertEqual(nodes["TeamLeaderInviteClosed"]["next"][-1], "TeamLeaderInviteRoundCheck")
+        self.assertEqual(missing["next"], ["TeamLeaderInviteClosed", "[JumpBack]CommonBountyInterrupt", "CommonUnknownPopup"])
+        safety = _all_nodes()
+        self.assertEqual(safety["TeamLeaderInviteTeammateMissing"]["next"][-3], "TeamLeaderInviteClosed")
+        self.assertEqual(nodes["TeamLeaderInviteClosed"]["next"][-3], "TeamLeaderInviteRoundCheck")
         still_open = nodes["TeamLeaderInviteStillOpen"]
-        self.assertEqual(nodes["TeamLeaderInviteNext"]["next"][-2:], ["TeamLeaderInviteRoundCheck", "TeamLeaderInviteStillOpen"])
-        self.assertEqual(still_open["next"][-2:], ["TeamLeaderInviteRoundCheck", "SafeInput_TeamLeaderInviteTeammateMissing"])
+        self.assertEqual(nodes["TeamLeaderInviteNext"]["next"][-4:], ["TeamLeaderInviteRoundCheck", "TeamLeaderInviteStillOpen", "[JumpBack]CommonBountyInterrupt", "CommonUnknownPopup"])
+        self.assertEqual(still_open["next"][-4:], ["TeamLeaderInviteRoundCheck", "TeamLeaderInviteTeammateMissing", "[JumpBack]CommonBountyInterrupt", "CommonUnknownPopup"])
         self.assertEqual(still_open["max_hit"], 3)
 
     def test_member_taps_speak_while_waiting_in_the_room(self):
         nodes = json.loads((self.ROOT / "assets/resource/base/pipeline/TeamMember.json").read_text(encoding="utf-8"))
         loop = nodes["TeamMemberLoop"]["next"]
-        self.assertEqual(loop[-3:], ["[JumpBack]TeamMemberRoomTick", "[JumpBack]TeamMemberIdleEmoteReady", "[JumpBack]TeamMemberRoomWait"])
+        self.assertEqual(loop[-5:], ["[JumpBack]TeamMemberRoomTick", "[JumpBack]TeamMemberIdleEmoteReady", "[JumpBack]TeamMemberRoomWait", "[JumpBack]CommonBountyInterrupt", "CommonUnknownPopup"])
         self.assertEqual((nodes["TeamMemberRoomTick"]["max_hit"], nodes["TeamMemberRoomTick"]["post_delay"]), (15, 1000))
         emote = nodes["TeamMemberIdleEmoteReady"]
         self.assertEqual(emote["action"]["param"]["custom_action_param"]["nodes"], ["TeamMemberRoomTick"])
-        self.assertEqual(emote["next"][-1], "SafeInput_TeamMemberIdleEmote")
+        self.assertEqual(emote["next"][-3], "TeamMemberIdleEmote")
         # Screenshot: the speak text sits at x 30-75, y 580-602 with its icon right above (OAS roi 27,526,55,51).
         x, y, width, height = nodes["TeamRoomSpeakButton"]["recognition"]["param"]["roi"]
         self.assertTrue(x <= 30 and x + width >= 75 and y <= 580 and y + height >= 602)
-        safety = json.loads((self.ROOT / "assets/resource/base/pipeline/InputSafety.json").read_text(encoding="utf-8"))
-        self.assertEqual(safety["SafeInput_TeamMemberIdleEmote"]["action"]["param"]["target_offset"], [0, -48, 0, 22])
-        self.assertEqual(safety["SafeInput_TeamMemberIdleEmote"]["next"], [])
+        safety = _all_nodes()
+        self.assertEqual(safety["TeamMemberIdleEmote"]["action"]["param"]["target_offset"], [0, -48, 0, 22])
+        self.assertEqual(safety["TeamMemberIdleEmote"]["next"], [])
 
     def test_member_defaults_accept_any_chinese_leader_and_target(self):
         option = load_jsonc(self.ROOT / "assets/tasks/TeamMember.json")["option"]["队长昵称"]
@@ -491,8 +499,8 @@ class NativeTeamConfigTest(unittest.TestCase):
         nodes = json.loads((self.ROOT / "assets/resource/base/pipeline/TeamMember.json").read_text(encoding="utf-8"))
         loop = nodes["TeamMemberLoop"]["next"]
         # Invites and the prompt expire in seconds, so they lead the loop.
-        self.assertEqual(loop[1:4], ["TeamMemberAutoReadyConfirm", "TeamMemberAcceptDefault", "TeamMemberAccept"])
-        self.assertEqual(nodes["TeamMemberAfterAccept"]["next"][1:], ["TeamMemberAutoReadyConfirm", "TeamMemberAcceptJoined"])
+        self.assertEqual(loop[0:3], ["TeamMemberAutoReadyConfirm", "TeamMemberAcceptDefault", "TeamMemberAccept"])
+        self.assertEqual(nodes["TeamMemberAfterAccept"]["next"], ["TeamMemberAutoReadyConfirm", "TeamMemberAcceptJoined", "[JumpBack]CommonBountyInterrupt", "CommonUnknownPopup"])
         self.assertEqual(nodes["TeamMemberAfterAccept"]["on_error"], ["TeamMemberLoop"])
         self.assertLessEqual(nodes["TeamMemberAfterAccept"]["timeout"], 5000)
         x, y, w, h = nodes["TeamMemberAutoReadyText"]["recognition"]["param"]["roi"]
@@ -500,10 +508,11 @@ class NativeTeamConfigTest(unittest.TestCase):
         x, y, w, h = nodes["TeamMemberAutoReadyButton"]["recognition"]["param"]["roi"]
         self.assertTrue(x <= 722 and x + w >= 785 and y <= 425 and y + h >= 452 and x >= 620)
         self.assertEqual(nodes["TeamMemberAutoReadyConfirm"]["recognition"]["param"]["box_index"], 1)
-        safety = json.loads((self.ROOT / "assets/resource/base/pipeline/InputSafety.json").read_text(encoding="utf-8"))
-        self.assertEqual(safety["SafeInput_TeamMemberAutoReadyConfirm"]["next"], ["TeamMemberLoop"])
-        for name in ("SafeInput_TeamMemberAccept", "SafeInput_TeamMemberAcceptDefault"):
-            self.assertEqual(safety[name]["next"], ["TeamMemberAfterAccept"])
+        safety = _all_nodes()
+        self.assertEqual(safety["TeamMemberAutoReadyConfirm"]["next"], ["TeamMemberLoop"])
+        for name in ("TeamMemberAccept", "TeamMemberAcceptDefault"):
+            # A tap that did not register leaves the invite visible: tap again, bounded by max_hit.
+            self.assertEqual(safety[name]["next"], ["TeamMemberAfterAccept", name, "[JumpBack]CommonBountyInterrupt", "CommonUnknownPopup"])
             self.assertLessEqual(safety[name]["post_delay"], 500)
 
     def test_member_counts_one_win_per_battle(self):
@@ -518,16 +527,16 @@ class NativeTeamConfigTest(unittest.TestCase):
         resets = nodes["TeamMemberBattleEntry"]["action"]["param"]["custom_action_param"]["nodes"]
         self.assertIn("TeamMemberInBattle", resets)
         self.assertNotIn("TeamMemberWon", resets)
-        safety = json.loads((self.ROOT / "assets/resource/base/pipeline/InputSafety.json").read_text(encoding="utf-8"))
-        self.assertEqual(safety["SafeInput_TeamMemberBattleResult"]["next"][-2:], ["TeamMemberWon", "TeamMemberResultCleared"])
+        safety = _all_nodes()
+        self.assertEqual(safety["TeamMemberBattleResult"]["next"][-4:], ["TeamMemberWon", "TeamMemberResultCleared", "[JumpBack]CommonBountyInterrupt", "CommonUnknownPopup"])
         self.assertEqual(nodes["TeamMemberResultCleared"]["next"], ["TeamMemberAfterResult"])
 
     def test_member_after_result_short_route(self):
         nodes = json.loads((self.ROOT / "assets/resource/base/pipeline/TeamMember.json").read_text(encoding="utf-8"))
         self.assertEqual(nodes["TeamMemberBattleEntry"]["next"], ["TeamMemberAfterResult"])
         after = nodes["TeamMemberAfterResult"]
-        self.assertEqual(after["next"][1:], ["TeamMemberAutoReadyConfirm", "TeamMemberAcceptDefault", "TeamMemberAccept",
-                                             "SafeInput_TeamMemberWinResult", "TeamMemberResultSeen", "TeamMemberAfterResultRoom"])
+        self.assertEqual(after["next"], ["TeamMemberAutoReadyConfirm", "TeamMemberAcceptDefault", "TeamMemberAccept",
+                                         "TeamMemberWinResult", "TeamMemberResultSeen", "TeamMemberAfterResultRoom", "[JumpBack]CommonBountyInterrupt", "CommonUnknownPopup"])
         self.assertLess(len(after["next"]), len(nodes["TeamMemberLoop"]["next"]) // 2)
         self.assertEqual(after["on_error"], ["TeamMemberLoop"])
         self.assertLessEqual(after["timeout"], 8000)
@@ -538,8 +547,8 @@ class NativeTeamConfigTest(unittest.TestCase):
         loop = nodes["TeamMemberLoop"]["next"]
         self.assertNotIn("[JumpBack]CommonBattleEnteringWait", loop)
         self.assertNotIn("[JumpBack]CommonRewardOverflow", loop)
-        safety = json.loads((self.ROOT / "assets/resource/base/pipeline/InputSafety.json").read_text(encoding="utf-8"))
-        self.assertIn("[JumpBack]CommonRewardOverflow", safety["SafeInput_TeamMemberBattleResult"]["next"])
+        safety = _all_nodes()
+        self.assertIn("[JumpBack]CommonRewardOverflow", safety["TeamMemberBattleResult"]["next"])
 
     def test_member_checks_defeat_only_on_a_result_screen(self):
         # DailyBattleFailed reads 694x444; it runs only after the small result prompt is seen.
@@ -549,7 +558,7 @@ class NativeTeamConfigTest(unittest.TestCase):
             self.assertIn("TeamMemberResultSeen", nodes[router]["next"], router)
         seen = nodes["TeamMemberResultSeen"]
         self.assertEqual(seen["recognition"]["param"]["all_of"], ["DailyBattleResult"])
-        self.assertEqual(seen["next"][1:], ["TeamMemberBattleFailure", "SafeInput_TeamMemberBattleResult"])
+        self.assertEqual(seen["next"], ["TeamMemberBattleFailure", "TeamMemberBattleResult", "[JumpBack]CommonBountyInterrupt", "CommonUnknownPopup"])
 
     def test_member_clicks_win_pages_without_the_defeat_check(self):
         # Screenshots: page one shows 胜利 at (700,75), page two the reward bag at (560,470); both only on a win.
@@ -573,12 +582,12 @@ class NativeTeamConfigTest(unittest.TestCase):
         self.assertEqual(nodes["TeamMemberWinResult"]["recognition"]["param"]["all_of"], ["DailyBattleResult", "CommonBattleWinPage"])
         for router in ("TeamMemberLoop", "TeamMemberAfterResult"):
             nxt = nodes[router]["next"]
-            self.assertLess(nxt.index("SafeInput_TeamMemberWinResult"), nxt.index("TeamMemberResultSeen"), router)
-        safety = json.loads((self.ROOT / "assets/resource/base/pipeline/InputSafety.json").read_text(encoding="utf-8"))
-        win_next = safety["SafeInput_TeamMemberWinResult"]["next"]
+            self.assertLess(nxt.index("TeamMemberWinResult"), nxt.index("TeamMemberResultSeen"), router)
+        safety = _all_nodes()
+        win_next = safety["TeamMemberWinResult"]["next"]
         self.assertNotIn("TeamMemberBattleFailure", win_next)
-        self.assertEqual(win_next[1], "SafeInput_TeamMemberWinResult")
-        self.assertEqual(win_next[-2:], ["TeamMemberWon", "TeamMemberResultCleared"])
+        self.assertEqual(win_next[0], "TeamMemberWinResult")
+        self.assertEqual(win_next[-4:], ["TeamMemberWon", "TeamMemberResultCleared", "[JumpBack]CommonBountyInterrupt", "CommonUnknownPopup"])
 
     def test_empty_invite_tab_counts_as_fitting_one_page(self):
         import re as _re
@@ -596,11 +605,11 @@ class NativeTeamConfigTest(unittest.TestCase):
         gone = nodes["TeamLeaderInvitePanelGone"]
         self.assertTrue(gone["inverse"])
         self.assertEqual(gone["recognition"]["param"]["all_of"], ["PageTeamInvite"])
-        self.assertEqual(gone["next"][-1], "TeamLeaderInviteClosed")
+        self.assertEqual(gone["next"][-3], "TeamLeaderInviteClosed")
         for name in ("TeamLeaderInviteSearch", "TeamLeaderInviteAdvance"):
             nxt = nodes[name]["next"]
             self.assertIn("TeamLeaderInvitePanelGone", nxt, name)
-        safety = json.loads((self.ROOT / "assets/resource/base/pipeline/InputSafety.json").read_text(encoding="utf-8"))
+        safety = _all_nodes()
         for tab in ("Friends", "Recent", "Guild", "Cross"):
-            self.assertEqual(safety["SafeInput_TeamLeaderInviteOpen" + tab]["next"][-1], "TeamLeaderInvitePanelGone", tab)
+            self.assertEqual(safety["TeamLeaderInviteOpen" + tab]["next"][-3], "TeamLeaderInvitePanelGone", tab)
 

@@ -13,14 +13,14 @@
             }
         },
         "next": [
+            "BondlingSearchNavigate",
             "[JumpBack]CommonBountyInterrupt",
-            "BondlingSearchNavigate"
+            "CommonUnknownPopup"
         ]
     },
     "BondlingSearchNavigate": {
         "doc": "从当前页面进入契灵之境探查页。",
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "NativeNavigationBlocked",
             "NativeResultBlocked",
             "[JumpBack]NativeDailyRewardPopup",
@@ -31,10 +31,12 @@
             "[JumpBack]NativeNavCancelInvite",
             "[JumpBack]NativeNavCancelCreate",
             "[JumpBack]NativeLoading",
-            "[JumpBack]SafeInput_StartupCloseAnnouncement",
-            "[JumpBack]SafeInput_StartupCancelIllustration",
+            "[JumpBack]StartupCloseAnnouncement",
+            "[JumpBack]StartupCancelIllustration",
             "BondlingSearchNavigationReady",
-            "[JumpBack]NavigateBondling"
+            "[JumpBack]NavigateBondling",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "timeout": 60000
     },
@@ -59,18 +61,20 @@
         "doc": "按顺序进入首个启用的准备步骤；每步完成后直接接后续步骤，选项关闭的步骤由 enabled 原生跳过。",
         "action": "DoNothing",
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "BondlingSearchLockTeam",
             "BondlingSearchPreset",
-            "BondlingSearchBattleEntry"
+            "BondlingSearchBattleEntry",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ]
     },
     "BondlingSearchLockTeam": {
         "doc": "确认阵容锁定；未锁定时点击锁图标。",
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "BondlingSearchLockedTeam",
-            "[JumpBack]SafeInput_BondlingSearchUnlockTeam"
+            "[JumpBack]BondlingSearchUnlockTeam",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "action": "DoNothing"
     },
@@ -92,9 +96,10 @@
         },
         "action": "DoNothing",
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "BondlingSearchPreset",
-            "BondlingSearchBattleEntry"
+            "BondlingSearchBattleEntry",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ]
     },
     "BondlingSearchUnlockTeam": {
@@ -123,15 +128,18 @@
                 "box_index": 1
             }
         },
-        "action": "DoNothing",
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_BondlingSearchUnlockTeam"
-        ],
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "next": [],
         "pre_delay": 0,
-        "post_delay": 0,
+        "post_delay": 1000,
         "pre_wait_freezes": 0,
-        "on_error": []
+        "on_error": [],
+        "max_hit": 3
     },
     "BondlingSearchPreset": {
         "pre_delay": 0,
@@ -165,7 +173,7 @@
                             }
                         }
                     },
-                    "SafeInput_TeamPresetOpen": {
+                    "TeamPresetOpen": {
                         "action": {
                             "param": {
                                 "target": [
@@ -201,8 +209,9 @@
         },
         "action": "DoNothing",
         "next": [
+            "BondlingSearchBattleEntry",
             "[JumpBack]CommonBountyInterrupt",
-            "BondlingSearchBattleEntry"
+            "CommonUnknownPopup"
         ]
     },
     "BondlingSearchBattleEntry": {
@@ -213,28 +222,28 @@
                 "custom_action": "ResetCount",
                 "custom_action_param": {
                     "nodes": [
-                        "SafeInput_BondlingSearchStart",
-                        "SafeInput_CommonBattleEnableAuto",
-                        "SafeInput_CommonNetworkRetry",
-                        "SafeInput_CommonRewardOverflow",
+                        "BondlingSearchStart",
+                        "CommonBattleEnableAuto",
+                        "CommonNetworkRetry",
+                        "CommonRewardOverflow",
                         "CommonBattleMark",
-                        "SafeInput_CommonBattleMark",
-                        "SafeInput_DailyPrepare",
-                        "SafeInput_BondlingSearchBattleResult",
-                        "SafeInput_BondlingSearchGatherLater",
+                        "DailyPrepare",
+                        "BondlingSearchBattleResult",
+                        "BondlingSearchGatherLater",
                         "CommonBattleWait",
                         "CommonBattleEnteringWait",
                         "CommonCutscene",
-                        "SafeInput_DailyRewardPopup"
+                        "DailyRewardPopup"
                     ]
                 }
             }
         },
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "BondlingSearchNoResource",
-            "[JumpBack]SafeInput_BondlingSearchGatherLater",
-            "SafeInput_BondlingSearchStart"
+            "[JumpBack]BondlingSearchGatherLater",
+            "BondlingSearchStart",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "pre_delay": 0,
         "post_delay": 0
@@ -253,8 +262,9 @@
         },
         "action": "DoNothing",
         "next": [
+            "NativeFlowFailed",
             "[JumpBack]CommonBountyInterrupt",
-            "NativeFlowFailed"
+            "CommonUnknownPopup"
         ]
     },
     "BondlingSearchButton": {
@@ -284,23 +294,29 @@
                 "box_index": 1
             }
         },
-        "action": "DoNothing",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_BondlingSearchStart"
+            "BondlingSearchWaitBattleStart"
         ],
         "pre_delay": 0,
-        "post_delay": 0,
+        "post_delay": 1000,
         "pre_wait_freezes": 0,
-        "on_error": []
+        "on_error": [],
+        "max_hit": 3
     },
     "BondlingSearchWaitBattleStart": {
         "doc": "等待过场、布阵载入、准备、正式战斗或结算；探查按钮仍在时有界重试，三次后仍未开战视为契灵已满。",
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "BondlingSearchNoResource",
             "BondlingSearchBattleStarted",
-            "SafeInput_BondlingSearchStart"
+            "BondlingSearchStart",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "on_error": [
             "BondlingSearchFull"
@@ -321,8 +337,9 @@
         },
         "action": "DoNothing",
         "next": [
+            "BondlingSearchFinish",
             "[JumpBack]CommonBountyInterrupt",
-            "BondlingSearchFinish"
+            "CommonUnknownPopup"
         ]
     },
     "BondlingSearchBattleStarted": {
@@ -350,18 +367,19 @@
     "BondlingSearchBattle": {
         "doc": "处理准备、自动战斗与结算，不将等待画面计为胜利。",
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "BondlingSearchNoResource",
-            "BondlingSearchBattleFailure",
-            "[JumpBack]CommonRewardOverflow",
-            "SafeInput_BondlingSearchBattleResult",
-            "[JumpBack]CommonBattleEnteringWait",
-            "[JumpBack]DailyPrepare",
             "[JumpBack]CommonBattleEnableAuto",
             "[JumpBack]CommonBattleMark",
             "[JumpBack]CommonBattleWait",
-            "[JumpBack]SafeInput_DailyRewardPopup",
-            "[JumpBack]CommonNetworkRetry"
+            "BondlingSearchNoResource",
+            "BondlingSearchBattleFailure",
+            "[JumpBack]CommonRewardOverflow",
+            "BondlingSearchBattleResult",
+            "[JumpBack]CommonBattleEnteringWait",
+            "[JumpBack]DailyPrepare",
+            "[JumpBack]DailyRewardPopup",
+            "[JumpBack]CommonNetworkRetry",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "timeout": 180000,
         "pre_delay": 0,
@@ -377,15 +395,26 @@
                 ]
             }
         },
-        "action": "DoNothing",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
         "next": [
+            "BondlingSearchBattleFailure",
+            "BondlingSearchBattleResult",
+            "[JumpBack]DailyRewardPopup",
+            "[JumpBack]BondlingSearchGatherLater",
+            "BondlingSearchAfterResult",
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_BondlingSearchBattleResult"
+            "CommonUnknownPopup"
         ],
         "pre_delay": 0,
-        "post_delay": 0,
+        "post_delay": 600,
         "pre_wait_freezes": 0,
-        "on_error": []
+        "on_error": [],
+        "max_hit": 5
     },
     "BondlingSearchGatherLater": {
         "doc": "探查发现首领时选择稍后集结，留在探查页继续。",
@@ -401,15 +430,18 @@
                 ]
             }
         },
-        "action": "DoNothing",
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_BondlingSearchGatherLater"
-        ],
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "next": [],
         "pre_delay": 0,
-        "post_delay": 0,
+        "post_delay": 1000,
         "pre_wait_freezes": 0,
-        "on_error": []
+        "on_error": [],
+        "max_hit": 3
     },
     "BondlingSearchAfterResult": {
         "doc": "确认成功结算已返回探查页后，累计成功次数并决定继续或结束；继续时重置每场的点击预算。",
@@ -462,8 +494,9 @@
         },
         "action": "DoNothing",
         "next": [
+            "BondlingSearchFailedBattleResult",
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_BondlingSearchFailedBattleResult"
+            "CommonUnknownPopup"
         ],
         "timeout": 30000
     },
@@ -477,15 +510,23 @@
                 ]
             }
         },
-        "action": "DoNothing",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
         "next": [
+            "BondlingSearchFailedReturn",
+            "BondlingSearchFailedBattleResult",
             "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_BondlingSearchFailedBattleResult"
+            "CommonUnknownPopup"
         ],
         "pre_delay": 0,
-        "post_delay": 0,
+        "post_delay": 1500,
         "pre_wait_freezes": 0,
-        "on_error": []
+        "on_error": [],
+        "max_hit": 5
     },
     "BondlingSearchFailedReturn": {
         "pre_delay": 0,

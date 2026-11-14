@@ -1,15 +1,17 @@
-"""Data-only dispatch policy; image observations and inputs always keep guards."""
+"""Dispatch policy: frequent candidates first, rare interrupts and the unknown-popup stop last."""
 from __future__ import annotations
 
 from typing import Any, Callable
 
-GUARD_PREFIX = ["[JumpBack]CommonBountyInterrupt"]
-_GUARDS = set(GUARD_PREFIX)
+# Rare checks go after every ordinary candidate: the cooperative invite, then any
+# confirm/cancel popup no rule handles, which stops the task.
+INTERRUPT_SUFFIX = ["[JumpBack]CommonBountyInterrupt", "CommonUnknownPopup"]
+_GUARDS = set(INTERRUPT_SUFFIX)
 _CONTROL_ACTIONS = {"ResetCount", "NodeOverride", "TargetCountDetermine", "TargetCountInit", "ResolveGamePackage"}
 
 
 def is_control_node(node: Any) -> bool:
-    """Only known no-image bookkeeping with a continuation may run without OCR."""
+    """Only known no-image bookkeeping with a continuation may skip the interrupt checks."""
     if not isinstance(node, dict) or not node.get("next") or node.get("inverse") or not node.get("enabled", True):
         return False
     if node.get("max_hit", 2**32-1) < 2**32-1:
@@ -31,7 +33,7 @@ def is_control_node(node: Any) -> bool:
 
 
 def is_control_route(routes: list, lookup: Callable[[str], Any]) -> bool:
-    """A sole ordinary control destination; mixed, missing and jump routes stay guarded."""
+    """A sole ordinary control destination; mixed, missing and jump routes keep the interrupts."""
     body = [node for node in routes if not isinstance(node, str) or node not in _GUARDS]
     if len(body) != 1 or not isinstance(body[0], str) or body[0].startswith("["):
         return False
@@ -54,9 +56,9 @@ def is_control_route(routes: list, lookup: Callable[[str], Any]) -> bool:
         return False
 
 
-def with_purchase_stop(nodes: list, context=None) -> list:
-    """Add cooperative interruption before visual candidates; inputs guard their own area."""
+def with_interrupts(nodes: list, context=None) -> list:
+    """Append the rare interrupts after visual candidates; a pure control hop needs none."""
     body = [node for node in nodes if not isinstance(node, str) or node not in _GUARDS]
     if context is not None and is_control_route(body, context.get_node_data):
         return body
-    return [*GUARD_PREFIX, *body]
+    return [*body, *INTERRUPT_SUFFIX]

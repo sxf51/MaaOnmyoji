@@ -22,8 +22,8 @@ class BattleFeaturesTest(unittest.TestCase):
             self.assertIn('expected',case['pipeline_override']['MitamaSelectBaqin']['recognition']['param'])
         for node in ('MitamaChallenge','MitamaFinishOnce'):
             self.assertIn('MitamaLayerSelected',self.nodes[node]['recognition']['param']['all_of'])
-        self.assertEqual(self.nodes['SafeInput_MitamaSelectBaqin']['next'],['MitamaVerifyLayer'])
-        self.assertEqual(self.nodes['SafeInput_MitamaSelectBaqin']['max_hit'],3)
+        self.assertEqual(self.nodes['MitamaSelectBaqin']['next'],['MitamaVerifyLayer'])
+        self.assertEqual(self.nodes['MitamaSelectBaqin']['max_hit'],3)
 
     def test_both_tasks_offer_six_guarded_stations_and_default_off(self):
         for prefix,label in [('Mitama','御魂'),('Awakening','觉醒')]:
@@ -32,7 +32,7 @@ class BattleFeaturesTest(unittest.TestCase):
             cases=d['option'][label+'绿标站位']['cases']
             self.assertEqual({c['name'] for c in cases},{'左一','左二','左三','左四','左五','阴阳师'})
             for case in cases:
-                region=case['pipeline_override']['SafeInput_CommonBattleMark']['action']['param']['target']
+                region=case['pipeline_override']['CommonBattleMark']['action']['param']['target']
                 self.assertEqual(len(region),4)
                 self.assertGreater(region[2],1);self.assertGreater(region[3],1)
         self.assertEqual(self.nodes['CommonBattleMark']['recognition']['param']['all_of'],['PageBattle'])
@@ -42,7 +42,7 @@ class BattleFeaturesTest(unittest.TestCase):
         for entry in ('MitamaBattleEntry','TeamLeaderBattleEntry','AwakeningBattleEntry'):
             reset=self.nodes[entry]['action']['param']['custom_action_param']['nodes']
             self.assertIn('CommonBattleMark',reset)
-            self.assertIn('SafeInput_CommonBattleMark',reset)
+            self.assertIn('CommonBattleMark',reset)
         for loop in ('MitamaBattle','TeamLeaderBattle','AwakeningBattle'):
             choices=self.nodes[loop]['next']
             self.assertLess(choices.index('[JumpBack]CommonBattleEnableAuto'),choices.index('[JumpBack]CommonBattleMark'))
@@ -51,7 +51,8 @@ class BattleFeaturesTest(unittest.TestCase):
     def test_recovery_uses_native_bounded_wait_and_no_success_counter(self):
         for prefix in ('Mitama','Awakening'):
             choices=self.nodes[prefix+'AbortRecover']['next']
-            self.assertEqual(choices[:2],['[JumpBack]CommonBountyInterrupt','[JumpBack]NativeNavCancelNoResource'])
+            self.assertEqual(choices[:2],['[JumpBack]NativeNavCancelNoResource','BattleCleanupResourcePending'])
+            self.assertEqual(choices[-2:],['[JumpBack]CommonBountyInterrupt','CommonUnknownPopup'])
             self.assertNotIn(prefix+'AfterResult',choices)
             self.assertIn('[JumpBack]BattleCleanupWait',choices)
             limits=self.nodes[prefix+'Session']['action']['param']['custom_action_param']['cleanup_override']
@@ -62,7 +63,7 @@ class BattleFeaturesTest(unittest.TestCase):
         self.assertEqual(wait['recognition']['param']['all_of'],['PageBattle'])
         self.assertEqual(wait['max_hit'],180)
         self.assertEqual(wait['post_delay'],1000)
-        self.assertEqual(self.nodes['SafeInput_BattleCleanupResult']['next'],[])
+        self.assertEqual(self.nodes['BattleCleanupResult']['next'],[])
 
 
 if __name__=='__main__':unittest.main()

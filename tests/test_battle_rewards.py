@@ -6,8 +6,8 @@ class BattleRewardContracts(unittest.TestCase):
  def setUp(self):
   self.nodes={k:v for p in (ROOT/'assets/resource/base/pipeline').glob('*.json') if p.name!='Example.json' for k,v in load_jsonc(p).items()}
  def test_mitama_retries_challenge_without_reselecting_layer(self):
-  self.assertEqual(self.nodes['SafeInput_MitamaChallenge']['max_hit'],3)
-  self.assertIn('SafeInput_MitamaChallenge',self.nodes['MitamaBattleEntry']['action']['param']['custom_action_param']['nodes'])
+  self.assertEqual(self.nodes['MitamaChallenge']['max_hit'],3)
+  self.assertIn('MitamaChallenge',self.nodes['MitamaBattleEntry']['action']['param']['custom_action_param']['nodes'])
   self.assertEqual(self.nodes['MitamaFinishOnce']['action']['param']['custom_action_param']['continue_node'],'MitamaBattleEntry')
   self.assertNotIn('MitamaSelectBaqin',str(self.nodes['MitamaBattleEntry']))
  def test_auto_and_network_are_shared_by_both_modes(self):
@@ -15,13 +15,13 @@ class BattleRewardContracts(unittest.TestCase):
    for branch in ['CommonBattleEnteringWait','CommonBattleWait','CommonBattleEnableAuto','CommonNetworkRetry']:
     self.assertIn('[JumpBack]'+branch,self.nodes[name]['next'])
   self.assertEqual(self.nodes['CommonNetworkRetry']['recognition']['param']['all_of'][0],'CommonNetworkPrompt')
-  self.assertEqual(self.nodes['SafeInput_CommonNetworkRetry']['max_hit'],3)
+  self.assertEqual(self.nodes['CommonNetworkRetry']['max_hit'],3)
  def test_buff_only_toggles_the_confirmed_opposite_state(self):
   for mode,state in [('Enable','Close'),('Disable','Open')]:
    reco=self.nodes['Mitama'+mode+'BuffClick']['recognition']['param']
    self.assertIn('MitamaCheckBuffStatus'+state,reco['all_of'])
    self.assertEqual(self.nodes['MitamaCheckBuffStatus'+state]['recognition']['param']['all_of'][2]['recognition']['param']['roi'],'MitamaBuffPanel')
-  self.assertEqual(self.nodes['SafeInput_MitamaCloseBuffPanel']['next'],['MitamaCloseBuffPanelVerify'])
+  self.assertEqual(self.nodes['MitamaCloseBuffPanel']['next'],['MitamaCloseBuffPanelVerify'])
  def test_local_statistics_and_optional_reporting_are_independent(self):
   for scope in ['Mitama','Awakening']:
    label={'Mitama':'御魂','Awakening':'觉醒'}[scope]
@@ -43,8 +43,8 @@ class BattleRewardContracts(unittest.TestCase):
   for name in ['MitamaSoloDropStatistics','TeamLeaderDropStatistics','AwakeningDropStatistics']:
    self.assertFalse(self.nodes[name]['enabled'])
   self.assertIn('TeamLeaderPrivacySelected',self.nodes['TeamLeaderCreateConfirm']['recognition']['param']['all_of'])
-  self.assertEqual(self.nodes['SafeInput_TeamLeaderCreate']['next'],['TeamLeaderVerifyPrivacy'])
-  self.assertEqual(self.nodes['SafeInput_TeamLeaderCreateConfirm']['next'],['TeamLeaderWaitRoom'])
+  self.assertEqual(self.nodes['TeamLeaderCreate']['next'],['TeamLeaderVerifyPrivacy','TeamLeaderCreate','[JumpBack]CommonBountyInterrupt','CommonUnknownPopup'])
+  self.assertEqual(self.nodes['TeamLeaderCreateConfirm']['next'],['TeamLeaderWaitRoom'])
 
  def test_reward_capture_waits_for_reveal_before_matching(self):
   for name in ['MitamaSoloDropStatistics','TeamLeaderDropStatistics','AwakeningDropStatistics']:

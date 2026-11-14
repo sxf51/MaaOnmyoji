@@ -1,4 +1,5 @@
-"""Local input protection and contextual confirmation contracts."""
+"""Input contract after removing SafeInput: each click lives on its own recognized node,
+and confirm/cancel popups without a rule stop the task from the end of every visual list."""
 import re
 import sys
 import unittest
@@ -8,9 +9,12 @@ from tools.validate_schema import load_jsonc
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "agent"))
+from custom.route_policy import INTERRUPT_SUFFIX, is_control_route
+
+INPUT_TYPES = ("Click", "Swipe", "LongPress", "TouchDown", "TouchMove", "Scroll", "Key")
 
 
-class PurchasePipelineTest(unittest.TestCase):
+class InputContractTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.nodes = {}
@@ -18,74 +22,57 @@ class PurchasePipelineTest(unittest.TestCase):
             if file.name != "Example.json":
                 cls.nodes.update(load_jsonc(file))
 
-    def test_navigation_retry_cannot_send_input(self):
-        retry = self.nodes["NativeNavRetry"]
-        self.assertNotIn("recognition", retry)
-        self.assertEqual((retry["action"], retry["next"]), ("DoNothing", []))
-        users = {name for name, node in self.nodes.items() if "NativeNavRetry" in node.get("next", [])}
-        self.assertEqual(len(users), 25)
-        self.assertTrue(all(name.startswith("Native") for name in users))
+    def test_safe_input_layer_is_gone(self):
+        self.assertFalse((ROOT / "assets/resource/base/pipeline/InputSafety.json").exists())
+        self.assertFalse((ROOT / "agent/custom/input_safety.py").exists())
+        self.assertFalse((ROOT / "agent/custom/reco/input_target.py").exists())
+        for path in [*(ROOT / "assets").rglob("*.json"), *(ROOT / "agent").rglob("*.py")]:
+            with self.subTest(path=path):
+                text = path.read_text(encoding="utf-8")
+                self.assertNotIn("SafeInput_", text)
+                self.assertNotIn("InputTarget", text)
 
-    def test_every_production_input_requires_matched_target_and_local_guard(self):
+    def test_every_input_requires_a_recognized_target(self):
         count = 0
-        navigation_steps = {item.removeprefix("[JumpBack]") for name, node in self.nodes.items() if name.startswith("Navigate")
-                            for item in node.get("next", []) if item.startswith("[JumpBack]Native")}
         for name, node in self.nodes.items():
             action = node.get("action", "DoNothing")
             kind = action.get("type") if isinstance(action, dict) else action
             custom = action.get("param", {}).get("custom_action") if isinstance(action, dict) else None
-            if kind not in ("Click", "Swipe", "LongPress", "TouchDown", "TouchMove", "Scroll", "Key") and custom != "BezierSwipe":
+            if kind not in INPUT_TYPES and custom != "BezierSwipe":
                 continue
             count += 1
             with self.subTest(node=name):
-                self.assertTrue(name.startswith("SafeInput_"))
-                public = self.nodes[name.removeprefix("SafeInput_")]
-                self.assertEqual(public["action"], "DoNothing")
-                preparation_exits = {
-                    "SafeInput_MitamaPrepare": "MitamaPreparationPassed",
-                    "SafeInput_DailyPrepare": "DailyPreparationPassed",
-                    "SafeInput_CommonActivityPrepare": "CommonActivityPreparationPassed",
-                }
-                if name == "SafeInput_CommonRefuseBounty":
-                    self.assertEqual(public["next"], ["CommonBountyClosed", name])
-                elif name in preparation_exits:
-                    exit_node = preparation_exits[name]
-                    wait = ['[JumpBack]CommonBattleEnteringWait']
-                    self.assertEqual(public["next"], ["[JumpBack]CommonBountyInterrupt", exit_node, *wait, name])
-                    passed = self.nodes[exit_node]
-                    self.assertEqual(passed["action"], "DoNothing")
-                    self.assertEqual(passed["next"], [])
-                elif name == "SafeInput_MitamaTreasurePopup":
-                    self.assertEqual(public["next"], ["[JumpBack]CommonBountyInterrupt", "MitamaTreasureClosed", name])
-                    closed = self.nodes["MitamaTreasureClosed"]
-                    self.assertEqual(closed["action"], "DoNothing")
-                    self.assertTrue(closed["inverse"])
-                    self.assertEqual(closed["next"], [])
-                elif name in ("SafeInput_MitamaBattleResult", "SafeInput_TeamLeaderBattleResult"):
-                    stats = "MitamaSoloDropStatistics" if name == "SafeInput_MitamaBattleResult" else "TeamLeaderDropStatistics"
-                    self.assertEqual(public["next"], ["[JumpBack]CommonBountyInterrupt", "[JumpBack]MitamaTreasurePopup", stats, name])
-                    self.assertEqual(self.nodes[stats]["next"], ["[JumpBack]CommonBountyInterrupt", name])
-                elif name == "SafeInput_AwakeningBattleResult":
-                    self.assertEqual(public["next"], ["[JumpBack]CommonBountyInterrupt", "[JumpBack]MitamaTreasurePopup", "AwakeningDropStatistics", name])
-                    self.assertEqual(self.nodes["AwakeningDropStatistics"]["next"], ["[JumpBack]CommonBountyInterrupt", name])
-                elif name.removeprefix("SafeInput_") in navigation_steps:
-                    # Only a no-input return may follow, and max_hit still limits the retries.
-                    self.assertEqual(public["next"], ["[JumpBack]CommonBountyInterrupt", name, "NativeNavRetry"])
-                    self.assertIsNotNone(public.get("max_hit"))
-                else:
-                    self.assertEqual(public["next"], ["[JumpBack]CommonBountyInterrupt", name])
-                target, guard = node["recognition"]["param"]["all_of"]
-                self.assertEqual(target, name.removeprefix("SafeInput_"))
-                self.assertEqual(guard["recognition"]["param"]["custom_recognition"], "InputTarget")
-                self.assertEqual(guard["recognition"]["param"]["custom_recognition_param"], {"target_node": target})
-                self.assertEqual(node["pre_delay"], 0)
-                self.assertEqual(node["pre_wait_freezes"], 0)
+                recognition = node.get("recognition", "DirectHit")
+                kind = recognition.get("type") if isinstance(recognition, dict) else recognition
+                self.assertNotEqual(kind, "DirectHit")
                 self.assertEqual(node.get("repeat", 1), 1)
-                recognition = public.get("recognition", "DirectHit")
-                self.assertNotEqual(recognition, "DirectHit")
-                if isinstance(recognition, dict):
-                    self.assertNotEqual(recognition.get("type"), "DirectHit")
-        self.assertGreater(count, 0)
+        self.assertGreater(count, 100)
+
+    def test_unknown_popup_stops_the_task(self):
+        popup = self.nodes["CommonUnknownPopup"]
+        self.assertEqual(popup["action"], "StopTask")
+        param = popup["recognition"]["param"]
+        self.assertEqual(popup["recognition"]["type"], "OCR")
+        self.assertEqual(param["roi"], [240, 220, 800, 420])
+        for text in ("确定", "确认", "取消"):
+            self.assertTrue(any(re.fullmatch(p, text) for p in param["expected"]), text)
+        self.assertNotIn("next", popup)
+
+    def test_rare_checks_are_last_in_every_visual_list(self):
+        exempt = {"CommonBountyInterrupt", "CommonRefuseBounty", "CommonActivityInsufficientAP"}
+        for name, node in self.nodes.items():
+            routes = node.get("next")
+            if not routes or name in exempt or is_control_route(routes, self.nodes.get):
+                continue
+            with self.subTest(node=name):
+                self.assertEqual(routes[-2:], INTERRUPT_SUFFIX)
+                self.assertNotIn(INTERRUPT_SUFFIX[0], routes[:-2])
+                self.assertNotIn(INTERRUPT_SUFFIX[1], routes[:-2])
+
+    def test_navigation_retry_cannot_send_input(self):
+        retry = self.nodes["NativeNavRetry"]
+        self.assertNotIn("recognition", retry)
+        self.assertEqual((retry["action"], retry["next"]), ("DoNothing", []))
 
     def test_confirmation_requires_update_context_and_an_exact_button(self):
         self.assertEqual(self.nodes["StartupUpdateConfirm"]["recognition"]["param"]["all_of"],
@@ -96,40 +83,3 @@ class PurchasePipelineTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
-
-class ConfirmTargetTest(unittest.TestCase):
-    """A click next to 确定/确认 is refused unless its node is allowlisted (log 2026-11-13 02:41)."""
-
-    def test_nodes_that_click_a_confirm_button_are_allowlisted(self):
-        import json as _json
-        import re as _re
-        from custom.input_safety import CONFIRM_TARGETS
-        nodes = {}
-        for path in (ROOT / "assets/resource/base/pipeline").glob("*.json"):
-            if path.name != "Example.json":
-                nodes.update(_json.loads(path.read_text(encoding="utf-8")))
-
-        def expects_confirm(recognition, seen):
-            if not isinstance(recognition, dict):
-                return False
-            param = recognition.get("param", {})
-            if recognition.get("type") == "OCR":
-                expected = param.get("expected", [])
-                expected = [expected] if isinstance(expected, str) else expected
-                return any(_re.search(r"确定|确认", item) for item in expected)
-            children = param.get("all_of", param.get("any_of", []))
-            for child in children:
-                if isinstance(child, str):
-                    if child not in seen and expects_confirm(nodes.get(child, {}).get("recognition"), seen | {child}):
-                        return True
-                elif expects_confirm(child.get("recognition"), seen):
-                    return True
-            return False
-
-        for name in nodes:
-            if name.startswith("SafeInput_"):
-                public = name.removeprefix("SafeInput_")
-                if expects_confirm(nodes.get(public, {}).get("recognition"), {public}):
-                    self.assertIn(public, CONFIRM_TARGETS, name)
-

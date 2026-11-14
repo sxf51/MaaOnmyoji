@@ -9,11 +9,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 # JumpBack callees that may legitimately return to their caller repeatedly.
 ALLOWED_RETURNS = {
-    "CommonBountyInterrupt": "只在弹窗关闭后返回；拒绝点击由 SafeInput_CommonRefuseBounty 限次",
-    "MitamaTreasurePopup": "只在提示关闭后返回；点击由 SafeInput_MitamaTreasurePopup 限次",
-    "MitamaPrepare": "已进入战斗才返回；点击已限次",
-    "DailyPrepare": "已进入战斗才返回；点击已限次",
-    "CommonActivityPrepare": "已进入战斗才返回；点击已限次",
+    "CommonBountyInterrupt": "只在弹窗关闭后返回；拒绝点击由 CommonRefuseBounty 的 max_hit 限次",
     "StartupCheckServer": "等待资源下载，时长不可预估",
     "StartupDownloading": "等待资源下载，时长不可预估",
     **{f"Navigate{page}": "到达目标页才返回；调用方同帧认可目标页，导航动作已限次"
@@ -148,25 +144,25 @@ class LoopBoundsTest(unittest.TestCase):
 
 class PerBattleBudgetTest(unittest.TestCase):
     """A budget missing here would run out after enough wins and stop a healthy task."""
-    SHARED = {"CommonBattleWait", "CommonBattleEnteringWait", "CommonCutscene", "SafeInput_DailyRewardPopup"}
+    SHARED = {"CommonBattleWait", "CommonBattleEnteringWait", "CommonCutscene", "DailyRewardPopup"}
     EXPECTED = {
-        "MitamaBattleEntry": {"SafeInput_MitamaChallenge", "SafeInput_MitamaPrepare", "SafeInput_MitamaBattleResult"} | SHARED,
-        "TeamLeaderBattleEntry": {"SafeInput_TeamLeaderStart", "SafeInput_DailyPrepare",
-                                    "SafeInput_TeamLeaderBattleResult", "SafeInput_CommonConfirm", "SafeInput_TeamLeaderReinvite"} | SHARED,
-        "TeamMemberBattleEntry": {"SafeInput_TeamMemberAcceptDefault", "SafeInput_TeamMemberAccept", "SafeInput_TeamMemberBattleResult", "SafeInput_DailyPrepare",
-                                  "TeamMemberRoomWait", "TeamMemberRoomTick", "TeamMemberIdleEmoteReady", "SafeInput_TeamMemberAutoReadyConfirm", "TeamMemberInBattle", "SafeInput_TeamMemberWinResult",
-                                  "CommonBattleWait", "CommonBattleEnteringWait", "SafeInput_DailyRewardPopup"},
-        "AwakeningBattleEntry": {"SafeInput_AwakeningChallenge", "SafeInput_DailyPrepare", "SafeInput_AwakeningBattleResult"} | SHARED,
-        "BondlingSearchBattleEntry": {"SafeInput_BondlingSearchStart", "SafeInput_DailyPrepare", "SafeInput_BondlingSearchBattleResult",
-                                      "SafeInput_BondlingSearchGatherLater"} | SHARED,
-        "ExplorationFieldReady": {"SafeInput_DailyPrepare", "SafeInput_ExplorationBattleResult", "SafeInput_ExplorationBattleFailedResult",
-                                  "CommonBattleEnteringWait", "SafeInput_DailyRewardPopup"},
-        "ExplorationScanReset": {"SafeInput_DailyPrepare", "SafeInput_ExplorationBattleResult", "SafeInput_ExplorationBattleFailedResult",
-                                 "CommonBattleEnteringWait", "SafeInput_DailyRewardPopup"},
-        "RealmRaidValidateChoice": {"SafeInput_DailyPrepare", "SafeInput_RealmRaidBattleResult", "SafeInput_RealmRaidBattleFailedResult",
-                                    "CommonBattleEnteringWait", "SafeInput_DailyRewardPopup", "RealmRaidBattleResume"},
-        "CommonActivityPreparation": {"SafeInput_CommonActivityChallenge", "SafeInput_CommonActivityPrepare", "SafeInput_CommonActivityBattleResult",
-                                      "CommonActivityChallenging", "SafeInput_CommonClickAuto", "CommonBattleEnteringWait", "CommonCutscene"},
+        "MitamaBattleEntry": {"MitamaChallenge", "MitamaPrepare", "MitamaBattleResult"} | SHARED,
+        "TeamLeaderBattleEntry": {"TeamLeaderStart", "DailyPrepare",
+                                    "TeamLeaderBattleResult", "CommonConfirm", "TeamLeaderReinvite"} | SHARED,
+        "TeamMemberBattleEntry": {"TeamMemberAcceptDefault", "TeamMemberAccept", "TeamMemberBattleResult", "DailyPrepare",
+                                  "TeamMemberRoomWait", "TeamMemberRoomTick", "TeamMemberIdleEmoteReady", "TeamMemberAutoReadyConfirm", "TeamMemberInBattle", "TeamMemberWinResult",
+                                  "CommonBattleWait", "CommonBattleEnteringWait", "DailyRewardPopup"},
+        "AwakeningBattleEntry": {"AwakeningChallenge", "DailyPrepare", "AwakeningBattleResult"} | SHARED,
+        "BondlingSearchBattleEntry": {"BondlingSearchStart", "DailyPrepare", "BondlingSearchBattleResult",
+                                      "BondlingSearchGatherLater"} | SHARED,
+        "ExplorationFieldReady": {"DailyPrepare", "ExplorationBattleResult", "ExplorationBattleFailedResult",
+                                  "CommonBattleEnteringWait", "DailyRewardPopup"},
+        "ExplorationScanReset": {"DailyPrepare", "ExplorationBattleResult", "ExplorationBattleFailedResult",
+                                 "CommonBattleEnteringWait", "DailyRewardPopup"},
+        "RealmRaidValidateChoice": {"DailyPrepare", "RealmRaidBattleResult", "RealmRaidBattleFailedResult",
+                                    "CommonBattleEnteringWait", "DailyRewardPopup", "RealmRaidBattleResume"},
+        "CommonActivityPreparation": {"CommonActivityChallenge", "CommonActivityPrepare", "CommonActivityBattleResult",
+                                      "CommonActivityChallenging", "CommonClickAuto", "CommonBattleEnteringWait", "CommonCutscene"},
     }
 
     def test_each_battle_entry_refreshes_its_budgets(self):

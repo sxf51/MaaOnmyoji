@@ -9,13 +9,13 @@
                 "custom_action": "ResetCount",
                 "custom_action_param": {
                     "nodes": [
-                        "SafeInput_MitamaOpenBuffMenu",
-                        "SafeInput_MitamaCloseBuffPanel",
-                        "SafeInput_MitamaFinishCloseBuffPanel",
-                        "SafeInput_MitamaEnableBuffClick",
-                        "SafeInput_MitamaDisableBuffClick",
-                        "SafeInput_BattleCleanupResult",
-                        "SafeInput_MitamaTreasurePopup",
+                        "MitamaOpenBuffMenu",
+                        "MitamaCloseBuffPanel",
+                        "MitamaFinishCloseBuffPanel",
+                        "MitamaEnableBuffClick",
+                        "MitamaDisableBuffClick",
+                        "BattleCleanupResult",
+                        "MitamaTreasurePopup",
                         "BattleCleanupWait",
                         "NavigateMitamaStage",
                         "NavigateAwakening",
@@ -23,10 +23,7 @@
                         "NativeNavCancelNoResource",
                         "DailyPrepare",
                         "DailyRewardPopup",
-                        "SafeInput_NativeNavCancelNoResource",
-                        "SafeInput_DailyPrepare",
-                        "SafeInput_DailyRewardPopup",
-                        "SafeInput_CommonBattleEnableAuto",
+                        "CommonBattleEnableAuto",
                         "NavigateExplore"
                     ]
                 }
@@ -38,7 +35,6 @@
     },
     "MitamaAbortRecover": {
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "[JumpBack]NativeNavCancelNoResource",
             "BattleCleanupResourcePending",
             "[JumpBack]MitamaTreasurePopup",
@@ -49,8 +45,10 @@
             "[JumpBack]DailyPrepare",
             "[JumpBack]CommonBattleEnableAuto",
             "[JumpBack]BattleCleanupWait",
-            "[JumpBack]SafeInput_DailyRewardPopup",
-            "[JumpBack]NavigateExplore"
+            "[JumpBack]DailyRewardPopup",
+            "[JumpBack]NavigateExplore",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "timeout": 5000
     },
@@ -80,14 +78,14 @@
                 "custom_action": "ResetCount",
                 "custom_action_param": {
                     "nodes": [
-                        "SafeInput_AwakeningOpenBuffMenu",
-                        "SafeInput_AwakeningEnableBuffClick",
-                        "SafeInput_AwakeningCloseBuffAfterEnable",
-                        "SafeInput_AwakeningDisableBuffClick",
-                        "SafeInput_AwakeningCloseBuffAfterDisable",
-                        "SafeInput_AwakeningDismissBuffPanel",
-                        "SafeInput_BattleCleanupResult",
-                        "SafeInput_MitamaTreasurePopup",
+                        "AwakeningOpenBuffMenu",
+                        "AwakeningEnableBuffClick",
+                        "AwakeningCloseBuffAfterEnable",
+                        "AwakeningDisableBuffClick",
+                        "AwakeningCloseBuffAfterDisable",
+                        "AwakeningDismissBuffPanel",
+                        "BattleCleanupResult",
+                        "MitamaTreasurePopup",
                         "BattleCleanupWait",
                         "NavigateMitamaStage",
                         "NavigateAwakening",
@@ -95,10 +93,7 @@
                         "NativeNavCancelNoResource",
                         "DailyPrepare",
                         "DailyRewardPopup",
-                        "SafeInput_NativeNavCancelNoResource",
-                        "SafeInput_DailyPrepare",
-                        "SafeInput_DailyRewardPopup",
-                        "SafeInput_CommonBattleEnableAuto",
+                        "CommonBattleEnableAuto",
                         "NavigateExplore"
                     ]
                 }
@@ -110,7 +105,6 @@
     },
     "AwakeningAbortRecover": {
         "next": [
-            "[JumpBack]CommonBountyInterrupt",
             "[JumpBack]NativeNavCancelNoResource",
             "BattleCleanupResourcePending",
             "[JumpBack]MitamaTreasurePopup",
@@ -122,8 +116,10 @@
             "[JumpBack]DailyPrepare",
             "[JumpBack]CommonBattleEnableAuto",
             "[JumpBack]BattleCleanupWait",
-            "[JumpBack]SafeInput_DailyRewardPopup",
-            "[JumpBack]NavigateAwakening"
+            "[JumpBack]DailyRewardPopup",
+            "[JumpBack]NavigateAwakening",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
         ],
         "timeout": 5000
     },
@@ -154,14 +150,15 @@
                 "box_index": 0
             }
         },
-        "action": "DoNothing",
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_BattleCleanupResult"
-        ]
+        "action": "Click",
+        "next": [],
+        "pre_delay": 0,
+        "post_delay": 800,
+        "pre_wait_freezes": 0,
+        "max_hit": 5
     },
     "CommonBattleMark": {
-        "doc": "仅在正式战斗识别成立后，按用户配置站位点击友方绿标；每场最多一次，过场与准备页不点。 参考 runhey/OnmyojiAutoScript@2d2f6d8962a5af17c95670c5d0fb2e384b247162 的 tasks/Component/GeneralBattle/battle_wait.py::_bw_green_default，仅采用每场一次和按站位选中的思路；本项目使用原生Pipeline与InputTarget，不引入其模糊名称匹配或随机战斗输入。站位范围结合本地1280x720战斗截图缩小，仍需实机核验镜头变化。",
+        "doc": "仅在正式战斗识别成立后，按用户配置站位点击友方绿标；每场最多一次，过场与准备页不点。 参考 runhey/OnmyojiAutoScript@2d2f6d8962a5af17c95670c5d0fb2e384b247162 的 tasks/Component/GeneralBattle/battle_wait.py::_bw_green_default，仅采用每场一次和按站位选中的思路；本项目使用原生Pipeline，不引入其模糊名称匹配或随机战斗输入。站位范围结合本地1280x720战斗截图缩小，仍需实机核验镜头变化。",
         "enabled": false,
         "recognition": {
             "type": "And",
@@ -172,12 +169,22 @@
                 "box_index": 0
             }
         },
-        "action": "DoNothing",
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    205,
+                    530,
+                    60,
+                    50
+                ]
+            }
+        },
         "max_hit": 1,
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_CommonBattleMark"
-        ]
+        "next": [],
+        "pre_delay": 0,
+        "post_delay": 200,
+        "pre_wait_freezes": 0
     },
     "AwakeningAbortOpenType": {
         "doc": "异常收尾从觉醒菜单打开火麒麟层数页，只用于关闭全局觉醒材料加成。",
@@ -189,11 +196,22 @@
                 ]
             }
         },
-        "action": "DoNothing",
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "SafeInput_AwakeningAbortOpenType"
-        ]
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    130,
+                    180,
+                    150,
+                    230
+                ]
+            }
+        },
+        "next": [],
+        "pre_delay": 0,
+        "post_delay": 800,
+        "pre_wait_freezes": 0,
+        "max_hit": 3
     },
     "BattleCleanupWait": {
         "pre_delay": 0,

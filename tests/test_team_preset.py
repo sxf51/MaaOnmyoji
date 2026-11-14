@@ -2,7 +2,9 @@
 import unittest
 from pathlib import Path
 
+import sys
 from tools.validate_schema import load_jsonc
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'agent'))
 from custom.route_policy import is_control_route
 
 ROOT=Path(__file__).resolve().parents[1]
@@ -28,10 +30,10 @@ class TeamPresetTest(unittest.TestCase):
         # Native chain: each finished step lists the remaining steps; disabled ones are skipped.
         bounty='[JumpBack]CommonBountyInterrupt'
         self.assertEqual(self.nodes['AwakeningPreparation']['next'],
-                         [bounty,'AwakeningLockTeam','AwakeningPreset','AwakeningEnableBuff','AwakeningBattleModeDestination'])
-        self.assertEqual(self.nodes['AwakeningLockedTeam']['next'],[bounty,'AwakeningPreset','AwakeningEnableBuff','AwakeningBattleModeDestination'])
-        self.assertEqual(self.nodes['AwakeningPresetDone']['next'],[bounty,'AwakeningEnableBuff','AwakeningBattleModeDestination'])
-        self.assertEqual(self.nodes['AwakeningBuffClosedForPreparation']['next'],[bounty,'AwakeningBattleModeDestination'])
+                         ['AwakeningLockTeam','AwakeningPreset','AwakeningEnableBuff','AwakeningBattleModeDestination',bounty,'CommonUnknownPopup'])
+        self.assertEqual(self.nodes['AwakeningLockedTeam']['next'],['AwakeningPreset','AwakeningEnableBuff','AwakeningBattleModeDestination',bounty,'CommonUnknownPopup'])
+        self.assertEqual(self.nodes['AwakeningPresetDone']['next'],['AwakeningEnableBuff','AwakeningBattleModeDestination',bounty,'CommonUnknownPopup'])
+        self.assertEqual(self.nodes['AwakeningBuffClosedForPreparation']['next'],['AwakeningBattleModeDestination',bounty,'CommonUnknownPopup'])
         task=load_jsonc(ROOT/'assets/tasks/Awakening.json')
         self.assertIn('觉醒材料加成',task['task'][0]['option'])
         self.assertIn('觉醒更换队伍预设',task['task'][0]['option'])
@@ -40,7 +42,7 @@ class TeamPresetTest(unittest.TestCase):
     def test_mitama_and_awakening_lock_options_match(self):
         bounty='[JumpBack]CommonBountyInterrupt'
         self.assertEqual(self.nodes['MitamaPreparation']['next'],
-                         [bounty,'MitamaLockTeam','MitamaPreset','MitamaEnableBuff','MitamaPreparationDestination'])
+                         ['MitamaLockTeam','MitamaPreset','MitamaEnableBuff','MitamaPreparationDestination',bounty,'CommonUnknownPopup'])
         for prefix,label in (('Mitama','御魂'),('Awakening','觉醒')):
             task=load_jsonc(ROOT/f'assets/tasks/{prefix}.json')
             options=task['task'][0]['option']
@@ -52,7 +54,7 @@ class TeamPresetTest(unittest.TestCase):
                              {'No':{prefix+'LockTeam':{'enabled':False}},'Yes':{prefix+'LockTeam':{'enabled':True}}})
             self.assertEqual(self.nodes[prefix+'LockedTeam']['recognition']['param']['template'] if prefix=='Awakening'
                              else self.nodes[prefix+'LockedTeam']['recognition']['param']['template'][0],'Common/FormationLocked.png')
-            click=self.nodes['SafeInput_'+prefix+'UnlockTeam']
+            click=self.nodes[prefix+'UnlockTeam']
             self.assertEqual((click['max_hit'],click['post_delay'],click['next']),(3,1000,[]))
 
     def test_options_update_all_group_and_team_recognitions(self):
@@ -68,11 +70,11 @@ class TeamPresetTest(unittest.TestCase):
     def test_shared_flow_verifies_window_before_and_after_input(self):
         self.assertEqual(self.nodes['TeamPresetWindow']['recognition']['param']['all_of'],['TeamPresetContext','TeamPresetFrame','TeamPresetFooter'])
         self.assertTrue(self.nodes['TeamPresetWindowClosed']['inverse'])
-        self.assertEqual(self.nodes['SafeInput_TeamPresetOut']['next'],['TeamPresetVerifyClosed'])
-        self.assertTrue(is_control_route(self.nodes['SafeInput_TeamPresetOut']['next'],self.nodes.get))
-        self.assertEqual(self.nodes['SafeInput_TeamPresetClose']['next'],['TeamPresetVerifyClosed'])
-        self.assertEqual(self.nodes['TeamPresetVerifyClosed']['next'][:1],['[JumpBack]CommonBountyInterrupt'])
-        self.assertEqual(self.nodes['TeamPresetDone']['next'],["[JumpBack]CommonBountyInterrupt",'[Anchor]TeamPresetReturn'])
+        # A click that did not take effect leaves the window open: retry, bounded by max_hit.
+        self.assertEqual(self.nodes['TeamPresetOut']['next'],['TeamPresetVerifyClosed','TeamPresetOut',*['[JumpBack]CommonBountyInterrupt','CommonUnknownPopup']])
+        self.assertEqual(self.nodes['TeamPresetClose']['next'],['TeamPresetVerifyClosed','TeamPresetClose',*['[JumpBack]CommonBountyInterrupt','CommonUnknownPopup']])
+        self.assertEqual(self.nodes['TeamPresetVerifyClosed']['next'][-2:],['[JumpBack]CommonBountyInterrupt','CommonUnknownPopup'])
+        self.assertEqual(self.nodes['TeamPresetDone']['next'],['[Anchor]TeamPresetReturn', "[JumpBack]CommonBountyInterrupt", "CommonUnknownPopup"])
         self.assertEqual(self.nodes['TeamPresetOpen']['max_hit'],3)
         self.assertEqual(self.nodes['TeamPresetOut']['max_hit'],3)
         self.assertEqual(self.nodes['TeamPresetClose']['max_hit'],3)
@@ -81,23 +83,23 @@ class TeamPresetTest(unittest.TestCase):
         self.assertNotIn('CommonActivityPreset',self.nodes)
         self.assertNotIn('CommonActivityPresetDone',self.nodes)
         self.assertEqual(self.nodes['CommonActivityPreparation']['next'],
-                         ['[JumpBack]CommonBountyInterrupt','SafeInput_CommonActivityChallenge'])
+                         ['CommonActivityChallenge', '[JumpBack]CommonBountyInterrupt', 'CommonUnknownPopup'])
         task=load_jsonc(ROOT/'assets/tasks/CommonActivity.json')
         self.assertEqual(task['task'][0]['option'],['重复挑战自定义作战次数'])
         self.assertNotIn('重复挑战更换队伍预设',task['option'])
 
     def test_group_and_team_lists_are_searched_with_bezier_swipes(self):
         bounty='[JumpBack]CommonBountyInterrupt'
-        self.assertEqual(self.nodes['TeamPresetWindowReady']['next'][-1],'TeamPresetGroupRemember')
-        self.assertEqual(self.nodes['TeamPresetGroupSelected']['next'],[bounty,'TeamPresetFindTeam'])
-        self.assertEqual(self.nodes['TeamPresetFindTeam']['next'],[bounty,'SafeInput_TeamPresetSelectTeamConfigured','TeamPresetTeamRemember'])
+        self.assertEqual(self.nodes['TeamPresetWindowReady']['next'][-3],'TeamPresetGroupRemember')
+        self.assertEqual(self.nodes['TeamPresetGroupSelected']['next'],['TeamPresetFindTeam',bounty,'CommonUnknownPopup'])
+        self.assertEqual(self.nodes['TeamPresetFindTeam']['next'],['TeamPresetSelectTeamConfigured','TeamPresetTeamRemember',bounty,'CommonUnknownPopup'])
         resets=self.nodes['TeamPresetRun']['action']['param']['custom_action_param']['nodes']
         for side,roi,budget in (('Group',[411,161,112,372],5),('Team',[544,160,376,320],6)):
             remember=self.nodes[f'TeamPreset{side}Remember']
             self.assertEqual(remember['action']['param']['custom_action'],'RememberFrame')
             self.assertEqual(remember['max_hit'],budget)
             self.assertIn(f'TeamPreset{side}Remember',resets)
-            swipe=self.nodes[f'SafeInput_TeamPreset{side}Scroll']['action']['param']
+            swipe=self.nodes[f'TeamPreset{side}Scroll']['action']['param']
             self.assertEqual(swipe['custom_action'],'BezierSwipe')
             begin,end=swipe['custom_action_param']['begin'],swipe['custom_action_param']['end']
             for x,y,w,h in (begin,end):
@@ -106,25 +108,25 @@ class TeamPresetTest(unittest.TestCase):
             bottom=self.nodes[f'TeamPreset{side}AtBottom']['recognition']['param']['custom_recognition_param']
             self.assertEqual(bottom['regions'],[roi])
             after=self.nodes[f'TeamPreset{side}AfterScroll']['next']
-            self.assertEqual(after[-3:],[f'TeamPreset{side}AtBottom',f'TeamPreset{side}Remember',f'TeamPreset{side}Missing'])
+            self.assertEqual(after[-5:-2],[f'TeamPreset{side}AtBottom',f'TeamPreset{side}Remember',f'TeamPreset{side}Missing'])
             self.assertEqual(self.nodes[f'TeamPreset{side}Missing']['next'],['NativeFlowFailed'])
 
     def test_solo_sorties_and_team_mode_closes_after_in_use(self):
         # Solo needs 出战 to set the lineup; team mode only applies the preset mitama.
         bounty='[JumpBack]CommonBountyInterrupt'
-        self.assertEqual(self.nodes['TeamPresetInUse']['next'],[bounty,'TeamPresetOut','TeamPresetShortTeam'])
-        self.assertEqual(self.nodes['TeamPresetCloseRetry']['next'],[bounty,'TeamPresetWindowClosed','TeamPresetOut'])
+        self.assertEqual(self.nodes['TeamPresetInUse']['next'],['TeamPresetOut','TeamPresetShortTeam',bounty,'CommonUnknownPopup'])
+        self.assertEqual(self.nodes['TeamPresetCloseRetry']['next'],['TeamPresetWindowClosed','TeamPresetOut',bounty,'CommonUnknownPopup'])
         self.assertEqual(self.nodes['TeamPresetShortTeam']['next'],['NativeFlowFailed'])
         # Blank area right of the window; the window's scrollbar sits at x 938.
-        x,y,w,h=self.nodes['SafeInput_TeamPresetClose']['action']['param']['target']
+        x,y,w,h=self.nodes['TeamPresetClose']['action']['param']['target']
         self.assertEqual([x,y,w,h],[969,424,284,120])
         self.assertGreater(x,960)      # outside the window's right frame
         self.assertLess(y+h,560)       # above the 组队/挑战 buttons
         self.assertLessEqual(x+w,1280)
         for rel,switch in (('Mitama','是否组队'),('Awakening','觉醒组队')):
             cases={c['name']:c['pipeline_override'] for c in load_jsonc(ROOT/f'assets/tasks/{rel}.json')['option'][switch]['cases']}
-            self.assertEqual(cases['Yes']['TeamPresetInUse']['next'],[bounty,'TeamPresetClose'])
-            self.assertEqual(cases['Yes']['TeamPresetCloseRetry']['next'],[bounty,'TeamPresetWindowClosed','TeamPresetClose'])
+            self.assertEqual(cases['Yes']['TeamPresetInUse']['next'],['TeamPresetClose',bounty,'CommonUnknownPopup'])
+            self.assertEqual(cases['Yes']['TeamPresetCloseRetry']['next'],['TeamPresetWindowClosed','TeamPresetClose',bounty,'CommonUnknownPopup'])
             self.assertNotIn('TeamPresetInUse',cases['No'])
 
     def test_window_is_recognized_by_either_footer(self):
@@ -143,8 +145,8 @@ class TeamPresetTest(unittest.TestCase):
             base=self.nodes[f'TeamPreset{side}AtBottom']['recognition']['param']['custom_recognition_param']['regions'][0]
             moved=raid[f'TeamPreset{side}AtBottom']['recognition']['param']['custom_recognition_param']['regions'][0]
             self.assertEqual(moved,[base[0]+dx,base[1]+dy,base[2],base[3]])
-            swipe=self.nodes[f'SafeInput_TeamPreset{side}Scroll']['action']['param']['custom_action_param']
-            raid_swipe=raid[f'SafeInput_TeamPreset{side}Scroll']['action']['param']['custom_action_param']
+            swipe=self.nodes[f'TeamPreset{side}Scroll']['action']['param']['custom_action_param']
+            raid_swipe=raid[f'TeamPreset{side}Scroll']['action']['param']['custom_action_param']
             for key in ('begin','end'):
                 bx,by,bw,bh=swipe[key]
                 self.assertEqual(raid_swipe[key],[bx+dx,by+dy,bw,bh])
