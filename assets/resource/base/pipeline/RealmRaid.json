@@ -1311,7 +1311,8 @@
             "[JumpBack]CommonBountyInterrupt",
             "CommonUnknownPopup"
         ],
-        "timeout": 5000
+        "timeout": 8000,
+        "doc": " 第9胜后九宫格会播放刷新动画，留8秒等待新卡片与攻破记录归零。"
     },
     "RealmRaidSuccess": {
         "pre_delay": 0,
@@ -1372,17 +1373,18 @@
         ]
     },
     "RealmRaidBreakRecordZero": {
-        "doc": "左下“攻破记录”下方的数字；本地截图读数0/1/2/3均正确，只接受0。",
+        "doc": "读“攻破记录”下方红色徽记里的数字，只认0。单个小数字在红底上常被OCR检测漏掉（实测 2026-11-15 03:50 第9胜后4次都没读到），所以用 only_rec 直接识别紧贴数字的区域（数字约在 220,607,8,15，实机截图读出“0”置信度0.99）。",
         "recognition": {
             "type": "OCR",
             "param": {
                 "expected": "^[0Oo]$",
                 "roi": [
-                    185,
-                    596,
-                    75,
-                    40
-                ]
+                    205,
+                    600,
+                    38,
+                    28
+                ],
+                "only_rec": true
             }
         }
     },

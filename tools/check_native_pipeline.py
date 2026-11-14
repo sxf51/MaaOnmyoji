@@ -503,6 +503,12 @@ def main():
             ("RealmRaidBattleResult", {"PageRaid", "RealmRaidCard", "RealmRaidBreakRecordZero"}),
             ("RealmRaidSelect", {"PageRaidTarget"}), ("RealmRaidAttack", {"DailyBattleResult"}),
             ("RealmRaidBattleResult", {"PageRaid", "RealmRaidBroken"})], requested_count=2, expected_count=2)
+        case("raid continues past a refreshed board until the tickets run out", "RealmRaidTask", {"PageRaid", "RealmRaidCard"}, [
+            ("RealmRaidSelect", {"PageRaidTarget"}), ("RealmRaidAttack", {"DailyBattleResult"}),
+            ("RealmRaidBattleResult", {"PageRaid", "RealmRaidCard", "RealmRaidBreakRecordZero"}),
+            ("RealmRaidSelect", {"PageRaidTarget"}), ("RealmRaidAttack", {"DailyBattleResult"}),
+            ("RealmRaidBattleResult", {"PageRaid", "RealmRaidBroken", "RealmRaidTicketEmpty"})],
+            requested_count=12, expected_count=2)
         case("raid zero record with marked slot is not a win", "RealmRaidTask", {"PageRaid", "RealmRaidCard"}, [
             ("RealmRaidSelect", {"PageRaidTarget"}), ("RealmRaidAttack", {"DailyBattleResult"}),
             ("RealmRaidBattleResult", {"PageRaid", "RealmRaidCard", "RaidCornerMarked", "RealmRaidBreakRecordZero"})], succeeds=False)

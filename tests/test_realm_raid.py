@@ -110,6 +110,21 @@ class RaidTest(unittest.TestCase):
         pattern=re.compile(self.nodes['RealmRaidBreakRecordZero']['recognition']['param']['expected'])
         for text,zero in [('0',True),('1',False),('3',False),('9',False),('10',False)]:
             self.assertEqual(bool(pattern.search(text)),zero,text)
+        # Log 2026-11-15 03:50: text detection missed the lone 0 four times; recognize the tight digit area directly.
+        param=self.nodes['RealmRaidBreakRecordZero']['recognition']['param']
+        self.assertTrue(param['only_rec'])
+        x,y,w,h=param['roi']
+        self.assertTrue(x<=220 and y<=607 and x+w>=228 and y+h>=622 and w<=40 and h<=30)
+        self.assertGreaterEqual(self.nodes['RealmRaidVerify']['timeout'],8000)
+
+    def test_count_is_not_capped_at_one_board(self):
+        # The board refreshes itself after nine wins; only the count or the tickets end the run.
+        option=load_jsonc(ROOT/'assets/tasks/RealmRaid.json')['option']['结界突破成功次数']
+        field=option['inputs'][0]
+        self.assertNotIn('九次',option['label'])
+        for text,ok in [('1',True),('9',True),('10',True),('30',True),('0',False),('09',False)]:
+            self.assertEqual(bool(re.fullmatch(field['verify'],text)),ok,text)
+        self.assertIn('RealmRaidNoTicket',self.nodes['RealmRaidScan']['next'])
 
     def test_mark_is_exclusive_with_retreat(self):
         mark=self.nodes['RealmRaidBattleMark']

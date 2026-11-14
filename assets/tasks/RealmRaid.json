@@ -18,13 +18,13 @@
     "option": {
         "结界突破成功次数": {
             "type": "input",
-            "label": "本轮成功次数（最多九次）",
+            "label": "成功次数（达到次数或突破券用完即结束；九张打完游戏会自动刷新，继续挑战）",
             "inputs": [
                 {
                     "name": "次数",
                     "pipeline_type": "int",
-                    "default": "9",
-                    "verify": "^[1-9]$"
+                    "default": "30",
+                    "verify": "^[1-9]\\d*$"
                 }
             ],
             "pipeline_override": {
