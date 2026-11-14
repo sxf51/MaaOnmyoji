@@ -31,7 +31,10 @@
         },
         "next": [
             "MitamaAbortRecover"
-        ]
+        ],
+        "anchor": {
+            "CommonBattleAuto": "CommonBattleEnableAuto"
+        }
     },
     "MitamaAbortRecover": {
         "next": [
@@ -43,10 +46,9 @@
             "MitamaAbortStageReady",
             "[JumpBack]BattleCleanupResult",
             "[JumpBack]CommonBattleEnteringWait",
-            "[JumpBack]CommonSoulMismatchMute",
             "[JumpBack]CommonSoulMismatch",
             "[JumpBack]DailyPrepare",
-            "[JumpBack]CommonBattleEnableAuto",
+            "[JumpBack][Anchor]CommonBattleAuto",
             "[JumpBack]BattleCleanupWait",
             "[JumpBack]DailyRewardPopup",
             "[JumpBack]NavigateExplore",
@@ -104,7 +106,10 @@
         },
         "next": [
             "AwakeningAbortRecover"
-        ]
+        ],
+        "anchor": {
+            "CommonBattleAuto": "CommonBattleEnableAuto"
+        }
     },
     "AwakeningAbortRecover": {
         "next": [
@@ -117,10 +122,9 @@
             "[JumpBack]AwakeningAbortOpenType",
             "[JumpBack]BattleCleanupResult",
             "[JumpBack]CommonBattleEnteringWait",
-            "[JumpBack]CommonSoulMismatchMute",
             "[JumpBack]CommonSoulMismatch",
             "[JumpBack]DailyPrepare",
-            "[JumpBack]CommonBattleEnableAuto",
+            "[JumpBack][Anchor]CommonBattleAuto",
             "[JumpBack]BattleCleanupWait",
             "[JumpBack]DailyRewardPopup",
             "[JumpBack]NavigateAwakening",

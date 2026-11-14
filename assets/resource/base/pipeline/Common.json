@@ -427,7 +427,7 @@
     },
     "CommonBattleWait": {
         "pre_delay": 0,
-        "doc": "已通过底部妖术或普攻识别战斗时只等待，返回调用玩法检查结算。",
+        "doc": "已通过底部妖术或普攻识别战斗时只等待，返回调用玩法检查结算。第一次命中后关闭本场的手动/自动检查（锚点 CommonBattleAuto），游戏会保持自动战斗。",
         "recognition": {
             "type": "And",
             "param": {
@@ -439,10 +439,13 @@
         "action": "DoNothing",
         "post_delay": 1000,
         "next": [],
-        "max_hit": 1800
+        "max_hit": 1800,
+        "anchor": {
+            "CommonBattleAuto": "CommonBattleAutoOff"
+        }
     },
     "CommonBattleEnableAuto": {
-        "doc": "确认正式战斗且仍显示手动后切换自动。",
+        "doc": "确认正式战斗且仍显示手动后切换自动。 只经由锚点 CommonBattleAuto 到达：每场在战斗入口打开，正式战斗等待第一次命中后关闭，避免每次轮询都 OCR“手动”。",
         "recognition": {
             "type": "And",
             "param": {
@@ -674,41 +677,17 @@
         "post_delay": 0
     },
     "CommonSoulMismatchMute": {
-        "doc": "御魂与预设不一致提示（参考 OAS I_DISABLE_7DAYS_DIFF_SOUL）：先勾选“7天内不再提示”，每个任务最多一次。文字与位置未实机校准。",
+        "doc": "御魂不一致提示中先勾选“7天内不再提示”，每个任务最多一次。",
         "recognition": {
-            "type": "And",
+            "type": "OCR",
             "param": {
-                "all_of": [
-                    {
-                        "recognition": {
-                            "type": "OCR",
-                            "param": {
-                                "roi": [
-                                    240,
-                                    160,
-                                    800,
-                                    420
-                                ],
-                                "expected": "御魂.*不一致|不一致.*御魂"
-                            }
-                        }
-                    },
-                    {
-                        "recognition": {
-                            "type": "OCR",
-                            "param": {
-                                "roi": [
-                                    240,
-                                    160,
-                                    800,
-                                    420
-                                ],
-                                "expected": "不再提示|7\\s*天"
-                            }
-                        }
-                    }
+                "roi": [
+                    240,
+                    160,
+                    800,
+                    420
                 ],
-                "box_index": 1
+                "expected": "不再提示|7\\s*天"
             }
         },
         "action": {
@@ -726,56 +705,36 @@
         "pre_delay": 0,
         "post_delay": 500,
         "max_hit": 1,
-        "next": []
+        "next": [
+            "CommonSoulMismatchConfirm",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ]
     },
     "CommonSoulMismatch": {
-        "doc": "御魂与预设不一致提示（参考 OAS I_CONFIRM_CLOSE_DIFF_SOUL）：确认后继续战斗，否则未知弹窗规则会停止任务。文字与位置未实机校准。",
+        "doc": "御魂与预设不一致提示（参考 OAS I_DISABLE_7DAYS_DIFF_SOUL / I_CONFIRM_CLOSE_DIFF_SOUL）。战斗循环每次只花一次文字 OCR；看到提示后才去找“不再提示”勾选框和确认按钮，否则未知弹窗规则会停止任务。文字与位置未实机校准。",
         "recognition": {
-            "type": "And",
+            "type": "OCR",
             "param": {
-                "all_of": [
-                    {
-                        "recognition": {
-                            "type": "OCR",
-                            "param": {
-                                "roi": [
-                                    240,
-                                    160,
-                                    800,
-                                    420
-                                ],
-                                "expected": "御魂.*不一致|不一致.*御魂"
-                            }
-                        }
-                    },
-                    {
-                        "recognition": {
-                            "type": "OCR",
-                            "param": {
-                                "roi": [
-                                    240,
-                                    220,
-                                    800,
-                                    420
-                                ],
-                                "expected": "^(确认|确定)$"
-                            }
-                        }
-                    }
+                "roi": [
+                    240,
+                    160,
+                    800,
+                    420
                 ],
-                "box_index": 1
+                "expected": "御魂.*不一致|不一致.*御魂"
             }
         },
-        "action": {
-            "type": "Click",
-            "param": {
-                "target": true
-            }
-        },
+        "action": "DoNothing",
         "pre_delay": 0,
-        "post_delay": 800,
-        "max_hit": 3,
-        "next": []
+        "post_delay": 0,
+        "max_hit": 5,
+        "next": [
+            "CommonSoulMismatchMute",
+            "CommonSoulMismatchConfirm",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ]
     },
     "CommonRewardItemDetail": {
         "doc": "结算时误点到奖励物品会弹出物品详情，详情里必有“获取途径”（参考 OAS I_END_FIX_1/2 的搜索范围 119,66,1136,620）。点左侧空白（OAS C_REWARD_2）关闭。",
@@ -805,6 +764,35 @@
         "pre_delay": 0,
         "post_delay": 800,
         "max_hit": 5,
+        "next": []
+    },
+    "CommonBattleAutoOff": {
+        "doc": "锚点 CommonBattleAuto 的关闭状态：本场已确认自动战斗（正式战斗等待命中过一次），后续轮询直接跳过手动/自动检查。",
+        "enabled": false
+    },
+    "CommonSoulMismatchConfirm": {
+        "doc": "确认关闭御魂不一致提示后返回调用的循环。",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "roi": [
+                    240,
+                    220,
+                    800,
+                    420
+                ],
+                "expected": "^(确认|确定)$"
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 800,
+        "max_hit": 3,
         "next": []
     }
 }

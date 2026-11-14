@@ -21,8 +21,6 @@
             "[JumpBack]NativeNavCancelInvite",
             "[JumpBack]NativeNavCancelCreate",
             "[JumpBack]NativeLoading",
-            "[JumpBack]StartupCloseAnnouncement",
-            "[JumpBack]StartupCancelIllustration",
             "RealmRaidReady",
             "[JumpBack]NavigateRaid",
             "[JumpBack]CommonBountyInterrupt",
@@ -429,7 +427,6 @@
             "[JumpBack]CommonRewardItemDetail",
             "RealmRaidBattleResult",
             "[JumpBack]CommonBattleEnteringWait",
-            "[JumpBack]CommonSoulMismatchMute",
             "[JumpBack]CommonSoulMismatch",
             "[JumpBack]DailyPrepare",
             "[JumpBack]DailyRewardPopup",
@@ -716,7 +713,8 @@
                         "DailyRewardPopup",
                         "RealmRaidBattleResume",
                         "CommonRewardItemDetail",
-                        "CommonSoulMismatch"
+                        "CommonSoulMismatch",
+                        "CommonSoulMismatchConfirm"
                     ],
                     "strict": true
                 }
@@ -1275,7 +1273,6 @@
     "RealmRaidWaitBattleStart": {
         "next": [
             "RealmRaidBattleStarted",
-            "[JumpBack]CommonSoulMismatchMute",
             "[JumpBack]CommonSoulMismatch",
             "RealmRaidAttack",
             "[JumpBack]CommonBountyInterrupt",
@@ -1490,7 +1487,8 @@
                         "DailyRewardPopup",
                         "RealmRaidBattleResume",
                         "CommonRewardItemDetail",
-                        "CommonSoulMismatch"
+                        "CommonSoulMismatch",
+                        "CommonSoulMismatchConfirm"
                     ],
                     "strict": true
                 }

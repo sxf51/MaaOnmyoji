@@ -28,8 +28,6 @@
             "[JumpBack]NativeNavCancelInvite",
             "[JumpBack]NativeNavCancelCreate",
             "[JumpBack]NativeLoading",
-            "[JumpBack]StartupCloseAnnouncement",
-            "[JumpBack]StartupCancelIllustration",
             "ExplorationTicketThreshold",
             "ExplorationFieldReady",
             "ExplorationChapterReady",
@@ -282,7 +280,8 @@
                         "DailyRewardPopup",
                         "CommonBattleEnteringWait",
                         "CommonRewardItemDetail",
-                        "CommonSoulMismatch"
+                        "CommonSoulMismatch",
+                        "CommonSoulMismatchConfirm"
                     ]
                 }
             }
@@ -432,7 +431,8 @@
                         "DailyRewardPopup",
                         "CommonBattleEnteringWait",
                         "CommonRewardItemDetail",
-                        "CommonSoulMismatch"
+                        "CommonSoulMismatch",
+                        "CommonSoulMismatchConfirm"
                     ]
                 }
             }
@@ -576,7 +576,6 @@
             "ExplorationBattleFailure",
             "[JumpBack]CommonRewardItemDetail",
             "ExplorationBattleResult",
-            "[JumpBack]CommonSoulMismatchMute",
             "[JumpBack]CommonSoulMismatch",
             "[JumpBack]DailyPrepare",
             "[JumpBack]DailyRewardPopup",

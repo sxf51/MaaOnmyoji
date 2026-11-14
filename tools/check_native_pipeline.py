@@ -700,18 +700,18 @@ def main():
             ("CommonActivityBattleResult", {"CommonActivityChallenge"})], expected_count=1,
             probe_events=[("PageBattle", {"CommonRewardItemDetail", "CommonActivityBattleResult"})])
         case("CommonActivity confirms the soul mismatch prompt instead of stopping", "CommonActivityTask", {"CommonActivityChallenge"}, [
-            ("CommonActivityChallenge", {"CommonSoulMismatch", "TouchAreaRisk"}),
-            ("CommonSoulMismatch", {"CommonActivityChallenging"}),
+            ("CommonActivityChallenge", {"CommonSoulMismatch", "CommonSoulMismatchConfirm", "TouchAreaRisk"}),
+            ("CommonSoulMismatchConfirm", {"CommonActivityChallenging"}),
             ("CommonActivityBattleResult", {"CommonActivityChallenge"})], expected_count=1, expect_popup_stop=False,
             probe_events=ca_battle)
         case("CommonActivity mutes the soul mismatch prompt once, then confirms", "CommonActivityTask", {"CommonActivityChallenge"}, [
-            ("CommonActivityChallenge", {"CommonSoulMismatchMute", "CommonSoulMismatch"}),
-            ("CommonSoulMismatchMute", {"CommonSoulMismatch"}),
-            ("CommonSoulMismatch", {"CommonActivityChallenging"}),
+            ("CommonActivityChallenge", {"CommonSoulMismatchMute", "CommonSoulMismatch", "CommonSoulMismatchConfirm"}),
+            ("CommonSoulMismatchMute", {"CommonSoulMismatch", "CommonSoulMismatchConfirm"}),
+            ("CommonSoulMismatchConfirm", {"CommonActivityChallenging"}),
             ("CommonActivityBattleResult", {"CommonActivityChallenge"})], expected_count=1, probe_events=ca_battle)
         case("Mitama confirms the soul mismatch prompt before battle", "MitamaChallenge", {"MitamaChallenge"}, [
-            ("MitamaChallenge", {"CommonSoulMismatch", "TouchAreaRisk"}),
-            ("CommonSoulMismatch", {"MitamaBattleResult"}),
+            ("MitamaChallenge", {"CommonSoulMismatch", "CommonSoulMismatchConfirm", "TouchAreaRisk"}),
+            ("CommonSoulMismatchConfirm", {"MitamaBattleResult"}),
             ("MitamaBattleResult", {"MitamaFinishOnce"})], expected_count=1, expect_popup_stop=False)
         # A confirm/cancel popup no rule handles stops the task once the frequent candidates miss.
         for entry in ("CommonActivityTask", "DailyRewardsTask", "ReturnMain", "TeamLeaderFindTeammate"):
@@ -740,8 +740,21 @@ def main():
             ("MitamaBattleResult", {"MitamaFinishOnce"})], expected_count=1)
         case("mitama challenge stops after three misses", "MitamaBattleEntry", {"MitamaChallenge"},
             [("MitamaChallenge", {"MitamaChallenge"})]*3, succeeds=False)
-        case("mitama manual battle switches automatic", "MitamaBattle", {"PageBattle","CommonBattleEnableAuto"}, [
+        case("mitama manual battle switches automatic", "MitamaChallenge", {"MitamaChallenge"}, [
+            ("MitamaChallenge", {"PageBattle", "CommonBattleEnableAuto"}),
             ("CommonBattleEnableAuto", {"DailyBattleResult"}), ("MitamaBattleResult", {"MitamaFinishOnce"})], expected_count=1)
+        # The battle-wait hit turns the auto check off for the rest of the battle (anchor CommonBattleAuto).
+        case("auto check stops after the first battle-wait hit", "MitamaChallenge", {"MitamaChallenge"}, [
+            ("MitamaChallenge", {"PageBattle"}), ("MitamaBattleResult", {"MitamaFinishOnce"})], expected_count=1,
+            probe_events=[("PageBattle", {"PageBattle"}), ("PageBattle", {"PageBattle", "CommonBattleEnableAuto"}),
+                          ("PageBattle", {"DailyBattleResult"})])
+        case("auto check is re-armed for the next battle", "MitamaChallenge", {"MitamaChallenge"}, [
+            ("MitamaChallenge", {"PageBattle"}),
+            ("MitamaBattleResult", {"MitamaFinishOnce", "MitamaChallenge"}),
+            ("MitamaChallenge", {"PageBattle", "CommonBattleEnableAuto"}),
+            ("CommonBattleEnableAuto", {"DailyBattleResult"}),
+            ("MitamaBattleResult", {"MitamaFinishOnce", "MitamaChallenge"})], requested_count=2, expected_count=2,
+            probe_events=[("PageBattle", {"PageBattle"}), ("PageBattle", {"DailyBattleResult"})])
         case("mitama settlement click retries collect only once", "MitamaBattle", {"DailyBattleResult"}, [
             ("MitamaBattleResult", {"DailyBattleResult"}), ("MitamaBattleResult", {"MitamaFinishOnce"})],
             expected_count=1, enable_drop_statistics=True, expected_statistics=1)

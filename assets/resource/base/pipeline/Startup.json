@@ -368,8 +368,6 @@
             "[JumpBack]NativeNavCancelInvite",
             "[JumpBack]NativeNavCancelCreate",
             "[JumpBack]NativeLoading",
-            "[JumpBack]StartupCloseAnnouncement",
-            "[JumpBack]StartupCancelIllustration",
             "NativeAtHome",
             "[JumpBack]NavigateHome",
             "[JumpBack]CommonBountyInterrupt",

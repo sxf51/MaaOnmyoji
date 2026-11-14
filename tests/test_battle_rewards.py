@@ -12,8 +12,15 @@ class BattleRewardContracts(unittest.TestCase):
   self.assertNotIn('MitamaSelectBaqin',str(self.nodes['MitamaBattleEntry']))
  def test_auto_and_network_are_shared_by_both_modes(self):
   for name in ['MitamaBattle','TeamLeaderBattle','AwakeningBattle']:
-   for branch in ['CommonBattleEnteringWait','CommonBattleWait','CommonBattleEnableAuto','CommonNetworkRetry']:
+   for branch in ['CommonBattleEnteringWait','CommonBattleWait','CommonNetworkRetry']:
     self.assertIn('[JumpBack]'+branch,self.nodes[name]['next'])
+   # The auto check runs through an anchor: armed at every battle start, off after the first battle-wait hit.
+   self.assertIn('[JumpBack][Anchor]CommonBattleAuto',self.nodes[name]['next'])
+  self.assertEqual(self.nodes['CommonBattleWait']['anchor'],{'CommonBattleAuto':'CommonBattleAutoOff'})
+  self.assertFalse(self.nodes['CommonBattleAutoOff']['enabled'])
+  for start in ['MitamaSoloBattleStarted','AwakeningBattleStarted','TeamLeaderBattleStarted','BondlingSearchBattleStarted',
+                'MitamaBattleEntry','AwakeningBattleEntry','TeamLeaderBattleEntry','TeamMemberTask','TeamMemberBattleEntry']:
+   self.assertEqual(self.nodes[start]['anchor']['CommonBattleAuto'],'CommonBattleEnableAuto',start)
   self.assertEqual(self.nodes['CommonNetworkRetry']['recognition']['param']['all_of'][0],'CommonNetworkPrompt')
   self.assertEqual(self.nodes['CommonNetworkRetry']['max_hit'],3)
  def test_buff_only_toggles_the_confirmed_opposite_state(self):

@@ -24,6 +24,28 @@ class NativePipelineTests(unittest.TestCase):
             self.assertTrue(choices[-3].startswith("[JumpBack]Navigate"), name)
             self.assertIn("recognition", self.nodes[choices[0]], name)
 
+    def test_login_popups_are_checked_after_the_destination(self):
+        # Log 2026-11-15: the announcement and illustration prompts only follow a login but cost ~0.7 s per navigation step.
+        popups = ("[JumpBack]StartupCloseAnnouncement", "[JumpBack]StartupCancelIllustration")
+        for name, node in self.nodes.items():
+            routes = node.get("next", [])
+            if not name.startswith("Navigate") or popups[0] not in routes:
+                continue
+            if name == "NavigateHome":
+                # The prompts appear over the courtyard itself, so home is only accepted once they are gone.
+                arrive = routes.index("NativeAtHome")
+                self.assertLess(max(routes.index(p) for p in popups), arrive)
+                continue
+            arrive = next(i for i, item in enumerate(routes) if item.startswith("NativeAt"))
+            for popup in popups:
+                self.assertGreater(routes.index(popup), arrive, name)
+                self.assertLess(routes.index(popup), routes.index("[JumpBack]NativeNavClose"), name)
+        # Callers delegate to a Navigate* fallback that already handles them.
+        for caller in ("ReturnMain", "MitamaDisableBuff", "RealmRaidTask", "DailyRewardsTask"):
+            self.assertFalse(set(popups) & set(self.nodes[caller]["next"]), caller)
+        for startup in ("Startup", "startupMain"):
+            self.assertIn(popups[0], self.nodes[startup]["next"])
+
     def test_battle_never_counts_waiting_room_without_settlement(self):
         # The raid loop checks settlement only once the battle exit button is gone.
         loops = {"ExplorationBattle": "ExplorationBattle", "TeamLeaderBattle": "TeamLeaderBattle",

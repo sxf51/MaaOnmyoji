@@ -1484,7 +1484,7 @@
     },
     "TeamLeaderBattle": {
         "next": [
-            "[JumpBack]CommonBattleEnableAuto",
+            "[JumpBack][Anchor]CommonBattleAuto",
             "[JumpBack]CommonBattleMark",
             "[JumpBack]CommonBattleWait",
             "[JumpBack]MitamaTreasurePopup",
@@ -1495,7 +1495,6 @@
             "TeamLeaderDropStatistics",
             "TeamLeaderBattleResult",
             "[JumpBack]CommonBattleEnteringWait",
-            "[JumpBack]CommonSoulMismatchMute",
             "[JumpBack]CommonSoulMismatch",
             "[JumpBack]DailyPrepare",
             "[JumpBack]DailyRewardPopup",
@@ -1695,7 +1694,6 @@
         "next": [
             "TeamLeaderBattleNoResource",
             "TeamLeaderBattleStarted",
-            "[JumpBack]CommonSoulMismatchMute",
             "[JumpBack]CommonSoulMismatch",
             "[JumpBack]TeamLeaderStartConfirm",
             "TeamLeaderStart",
@@ -1726,7 +1724,10 @@
         "action": "DoNothing",
         "next": [
             "TeamLeaderBattle"
-        ]
+        ],
+        "anchor": {
+            "CommonBattleAuto": "CommonBattleEnableAuto"
+        }
     },
     "TeamLeaderStartConfirm": {
         "doc": "确认组队房间中的开始战斗提示。",
@@ -1946,7 +1947,8 @@
                         "TeamLeaderInviteMissing",
                         "TeamLeaderInviteStillOpen",
                         "CommonRewardItemDetail",
-                        "CommonSoulMismatch"
+                        "CommonSoulMismatch",
+                        "CommonSoulMismatchConfirm"
                     ],
                     "strict": true
                 }
@@ -1956,7 +1958,10 @@
             "TeamLeaderFight"
         ],
         "pre_delay": 0,
-        "post_delay": 0
+        "post_delay": 0,
+        "anchor": {
+            "CommonBattleAuto": "CommonBattleEnableAuto"
+        }
     },
     "TeamLeaderPrivacyText": {
         "recognition": {

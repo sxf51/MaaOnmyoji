@@ -45,7 +45,7 @@ class BattleFeaturesTest(unittest.TestCase):
             self.assertIn('CommonBattleMark',reset)
         for loop in ('MitamaBattle','TeamLeaderBattle','AwakeningBattle'):
             choices=self.nodes[loop]['next']
-            self.assertLess(choices.index('[JumpBack]CommonBattleEnableAuto'),choices.index('[JumpBack]CommonBattleMark'))
+            self.assertLess(choices.index('[JumpBack][Anchor]CommonBattleAuto'),choices.index('[JumpBack]CommonBattleMark'))
             self.assertLess(choices.index('[JumpBack]CommonBattleMark'),choices.index('[JumpBack]CommonBattleWait'))
 
     def test_recovery_uses_native_bounded_wait_and_no_success_counter(self):

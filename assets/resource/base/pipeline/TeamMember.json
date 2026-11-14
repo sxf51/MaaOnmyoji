@@ -15,7 +15,10 @@
         },
         "next": [
             "TeamMemberBattleEntry"
-        ]
+        ],
+        "anchor": {
+            "CommonBattleAuto": "CommonBattleEnableAuto"
+        }
     },
     "TeamMemberBattleEntry": {
         "doc": "每场开始前重置点击和等待预算，不清零成功次数；之后先走结算后的短路径，再进主循环。",
@@ -45,7 +48,8 @@
                         "TeamMemberInBattle",
                         "TeamMemberWinResult",
                         "CommonRewardItemDetail",
-                        "CommonSoulMismatch"
+                        "CommonSoulMismatch",
+                        "CommonSoulMismatchConfirm"
                     ],
                     "strict": true
                 }
@@ -53,7 +57,10 @@
         },
         "next": [
             "TeamMemberAfterResult"
-        ]
+        ],
+        "anchor": {
+            "CommonBattleAuto": "CommonBattleEnableAuto"
+        }
     },
     "TeamMemberLoop": {
         "doc": "队员主循环。邀请和自动准备确认框几秒就过期，所以排在最前；其后是战斗、结算和房间等待。每轮所有候选按顺序在同一张截图上判断，越靠前越快命中。 过场等待不放进来（只等待不输入，删掉不影响流程）；御魂容量已满提示只在点完结算后出现，放在结算后的路由里。",
@@ -70,7 +77,7 @@
             "[JumpBack]TeamMemberInBattle",
             "[JumpBack]DailyPrepare",
             "[JumpBack]DailyRewardPopup",
-            "[JumpBack]CommonBattleEnableAuto",
+            "[JumpBack][Anchor]CommonBattleAuto",
             "[JumpBack]CommonBattleWait",
             "[JumpBack]CommonNetworkRetry",
             "TeamMemberBecameLeader",

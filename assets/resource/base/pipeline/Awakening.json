@@ -32,8 +32,6 @@
             "[JumpBack]NativeNavCancelInvite",
             "[JumpBack]NativeNavCancelCreate",
             "[JumpBack]NativeLoading",
-            "[JumpBack]StartupCloseAnnouncement",
-            "[JumpBack]StartupCancelIllustration",
             "AwakeningNavigationReady",
             "[JumpBack]NavigateAwakening",
             "[JumpBack]CommonBountyInterrupt",
@@ -619,7 +617,8 @@
                         "CommonCutscene",
                         "DailyRewardPopup",
                         "CommonRewardItemDetail",
-                        "CommonSoulMismatch"
+                        "CommonSoulMismatch",
+                        "CommonSoulMismatchConfirm"
                     ]
                 }
             }
@@ -631,7 +630,10 @@
             "CommonUnknownPopup"
         ],
         "pre_delay": 0,
-        "post_delay": 0
+        "post_delay": 0,
+        "anchor": {
+            "CommonBattleAuto": "CommonBattleEnableAuto"
+        }
     },
     "AwakeningNoResource": {
         "pre_delay": 0,
@@ -698,7 +700,6 @@
         "next": [
             "AwakeningNoResource",
             "AwakeningBattleStarted",
-            "[JumpBack]CommonSoulMismatchMute",
             "[JumpBack]CommonSoulMismatch",
             "AwakeningChallenge",
             "[JumpBack]CommonBountyInterrupt",
@@ -727,12 +728,15 @@
         "action": "DoNothing",
         "next": [
             "AwakeningBattle"
-        ]
+        ],
+        "anchor": {
+            "CommonBattleAuto": "CommonBattleEnableAuto"
+        }
     },
     "AwakeningBattle": {
         "doc": "处理准备、自动战斗、结算与特殊奖励，不将等待画面计为胜利。",
         "next": [
-            "[JumpBack]CommonBattleEnableAuto",
+            "[JumpBack][Anchor]CommonBattleAuto",
             "[JumpBack]CommonBattleMark",
             "[JumpBack]CommonBattleWait",
             "AwakeningNoResource",
@@ -743,7 +747,6 @@
             "AwakeningDropStatistics",
             "AwakeningBattleResult",
             "[JumpBack]CommonBattleEnteringWait",
-            "[JumpBack]CommonSoulMismatchMute",
             "[JumpBack]CommonSoulMismatch",
             "[JumpBack]DailyPrepare",
             "[JumpBack]DailyRewardPopup",

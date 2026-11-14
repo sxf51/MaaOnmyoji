@@ -99,7 +99,8 @@ class CommonActivityPipelineTest(unittest.TestCase):
         # Popups covering the result or prepare page come before the buttons underneath them.
         self.assertLess(hub.index("[JumpBack]CommonRewardItemDetail"), hub.index("CommonActivityBattleResult"))
         self.assertLess(hub.index("[JumpBack]CommonSoulMismatch"), hub.index("[JumpBack]CommonActivityPrepare"))
-        self.assertLess(hub.index("[JumpBack]CommonSoulMismatchMute"), hub.index("[JumpBack]CommonSoulMismatch"))
+        # One text OCR per poll; the checkbox and button are only searched once the prompt is seen.
+        self.assertNotIn("[JumpBack]CommonSoulMismatchMute", hub)
         # The fallback tap is the last ordinary candidate.
         self.assertEqual(hub[-3:], ["[Anchor]CommonActivityAfterBattle", "[JumpBack]CommonBountyInterrupt", "CommonUnknownPopup"])
 
@@ -121,10 +122,13 @@ class CommonActivityPipelineTest(unittest.TestCase):
         self.assertEqual(detail["recognition"]["param"]["expected"], "获取途径")
         x, y, w, h = detail["action"]["param"]["target"]
         self.assertLessEqual(x + w, 249)  # OAS C_REWARD_2: left blank strip
-        mismatch = common["CommonSoulMismatch"]["recognition"]["param"]["all_of"]
-        self.assertTrue(re.search(mismatch[0]["recognition"]["param"]["expected"], "御魂与预设不一致"))
-        self.assertTrue(re.fullmatch(mismatch[1]["recognition"]["param"]["expected"], "确认"))
+        mismatch = common["CommonSoulMismatch"]
+        self.assertEqual(mismatch["recognition"]["type"], "OCR")
+        self.assertTrue(re.search(mismatch["recognition"]["param"]["expected"], "御魂与预设不一致"))
+        self.assertEqual(mismatch["next"][:2], ["CommonSoulMismatchMute", "CommonSoulMismatchConfirm"])
+        self.assertTrue(re.fullmatch(common["CommonSoulMismatchConfirm"]["recognition"]["param"]["expected"], "确认"))
         self.assertEqual(common["CommonSoulMismatchMute"]["max_hit"], 1)
+        self.assertEqual(common["CommonSoulMismatchConfirm"]["next"], [])
         nodes = {}
         for path in (ROOT / "assets/resource/base/pipeline").glob("*.json"):
             if path.name != "Example.json":
