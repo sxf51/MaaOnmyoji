@@ -52,7 +52,7 @@
         "action": "DoNothing",
         "next": [],
         "max_hit": 1800,
-        "doc": "识别到战斗中：把锚点切到“已战斗”——回到挑战页走计数节点，结算页认不出时启用兜底点击。JumpBack 返回共用列表继续等待。",
+        "doc": "识别到战斗中：把锚点切到“已战斗”——回到挑战页走计数节点，结算页认不出时启用兜底点击。准备页、结算页、胜利页也会切换，战斗太短没截到战斗画面时照样计数。JumpBack 返回共用列表继续等待。",
         "anchor": {
             "CommonActivityStage": "CommonActivityFinishOnce",
             "CommonActivityAfterBattle": "CommonActivityAfterBattleTap"
@@ -170,12 +170,16 @@
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
         "on_error": [],
-        "doc": "点击结算页的“点击屏幕继续”。不计数，计数在回到挑战页时进行。",
-        "max_hit": 5
+        "doc": "点击结算页的“点击屏幕继续”。结算页说明这一轮打过，把计数锚点切到“已战斗”；计数在回到挑战页时进行。",
+        "max_hit": 5,
+        "anchor": {
+            "CommonActivityStage": "CommonActivityFinishOnce",
+            "CommonActivityAfterBattle": "CommonActivityAfterBattleTap"
+        }
     },
     "CommonActivityVictory": {
         "desc": "重复挑战：胜利结算（无继续提示）",
-        "doc": "胜利结算没有“点击屏幕继续”时：识别顶部胜利鼓（参考 OAS I_WIN，模板取自实机截图）或第二页“祝”字奖励袋（OAS I_REWARD），点击右侧空白安全区（OAS C_REWARD_3，避开下方奖励数字）。",
+        "doc": "胜利结算没有“点击屏幕继续”时：识别顶部胜利鼓（参考 OAS I_WIN，模板取自实机截图）或第二页“祝”字奖励袋（OAS I_REWARD），点击右侧空白安全区（OAS C_REWARD_3，避开下方奖励数字）。 胜利页同样把计数锚点切到“已战斗”。",
         "recognition": {
             "type": "Or",
             "param": {
@@ -233,7 +237,11 @@
             "[Anchor]CommonActivityAfterBattle",
             "[JumpBack]CommonBountyInterrupt",
             "CommonUnknownPopup"
-        ]
+        ],
+        "anchor": {
+            "CommonActivityStage": "CommonActivityFinishOnce",
+            "CommonActivityAfterBattle": "CommonActivityAfterBattleTap"
+        }
     },
     "CommonActivityInsufficientAP": {
         "pre_delay": 0,
@@ -394,8 +402,12 @@
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
         "on_error": [],
-        "doc": "点击当前活动战斗中的准备按钮。",
-        "max_hit": 5
+        "doc": "点击战斗准备；准备页也说明这一轮已开战，把计数锚点切到“已战斗”（战斗太短时可能识别不到战斗中）。",
+        "max_hit": 5,
+        "anchor": {
+            "CommonActivityStage": "CommonActivityFinishOnce",
+            "CommonActivityAfterBattle": "CommonActivityAfterBattleTap"
+        }
     },
     "CommonActivityFinish": {
         "pre_delay": 0,

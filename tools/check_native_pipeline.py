@@ -661,6 +661,21 @@ def main():
         case("CommonActivity result that returns straight to the stage still counts", "CommonActivityTask", {"CommonActivityChallenge"}, [
             ("CommonActivityChallenge", {"CommonActivityChallenging"})], expected_count=1,
             probe_events=[("PageBattle", {"CommonActivityChallenge"})])
+        # A battle too short to capture still counts once its prepare or result page was seen.
+        case("CommonActivity short battle counts from the result page alone", "CommonActivityTask", {"CommonActivityChallenge"}, [
+            ("CommonActivityChallenge", {"CommonActivityBattleResult"}),
+            ("CommonActivityBattleResult", {"CommonActivityChallenge"})], expected_count=1)
+        case("CommonActivity short battle counts from the victory page alone", "CommonActivityTask", {"CommonActivityChallenge"}, [
+            ("CommonActivityChallenge", {"CommonActivityVictory"}),
+            ("CommonActivityVictory", {"CommonActivityChallenge"})], expected_count=1)
+        case("CommonActivity prepare page arms the count even when the result is skipped", "CommonActivityTask", {"CommonActivityChallenge"}, [
+            ("CommonActivityChallenge", {"CommonActivityPrepare"}),
+            ("CommonActivityPrepare", {"CommonActivityChallenge"})], expected_count=1)
+        case("CommonActivity two short battles count twice", "CommonActivityTask", {"CommonActivityChallenge"}, [
+            ("CommonActivityChallenge", {"CommonActivityBattleResult"}),
+            ("CommonActivityBattleResult", {"CommonActivityChallenge"}),
+            ("CommonActivityChallenge", {"CommonActivityVictory"}),
+            ("CommonActivityVictory", {"CommonActivityChallenge"})], requested_count=2, expected_count=2)
         case("CommonActivity stage seen without a battle never counts", "CommonActivityTask", {"CommonActivityChallenge"}, [
             ("CommonActivityChallenge", {"CommonActivityChallenge"}),
             ("CommonActivityChallenge", {"CommonActivityChallenging"}),
@@ -779,11 +794,14 @@ def main():
             ("awakening settlement never closes", "AwakeningBattle", result, "AwakeningBattleResult", 5, None),
             ("awakening prepare never leaves", "AwakeningBattle", {"DailyPrepare"}, "DailyPrepare", 5, None),
             ("activity challenge never enters", "CommonActivityTask", {"CommonActivityChallenge"}, "CommonActivityChallenge", 3, None),
-            ("activity prepare never leaves", "CommonActivityTask", {"CommonActivityPrepare"}, "CommonActivityPrepare", 5, None),
-            ("activity settlement never closes", "CommonActivityBattleResult", {"CommonActivityBattleResult"}, "CommonActivityBattleResult", 5, None),
             ("reward popup never closes", "ExplorationBattle", {"DailyRewardPopup"}, "DailyRewardPopup", 150, None),
         ]:
             case("frozen screen stops: " + title, entry, flags, [(event, flags)] * budget, succeeds=False, pipeline_override=extra)
+        # Prepare and result pages mark the battle as started, so after their own budget the bounded fallback taps too.
+        for title, flags, event in (("activity prepare never leaves", {"CommonActivityPrepare"}, "CommonActivityPrepare"),
+                                    ("activity settlement never closes", {"CommonActivityBattleResult"}, "CommonActivityBattleResult")):
+            case("frozen screen stops: " + title, "CommonActivityTask", flags,
+                 [(event, flags)] * 5 + [("CommonActivityAfterBattleTap", flags)] * 5, succeeds=False)
         one_wait = {"CommonBattleWait": {"max_hit": 3}}
         case("frozen battle page stops once its wait budget runs out", "MitamaBattle", {"PageBattle"}, succeeds=False, pipeline_override=one_wait)
         case("retry budgets return on the next battle", "MitamaBattleEntry", {"MitamaChallenge"}, [

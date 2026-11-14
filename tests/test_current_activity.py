@@ -48,6 +48,10 @@ class CommonActivityPipelineTest(unittest.TestCase):
         self.assertEqual(pipeline["CommonActivityTask"]["anchor"], idle)
         self.assertEqual(pipeline["CommonActivityFinishOnce"]["anchor"], idle)
         self.assertEqual(pipeline["CommonActivityChallenging"]["anchor"], armed)
+        # A short battle may never be captured: prepare, result and victory pages also prove a battle started.
+        for name in ("CommonActivityPrepare", "CommonActivityBattleResult", "CommonActivityVictory"):
+            self.assertEqual(pipeline[name]["anchor"], armed, name)
+        self.assertNotIn("anchor", pipeline["CommonActivityChallenge"])
         self.assertEqual(pipeline["CommonActivityChallenging"]["action"], "DoNothing")
         hub = pipeline["CommonActivityTask"]["next"]
         self.assertIn("[Anchor]CommonActivityStage", hub)
