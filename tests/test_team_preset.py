@@ -83,7 +83,7 @@ class TeamPresetTest(unittest.TestCase):
         self.assertNotIn('CommonActivityPreset',self.nodes)
         self.assertNotIn('CommonActivityPresetDone',self.nodes)
         self.assertEqual(self.nodes['CommonActivityPreparation']['next'],
-                         ['CommonActivityChallenge', '[JumpBack]CommonBountyInterrupt', 'CommonUnknownPopup'])
+                         ['CommonActivityChallenge',*self.nodes['CommonActivityTask']['next']])
         task=load_jsonc(ROOT/'assets/tasks/CommonActivity.json')
         self.assertEqual(task['task'][0]['option'],['重复挑战自定义作战次数'])
         self.assertNotIn('重复挑战更换队伍预设',task['option'])

@@ -31,9 +31,9 @@
             "CommonUnknownPopup"
         ],
         "timeout": 180000,
-        "doc": "通用重复挑战入口：所有状态共用一个候选列表，按出现频率排序（战斗中 > 失败/结算 > 挑战页 > 准备/载入 > 协作邀请 > 未知弹窗）。计数用原生锚点表示状态：开局为“未战斗”。",
+        "doc": "通用重复挑战入口：所有状态共用一个候选列表，按出现频率排序（战斗中 > 失败/结算 > 挑战页 > 准备/载入 > 协作邀请 > 未知弹窗）。计数用原生锚点表示状态：开局为“未战斗”，锚点 CommonActivityStage 直接指向点击挑战节点。",
         "anchor": {
-            "CommonActivityStage": "CommonActivityStageIdle",
+            "CommonActivityStage": "CommonActivityChallenge",
             "CommonActivityAfterBattle": "CommonActivityFallbackOff"
         }
     },
@@ -52,7 +52,7 @@
         "action": "DoNothing",
         "next": [],
         "max_hit": 1800,
-        "doc": "识别到战斗中：把锚点切到“已战斗”——回到挑战页走计数节点，结算页认不出时启用兜底点击。准备页、结算页、胜利页也会切换，战斗太短没截到战斗画面时照样计数。JumpBack 返回共用列表继续等待。",
+        "doc": "识别到战斗中：把锚点切到“已战斗”——回到挑战页时 CommonActivityStage 指向计数节点，结算页认不出时启用兜底点击。准备页、结算页、胜利页也会切换，战斗太短没截到战斗画面时照样计数。JumpBack 返回共用列表继续等待。",
         "anchor": {
             "CommonActivityStage": "CommonActivityFinishOnce",
             "CommonActivityAfterBattle": "CommonActivityAfterBattleTap"
@@ -287,14 +287,14 @@
         ],
         "pre_delay": 0,
         "post_delay": 0,
-        "doc": "只经由锚点 CommonActivityStage 在战斗之后到达：识别到挑战节点的按钮文字即计一次（不依赖“点击屏幕继续”），把锚点切回“未战斗”，达到次数结束，否则进入下一轮准备。",
+        "doc": "只经由锚点 CommonActivityStage 在战斗之后到达：识别到挑战页按钮即计一次（不依赖“点击屏幕继续”），把锚点切回“未战斗”（直接指向点击挑战），达到次数结束，否则进入下一轮准备。",
         "anchor": {
-            "CommonActivityStage": "CommonActivityStageIdle",
+            "CommonActivityStage": "CommonActivityChallenge",
             "CommonActivityAfterBattle": "CommonActivityFallbackOff"
         }
     },
     "CommonActivityPreparation": {
-        "doc": "每场挑战前经过此处，重置本轮点击与战斗节点计数后直接挑战。",
+        "doc": "每场挑战前经过此处，重置本轮点击与战斗节点计数后点击挑战；挑战按钮不在时回到共用列表，避免画面切换瞬间卡住。",
         "action": {
             "type": "Custom",
             "param": {
@@ -323,6 +323,22 @@
         },
         "next": [
             "CommonActivityChallenge",
+            "[JumpBack]CommonClickAuto",
+            "[JumpBack]CommonActivityChallenging",
+            "CommonActivityBattleFailure",
+            "[JumpBack]CommonRewardItemDetail",
+            "[JumpBack]CommonRewardOverflow",
+            "CommonActivityBattleResult",
+            "CommonActivityVictory",
+            "CommonActivityInsufficientAP",
+            "[Anchor]CommonActivityStage",
+            "[JumpBack]CommonSoulMismatch",
+            "[JumpBack]CommonActivityPrepare",
+            "[JumpBack]CommonBattleEnteringWait",
+            "[JumpBack]CommonCutscene",
+            "[JumpBack]DailyRewardPopup",
+            "[JumpBack]CommonNetworkRetry",
+            "[Anchor]CommonActivityAfterBattle",
             "[JumpBack]CommonBountyInterrupt",
             "CommonUnknownPopup"
         ],
@@ -376,8 +392,8 @@
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
         "on_error": [],
-        "doc": "点击挑战按钮。点击后回到共用列表；若仍停在挑战页（点击未生效），由 CommonActivityFinishOnce 在未进入战斗时直接重点挑战，max_hit 限 3 次。",
-        "max_hit": 3
+        "doc": "点击挑战页按钮（召唤/挑战/搜寻/开启，适用于任意“点按钮 → 准备/战斗/结算 → 回到按钮页”的循环）。未战斗时由锚点 CommonActivityStage 直接指向本节点，点击前不经过其它节点；仍停在按钮页（点击未生效或需先召唤再挑战）时再点，最多5次。",
+        "max_hit": 5
     },
     "CommonActivityPrepare": {
         "desc": "重复挑战：准备",
@@ -468,25 +484,6 @@
             "CommonUnknownPopup"
         ],
         "inverse": true
-    },
-    "CommonActivityStageIdle": {
-        "doc": "锚点 CommonActivityStage 的“未战斗”状态（任务刚开始或刚计过数，或点击挑战未生效）：看到挑战页不计数，直接点击挑战；不经过准备节点，挑战的 max_hit 3 限制空点。",
-        "recognition": {
-            "type": "And",
-            "param": {
-                "all_of": [
-                    "CommonActivityChallenge"
-                ]
-            }
-        },
-        "action": "DoNothing",
-        "pre_delay": 0,
-        "post_delay": 0,
-        "next": [
-            "CommonActivityChallenge",
-            "[JumpBack]CommonBountyInterrupt",
-            "CommonUnknownPopup"
-        ]
     },
     "CommonActivityFallbackOff": {
         "doc": "锚点 CommonActivityAfterBattle 的“未战斗”状态：节点禁用，列表里直接跳过，战斗前不会兜底点击。",

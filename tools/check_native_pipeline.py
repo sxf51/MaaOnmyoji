@@ -686,8 +686,15 @@ def main():
             ("CommonActivityChallenge", {"CommonActivityChallenge"}),
             ("CommonActivityChallenge", {"CommonActivityChallenging"}),
             ("CommonActivityBattleResult", {"CommonActivityChallenge"})], expected_count=1, probe_events=ca_battle)
-        case("CommonActivity challenge that never registers stops after three taps", "CommonActivityTask", {"CommonActivityChallenge"},
-            [("CommonActivityChallenge", {"CommonActivityChallenge"})] * 3, succeeds=False)
+        case("CommonActivity challenge that never registers stops after five taps", "CommonActivityTask", {"CommonActivityChallenge"},
+            [("CommonActivityChallenge", {"CommonActivityChallenge"})] * 5, succeeds=False)
+        # Log 2026-11-15 04:02: summon first, then challenge (the button page stays visible for a few frames);
+        # every tap returns to the shared list, which follows the battle as soon as the button is gone.
+        case("CommonActivity summon then challenge", "CommonActivityTask", {"CommonActivityChallenge"}, [
+            ("CommonActivityChallenge", {"CommonActivityChallenge"}),
+            ("CommonActivityChallenge", {"CommonActivityChallenge"}),
+            ("CommonActivityChallenge", {"CommonActivityChallenging"}),
+            ("CommonActivityBattleResult", {"CommonActivityChallenge"})], expected_count=1, probe_events=ca_battle)
         case("CommonActivity unknown popup after a battle stops before the next challenge", "CommonActivityTask", {"CommonActivityChallenge"}, [
             ("CommonActivityChallenge", {"CommonActivityChallenging"}),
             ("CommonActivityBattleResult", {"TouchAreaRisk"})], succeeds=False, expect_popup_stop=True, probe_events=ca_battle)
@@ -740,7 +747,7 @@ def main():
         # Accepted trade-off: a visible button under a popup is tapped (max_hit bounds it) before the popup stops the task.
         popup_over_stage = {"TouchAreaRisk", "CommonActivityChallenge", "CommonConfirm"}
         case("purchase popup over the challenge stops after the challenge budget", "CommonActivityTask", {"CommonActivityChallenge"},
-             [("CommonActivityChallenge", popup_over_stage)] * 3, succeeds=False, expect_popup_stop=True)
+             [("CommonActivityChallenge", popup_over_stage)] * 5, succeeds=False, expect_popup_stop=True)
         case("confirmation alone never authorizes an update click", "StartupUpdateConfirm", {"StartupUpdateButton"}, succeeds=False)
         case("unknown startup screen is never blindly clicked", "StartupSkipAnimation", set(), succeeds=False)
         case("explicit update context allows its own button", "StartupUpdateConfirm", {"StartupUpdateText", "StartupUpdateButton"}, [
@@ -799,7 +806,7 @@ def main():
             ("raid settlement never closes", "RealmRaidBattleSettle", result, "RealmRaidBattleResult", 5, None),
             ("awakening settlement never closes", "AwakeningBattle", result, "AwakeningBattleResult", 5, None),
             ("awakening prepare never leaves", "AwakeningBattle", {"DailyPrepare"}, "DailyPrepare", 5, None),
-            ("activity challenge never enters", "CommonActivityTask", {"CommonActivityChallenge"}, "CommonActivityChallenge", 3, None),
+            ("activity challenge never enters", "CommonActivityTask", {"CommonActivityChallenge"}, "CommonActivityChallenge", 5, None),
             ("reward popup never closes", "ExplorationBattle", {"DailyRewardPopup"}, "DailyRewardPopup", 150, None),
         ]:
             case("frozen screen stops: " + title, entry, flags, [(event, flags)] * budget, succeeds=False, pipeline_override=extra)

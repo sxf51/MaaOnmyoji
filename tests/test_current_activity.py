@@ -42,7 +42,7 @@ class CommonActivityPipelineTest(unittest.TestCase):
 
     def test_count_state_lives_in_native_anchors(self) -> None:
         pipeline = json.loads((ROOT / "assets/resource/base/pipeline/CommonActivity.json").read_text(encoding="utf-8"))
-        idle = {"CommonActivityStage": "CommonActivityStageIdle", "CommonActivityAfterBattle": "CommonActivityFallbackOff"}
+        idle = {"CommonActivityStage": "CommonActivityChallenge", "CommonActivityAfterBattle": "CommonActivityFallbackOff"}
         armed = {"CommonActivityStage": "CommonActivityFinishOnce", "CommonActivityAfterBattle": "CommonActivityAfterBattleTap"}
         # Task start and every count reset the state; seeing the battle arms it.
         self.assertEqual(pipeline["CommonActivityTask"]["anchor"], idle)
@@ -60,10 +60,14 @@ class CommonActivityPipelineTest(unittest.TestCase):
         self.assertEqual(finish["recognition"]["param"]["all_of"], ["CommonActivityChallenge"])
         params = finish["action"]["param"]["custom_action_param"]
         self.assertEqual((params["continue_node"], params["finish_node"]), ("CommonActivityPreparation", "CommonActivityFinish"))
-        # Without a battle the stage only re-taps 挑战, skipping the budget reset in Preparation.
-        stage_idle = pipeline["CommonActivityStageIdle"]
-        self.assertEqual(stage_idle["action"], "DoNothing")
-        self.assertEqual(stage_idle["next"][0], "CommonActivityChallenge")
+        # Generic loop: without a battle the anchor is the tap itself, with no extra node in front of it.
+        self.assertNotIn("CommonActivityStageIdle", pipeline)
+        hub = pipeline["CommonActivityTask"]["next"]
+        challenge = pipeline["CommonActivityChallenge"]
+        self.assertEqual(challenge["next"], hub)
+        self.assertEqual((challenge["max_hit"], challenge["post_delay"]), (5, 500))
+        # Log 2026-11-15 04:02: after a count, a vanished button may mean the battle is already loading.
+        self.assertEqual(pipeline["CommonActivityPreparation"]["next"], ["CommonActivityChallenge", *hub])
         self.assertFalse(pipeline["CommonActivityFallbackOff"]["enabled"])
         counters = [name for name, node in pipeline.items() if isinstance(node.get("action"), dict)
                     and node["action"].get("param", {}).get("custom_action") == "TargetCountProgress"]
