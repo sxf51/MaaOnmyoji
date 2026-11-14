@@ -14,7 +14,6 @@ ALLOWED_RETURNS = {
     "MitamaPrepare": "已进入战斗才返回；点击已限次",
     "DailyPrepare": "已进入战斗才返回；点击已限次",
     "CommonActivityPrepare": "已进入战斗才返回；点击已限次",
-    "CurrentActivityPrepare": "已进入战斗才返回；点击已限次",
     "StartupCheckServer": "等待资源下载，时长不可预估",
     "StartupDownloading": "等待资源下载，时长不可预估",
     **{f"Navigate{page}": "到达目标页才返回；调用方同帧认可目标页，导航动作已限次"
@@ -143,7 +142,7 @@ class LoopBoundsTest(unittest.TestCase):
     def test_long_waits_cannot_spin_through_their_budget(self):
         # max_hit counts hits, so a wait budget only means time when each hit takes time.
         nodes = self.graph.nodes
-        for name in ("CommonBattleWait", "CommonActivityChallenging", "CurrentActivityChallenging"):
+        for name in ("CommonBattleWait", "CommonActivityChallenging"):
             self.assertEqual((nodes[name]["max_hit"], nodes[name]["post_delay"]), (1800, 1000), name)
 
 
@@ -168,8 +167,6 @@ class PerBattleBudgetTest(unittest.TestCase):
                                     "CommonBattleEnteringWait", "SafeInput_DailyRewardPopup", "RealmRaidBattleResume"},
         "CommonActivityPreparation": {"SafeInput_CommonActivityChallenge", "SafeInput_CommonActivityPrepare", "SafeInput_CommonActivityBattleResult",
                                       "CommonActivityChallenging", "SafeInput_CommonClickAuto", "CommonBattleEnteringWait", "CommonCutscene"},
-        "CurrentActivityPreparation": {"SafeInput_CurrentActivityChallenge", "SafeInput_CurrentActivityPrepare", "SafeInput_CurrentActivityBattleResult",
-                                       "CurrentActivityChallenging", "SafeInput_CommonClickAuto", "CommonBattleEnteringWait", "CommonCutscene"},
     }
 
     def test_each_battle_entry_refreshes_its_budgets(self):

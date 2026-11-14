@@ -76,7 +76,7 @@ class AwakeningTest(unittest.TestCase):
         for label in ('准备','加成','点击屏幕继续'):
             self.assertIsNone(re.search(param['expected'],label),label)
         self.assertEqual(param['roi'],[600,676,680,44])
-        for name in ('AwakeningChallenging','MitamaChallenging','CommonActivityChallenging','CurrentActivityChallenging'):
+        for name in ('AwakeningChallenging','MitamaChallenging','CommonActivityChallenging'):
             self.assertEqual(self.nodes[name]['recognition']['param']['all_of'],
                              ['CommonBattleWait'] if name in ('AwakeningChallenging','MitamaChallenging') else ['PageBattle'])
 

@@ -28,8 +28,8 @@ class CommonActivityPipelineTest(unittest.TestCase):
         )
 
         challenge = pipeline["CommonActivityChallenge"]
-        self.assertEqual(challenge["recognition"]["param"]["roi"], [1067, 564, 212, 154])
-        self.assertEqual(challenge["recognition"]["param"]["expected"], ["^挑战$", "^搜寻$", "^开启$"])
+        self.assertEqual(challenge["recognition"]["param"]["roi"], [938, 473, 325, 231])
+        self.assertEqual(challenge["recognition"]["param"]["expected"], ["^挑战$", "^搜寻$", "^开启$", "^召唤$"])
 
         challenging = pipeline["CommonActivityChallenging"]
         self.assertEqual(challenging["recognition"]["param"]["all_of"], ["PageBattle"])
@@ -51,6 +51,19 @@ class CommonActivityPipelineTest(unittest.TestCase):
         ]
         self.assertEqual(params["continue_node"], "CommonActivityPreparation")
         self.assertEqual(params["finish_node"], "CommonActivityFinish")
+
+    def test_count_only_after_continue_click_returns_to_challenge(self) -> None:
+        pipeline = json.loads((ROOT / "assets/resource/base/pipeline/CommonActivity.json").read_text(encoding="utf-8"))
+        safety = json.loads((ROOT / "assets/resource/base/pipeline/InputSafety.json").read_text(encoding="utf-8"))
+        # Only the continue click leads to FinishOnce, and FinishOnce must see the challenge button text again.
+        self.assertEqual(safety["SafeInput_CommonActivityBattleResult"]["next"][-1], "CommonActivityFinishOnce")
+        self.assertEqual(pipeline["CommonActivityFinishOnce"]["recognition"]["param"]["all_of"], ["CommonActivityChallenge"])
+        counters = [name for name, node in {**pipeline, **safety}.items()
+                    if isinstance(node.get("action"), dict)
+                    and node["action"].get("param", {}).get("custom_action") == "TargetCountProgress"
+                    and name.startswith(("CommonActivity", "SafeInput_CommonActivity"))]
+        reachable = {n for node in {**pipeline, **safety}.values() for n in node.get("next", [])}
+        self.assertEqual([c for c in counters if c in reachable], ["CommonActivityFinishOnce"])
 
 
 if __name__ == "__main__":

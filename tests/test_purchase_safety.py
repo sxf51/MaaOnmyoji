@@ -45,7 +45,6 @@ class PurchasePipelineTest(unittest.TestCase):
                     "SafeInput_MitamaPrepare": "MitamaPreparationPassed",
                     "SafeInput_DailyPrepare": "DailyPreparationPassed",
                     "SafeInput_CommonActivityPrepare": "CommonActivityPreparationPassed",
-                    "SafeInput_CurrentActivityPrepare": "CurrentActivityPreparationPassed",
                 }
                 if name == "SafeInput_CommonRefuseBounty":
                     self.assertEqual(public["next"], ["CommonBountyClosed", name])

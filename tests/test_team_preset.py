@@ -16,7 +16,7 @@ class TeamPresetTest(unittest.TestCase):
             if path.name!='Example.json':cls.nodes.update(load_jsonc(path))
 
     def test_each_task_configures_context_and_own_return(self):
-        for prefix,context in [('Mitama','PageMitamaStage'),('Awakening','PageAwakeningStage'),('CommonActivity','CommonActivityChallenge'),('CurrentActivity','CurrentActivityChallenge')]:
+        for prefix,context in [('Mitama','PageMitamaStage'),('Awakening','PageAwakeningStage')]:
             node=self.nodes[prefix+'Preset']
             self.assertFalse(node['enabled'])
             self.assertEqual(node['anchor'],{'TeamPresetReturn':prefix+'PresetDone'})
@@ -56,9 +56,9 @@ class TeamPresetTest(unittest.TestCase):
             self.assertEqual((click['max_hit'],click['post_delay'],click['next']),(3,1000,[]))
 
     def test_options_update_all_group_and_team_recognitions(self):
-        for prefix in ('Mitama','Awakening','CommonActivity','CurrentActivity'):
+        for prefix in ('Mitama','Awakening'):
             options=load_jsonc(ROOT/f'assets/tasks/{prefix}.json')['option']
-            task_name={'Mitama':'御魂','Awakening':'觉醒','CommonActivity':'重复挑战','CurrentActivity':'当期活动'}[prefix]
+            task_name={'Mitama':'御魂','Awakening':'觉醒'}[prefix]
             switch=options[task_name+'更换队伍预设']
             self.assertEqual(switch['default_case'],'No')
             selected=options[switch['cases'][1]['option'][0]]['pipeline_override']
@@ -77,14 +77,14 @@ class TeamPresetTest(unittest.TestCase):
         self.assertEqual(self.nodes['TeamPresetOut']['max_hit'],3)
         self.assertEqual(self.nodes['TeamPresetClose']['max_hit'],3)
 
-    def test_activity_repeats_skip_completed_preset_not_preparation_gate(self):
-        for prefix in ('CommonActivity','CurrentActivity'):
-            params=self.nodes[prefix+'FinishOnce']['action']['param']['custom_action_param']
-            self.assertEqual(params['continue_node'],prefix+'Preparation')
-            self.assertEqual(self.nodes[prefix+'Preparation']['next'],
-                             ['[JumpBack]CommonBountyInterrupt',prefix+'Preset','SafeInput_'+prefix+'Challenge'])
-            # Every battle passes Preparation again; max_hit runs the preset once per task.
-            self.assertEqual(self.nodes[prefix+'Preset']['max_hit'],1)
+    def test_common_activity_has_no_team_preset(self):
+        self.assertNotIn('CommonActivityPreset',self.nodes)
+        self.assertNotIn('CommonActivityPresetDone',self.nodes)
+        self.assertEqual(self.nodes['CommonActivityPreparation']['next'],
+                         ['[JumpBack]CommonBountyInterrupt','SafeInput_CommonActivityChallenge'])
+        task=load_jsonc(ROOT/'assets/tasks/CommonActivity.json')
+        self.assertEqual(task['task'][0]['option'],['重复挑战自定义作战次数'])
+        self.assertNotIn('重复挑战更换队伍预设',task['option'])
 
     def test_group_and_team_lists_are_searched_with_bezier_swipes(self):
         bounty='[JumpBack]CommonBountyInterrupt'

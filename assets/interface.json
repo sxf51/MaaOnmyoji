@@ -79,7 +79,6 @@
         "tasks/RealmRaid.json",
         "tasks/DailyRewards.json",
         "tasks/Shutdown.json",
-        "tasks/CommonActivity.json",
-        "tasks/CurrentActivity.json"
+        "tasks/CommonActivity.json"
     ]
 }

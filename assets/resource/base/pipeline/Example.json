@@ -188,23 +188,6 @@
         },
         "next": ["AwakeningTask"]
     },
-    "ExampleActivityWithPreset": {
-        "doc": "通用活动换队示例：仅从显示队伍预设入口的挑战页开始，启用预设并成功一次后结束。配置位于 tasks/CommonActivity.json 的 重复挑战预设分组与队伍。窗口、分组、应用或出战确认失败时停止，不能跳过换队直接开战。当前活动任务使用相同模块，选项名为 当期活动更换队伍预设。",
-        "action": {
-            "type": "Custom",
-            "param": {
-                "custom_action": "NodeOverride",
-                "custom_action_param": {
-                    "CommonActivityPreset": {"enabled": true},
-                    "CommonActivityTask": {
-                        "action": {"param": {"custom_action_param": {"target_count": 1}}},
-                        "next": ["CommonActivityBeforeChallenge"]
-                    }
-                }
-            }
-        },
-        "next": ["CommonActivityTask"]
-    },
     "ExampleCountAndRouteAfterResult": {
         "doc": "计数与路由合并示例：需先初始化目标次数，且只能在确认一次成功结算并返回挑战页后执行。count 累计本次成功，continue_node 和 finish_node 必须同时配置；动作会按累计次数改写当前节点的 next，并自动将协作邀请分支放在首位。实际用法见 MitamaFinishOnce；省略这两个路由参数时仅计数，保持旧用法。",
         "recognition": {

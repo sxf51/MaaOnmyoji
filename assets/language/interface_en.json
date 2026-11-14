@@ -16,8 +16,6 @@
     "mitama_task_doc": "Enter Soul Zones from the courtyard and repeat until the configured count or insufficient AP",
     "common_activity_task": "Common Activity",
     "common_activity_task_doc": "Repeat the battle from the event screen until the configured count is reached",
-    "current_activity_task": "Current Activity",
-    "current_activity_task_doc": "Repeat the battle from the current screen until the configured count is reached",
     "battle_count": "Battle count",
     "exploration_task": "Exploration",
     "exploration_task_doc": "Navigate to the configured chapter or continue the current chapter; find sword icons and count completed settlements. Optionally stop on the map or chapter entrance once raid tickets reach a threshold.",

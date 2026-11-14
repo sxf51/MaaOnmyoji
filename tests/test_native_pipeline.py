@@ -88,7 +88,7 @@ class NativePipelineTests(unittest.TestCase):
         self.assertIs(self.nodes["SafeInput_TeamLeaderStart"]["action"]["param"]["target"], True)
 
     def test_settlement_labels_cover_screen_and_blank_area_variants(self):
-        for name in ("DailyBattleResult", "PageResult", "MitamaBattleResult", "CommonActivityBattleResult", "CurrentActivityBattleResult"):
+        for name in ("DailyBattleResult", "PageResult", "MitamaBattleResult", "CommonActivityBattleResult"):
             expected = self.nodes[name]["recognition"]["param"]["expected"]
             patterns = [expected] if isinstance(expected, str) else expected
             # Log 2026-11-13 02:22: the first character is often covered by the reward animation.

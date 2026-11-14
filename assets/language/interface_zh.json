@@ -16,8 +16,6 @@
     "mitama_task_doc": "从庭院进入御魂副本并循环挑战；体力不足或达到次数后停止",
     "common_activity_task": "通用重复挑战",
     "common_activity_task_doc": "从当前活动挑战界面开始，循环挑战直到达到配置次数，其它循环的挑战任务也能用",
-    "current_activity_task": "当前活动挑战",
-    "current_activity_task_doc": "从当前活动挑战界面开始，循环挑战直到达到配置次数，其它循环的挑战任务也能用",
     "battle_count": "挑战次数",
     "exploration_task": "探索副本",
     "exploration_task_doc": "识别当前页面并进入配置章节；已在章节内时继续，按双剑图标找怪，结算后计数；可选在地图或章节入口突破券达到数量时结束。",

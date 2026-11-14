@@ -112,7 +112,7 @@ class Screen(CustomRecognition):
             matched = name in self.state.flags and 'WrongMitamaLayer' not in self.state.flags
         if name == 'PageBattle':
             matched = bool(self.state.flags & {'PageBattle', 'MitamaChallenging', 'CommonActivityChallenging',
-                'CurrentActivityChallenging', 'AwakeningChallenging'})
+                'AwakeningChallenging'})
         if name in ('RealmRaidSelectedCard', 'RealmRaidNickname', 'RealmRaidUnmarkedCorner'):
             matched = 'RealmRaidCard' in self.state.flags
             if name == 'RealmRaidNickname' and 'RaidNicknameMissing' in self.state.flags:
@@ -157,7 +157,6 @@ class Input(CustomAction):
 STEP_DONE = {
     "MitamaLockedTeam", "MitamaPresetDone", "MitamaCheckBuffStatusOpen", "MitamaCheckBuffStatusClose",
     "AwakeningLockedTeam", "AwakeningPresetDone", "AwakeningBuffEnabled", "AwakeningBuffDisabled",
-    "CommonActivityPresetDone", "CurrentActivityPresetDone",
 }
 
 
@@ -284,7 +283,7 @@ def run_case(resource, controller, nodes, name, entry, flags, events=(), expecte
         if "next" in original:
             node["next"] = original["next"]
         override[key] = node
-    for entry_node in ("MitamaTask", "ExplorationTask", "RealmRaidTask", "CommonActivityTask", "CurrentActivityTask", "AwakeningTask", "BondlingSearchTask", "TeamMemberTask"):
+    for entry_node in ("MitamaTask", "ExplorationTask", "RealmRaidTask", "CommonActivityTask", "AwakeningTask", "BondlingSearchTask", "TeamMemberTask"):
         # Same shape as task options: the report option replaces custom_action_param whole, the count lives in attach.
         override[entry_node]["attach"] = {"target_count": requested_count}
         override[entry_node]["action"] = {"param": {"custom_action_param": {"report_drops": False}}}
@@ -297,10 +296,7 @@ def run_case(resource, controller, nodes, name, entry, flags, events=(), expecte
         override[stats]["enabled"] = enable_drop_statistics
     for step in ("AwakeningEnableBuff", "AwakeningDisableBuff"):
         override[step]["enabled"] = awakening_buff
-    for prefix in ("Awakening", "CommonActivity", "CurrentActivity"):
-        override[prefix + "Preset"]["enabled"] = prefix == preset_task
-    if preset_task in ("CommonActivity", "CurrentActivity"):
-        override[preset_task + "Task"]["next"] = with_purchase_stop([preset_task + "BeforeChallenge"])
+    override["AwakeningPreset"]["enabled"] = preset_task == "Awakening"
     if stop_after_input:
         override['SafeInput_' + stop_after_input]['next'] = []
     # Cases entering the shared leader flow midway never pass an entry node, so give them Mitama's ending.
@@ -378,7 +374,7 @@ def main():
             [('CommonRefuseBounty', {'PageHome', 'CommonRefuseBounty'})] * 3, succeeds=False)
         case('cooperative invite disappears before input', 'NavigateHome', {'PageHome', 'CommonRefuseBounty'},
             probe_events=[('CommonRefuseBounty', {'PageHome'})])
-        for prefix in ('Mitama', 'CommonActivity', 'CurrentActivity'):
+        for prefix in ('Mitama', 'CommonActivity'):
             case(prefix + ' cooperative invite arrives between detection and click', prefix + 'Challenge', {prefix + 'Challenge'}, [
                 ('CommonRefuseBounty', {prefix + 'Challenge'}),
                 (prefix + 'Challenge', {prefix + 'BattleResult'}),
@@ -689,7 +685,7 @@ def main():
             *[("NativeRewardsScroll", {"PageQuests"}) for _ in range(5)]])
         case("reward loop purchase popup after claim prevents next input", "NativeRewardsClaimLoop", {"PageQuests", "DailyRewardsClaimReward"}, [
             ("NativeRewardsClaim", {"PageQuests", "DailyRewardsClaimReward", "TouchAreaRisk"})], succeeds=False)
-        for prefix in ("CommonActivity", "CurrentActivity"):
+        for prefix in ("CommonActivity",):
             case(prefix + " merged loop counts two victories and stops", prefix + "Task", {prefix + "Challenge"}, [
                 (prefix + "Challenge", {prefix + "BattleResult"}),
                 (prefix + "BattleResult", {prefix + "Challenge"}),
@@ -698,7 +694,7 @@ def main():
             case(prefix + " risk after result return prevents next input", prefix + "FinishOnce", {prefix + "Challenge"},
                 requested_count=2, expected_count=1, succeeds=False,
                 probe_events=[(prefix + "Challenge", {prefix + "Challenge", "TouchAreaRisk"})])
-        for prefix in ("CommonActivity", "CurrentActivity", "Mitama"):
+        for prefix in ("CommonActivity", "Mitama"):
             start = prefix + "Task" if prefix != "Mitama" else "MitamaChallenge"
             returned = prefix + "Challenge" if prefix != "Mitama" else "MitamaFinishOnce"
             case(prefix + " single victory counts once", start, {prefix + "Challenge"}, [
@@ -713,7 +709,6 @@ def main():
         for entry, background in [
             ("MitamaChallenge", {"MitamaChallenge"}),
             ("CommonActivityTask", {"CommonActivityChallenge"}),
-            ("CurrentActivityTask", {"CurrentActivityChallenge"}),
             ("DailyRewardsTask", {"PageMail", "DailyRewardsClaimAllMail"}),
             ("DailyRewardsClaimAllMail", {"DailyRewardsClaimAllMail"}),
             ("ReturnMain", {"NavBack", "ReturnMainHomeButton"}),
@@ -949,7 +944,7 @@ def main():
         case("team treasure closes before returning to the room", "TeamLeaderBattle", {"DailyBattleResult"}, [
             ("TeamLeaderBattleResult", {"MitamaTreasurePopup"}),
             ("MitamaTreasurePopup", {"PageTeamRoom"})], expected_count=1)
-        for prefix in ("CommonActivity", "CurrentActivity"):
+        for prefix in ("CommonActivity",):
             case(prefix + " tolerates automatic preparation", prefix + "Task", {prefix + "Challenge"}, [
                 (prefix + "Challenge", {prefix + "Prepare"}),
                 (prefix + "BattleResult", {prefix + "Challenge"})], expected_count=1,
@@ -1331,11 +1326,11 @@ def main():
                 ("TeamPresetOut", stage),
             ]
         awake_preset_stage = awake_stage | {"TeamPresetEntryText"}
-        for prefix in ("Awakening", "CommonActivity", "CurrentActivity"):
-            stage = awake_preset_stage if prefix == "Awakening" else {prefix + "Challenge", "TeamPresetEntryText"}
-            result = "DailyBattleResult" if prefix == "Awakening" else prefix + "BattleResult"
-            returned = stage if prefix != "Awakening" else awake_preset_stage
-            steps_done = (["AwakeningLockedTeam"] if prefix == "Awakening" else []) + [prefix + "PresetDone"]
+        for prefix in ("Awakening",):
+            stage = awake_preset_stage
+            result = "DailyBattleResult"
+            returned = awake_preset_stage
+            steps_done = ["AwakeningLockedTeam", prefix + "PresetDone"]
             case(prefix + " completes preset before challenge", prefix + "Task", stage, [
                 *preset_events(stage),
                 (prefix + "Challenge", {result}),
@@ -1353,17 +1348,9 @@ def main():
             ("RealmRaidSelect", {"PageRaidTarget"}), ("RealmRaidAttack", {"DailyBattleResult"}),
             ("RealmRaidBattleResult", {"PageRaid", "RealmRaidBroken"})], expected_count=1,
             pipeline_override={"RealmRaidPreset": {"enabled": True}})
-        activity_stage = {"CommonActivityChallenge", "TeamPresetEntryText"}
-        case("activity preset runs once across multiple battles", "CommonActivityTask", activity_stage, [
-            *preset_events(activity_stage),
-            ("CommonActivityChallenge", {"CommonActivityBattleResult"}),
-            ("CommonActivityBattleResult", activity_stage),
-            ("CommonActivityChallenge", {"CommonActivityBattleResult"}),
-            ("CommonActivityBattleResult", activity_stage)], requested_count=2, expected_count=2,
-            preset_task="CommonActivity", expected_steps=["CommonActivityPresetDone"])
-        for prefix in ("Awakening", "CommonActivity", "CurrentActivity"):
-            stage = awake_preset_stage if prefix == "Awakening" else {prefix + "Challenge", "TeamPresetEntryText"}
-            steps_done = ["AwakeningLockedTeam"] if prefix == "Awakening" else []
+        for prefix in ("Awakening",):
+            stage = awake_preset_stage
+            steps_done = ["AwakeningLockedTeam"]
             case(prefix + " preset missing window never starts challenge", prefix + "Task", stage,
                 [("TeamPresetOpen", stage)] * 3, succeeds=False, preset_task=prefix, expected_steps=steps_done)
         window = awake_preset_stage | {"TeamPresetFrameTemplate", "TeamPresetOut", "TeamPresetFooter", "TeamPresetGroupSelected", "TeamPresetSelectTeamConfigured"}
@@ -1374,9 +1361,6 @@ def main():
         case("purchase popup after opening preset blocks application", "AwakeningTask", awake_preset_stage, [
             ("TeamPresetOpen", window | {"TouchAreaRisk"})], succeeds=False,
             preset_task="Awakening", expected_steps=["AwakeningLockedTeam"])
-        for prefix in ("CommonActivity", "CurrentActivity"):
-            case(prefix + " preset cannot begin from an existing battle", prefix + "Task", {prefix + "BattleResult"},
-                succeeds=False, preset_task=prefix, expected_steps=[])
         stage = awake_preset_stage | {"AwakeningOpenBuffMenu"}
         case("awakening dependency order is lock preset buff then battle", "AwakeningTask", stage, [
             *preset_events(stage),

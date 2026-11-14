@@ -31,15 +31,16 @@
             "type": "OCR",
             "param": {
                 "roi": [
-                    1067,
-                    564,
-                    212,
-                    154
+                    938,
+                    473,
+                    325,
+                    231
                 ],
                 "expected": [
                     "^挑战$",
                     "^搜寻$",
-                    "^开启$"
+                    "^开启$",
+                    "^召唤$"
                 ]
             }
         },
@@ -157,41 +158,7 @@
         ],
         "pre_delay": 0,
         "post_delay": 0,
-        "doc": "确认成功结算已返回挑战页后，累计次数并决定继续准备或结束；后续仍检查未完成的队伍预设。"
-    },
-    "CommonActivityComplete": {
-        "desc": "重复挑战：记录一次成功挑战",
-        "action": {
-            "type": "Custom",
-            "param": {
-                "custom_action": "TargetCountProgress",
-                "custom_action_param": {
-                    "count": 1
-                }
-            }
-        },
-        "next": [
-            "CommonActivityCountDetermine"
-        ]
-    },
-    "CommonActivityCountDetermine": {
-        "desc": "重复挑战：判断是否继续挑战",
-        "action": {
-            "type": "Custom",
-            "param": {
-                "custom_action": "TargetCountDetermine",
-                "custom_action_param": {
-                    "decision_node": "CommonActivityCountDetermine",
-                    "continue_node": "CommonActivityBeforeChallenge",
-                    "finish_node": "CommonActivityFinish"
-                }
-            }
-        },
-        "next": [
-            "[JumpBack]CommonBountyInterrupt",
-            "[JumpBack]SafeInput_CommonActivityBattleResult",
-            "CommonActivityBeforeChallenge"
-        ]
+        "doc": "点击屏幕继续后，再次识别到挑战节点的按钮文字（返回挑战页）才累计一次成功，并决定继续挑战或结束。"
     },
     "CommonActivityInsufficientAP": {
         "pre_delay": 0,
@@ -292,78 +259,8 @@
         "action": "DoNothing",
         "next": []
     },
-    "CommonActivityPreset": {
-        "pre_delay": 0,
-        "post_delay": 0,
-        "doc": "配置本任务的预设页面与返回位置，完成换队后才继续准备。",
-        "enabled": false,
-        "action": {
-            "type": "Custom",
-            "param": {
-                "custom_action": "NodeOverride",
-                "custom_action_param": {
-                    "TeamPresetContext": {
-                        "recognition": {
-                            "type": "And",
-                            "param": {
-                                "all_of": [
-                                    "CommonActivityChallenge"
-                                ]
-                            }
-                        }
-                    },
-                    "TeamPresetEntryText": {
-                        "recognition": {
-                            "param": {
-                                "roi": [
-                                    728,
-                                    605,
-                                    103,
-                                    40
-                                ]
-                            }
-                        }
-                    },
-                    "SafeInput_TeamPresetOpen": {
-                        "action": {
-                            "param": {
-                                "target": [
-                                    750,
-                                    558,
-                                    52,
-                                    50
-                                ]
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "anchor": {
-            "TeamPresetReturn": "CommonActivityPresetDone"
-        },
-        "next": [
-            "TeamPresetRun"
-        ],
-        "max_hit": 1
-    },
-    "CommonActivityPresetDone": {
-        "doc": "确认预设已应用并返回挑战页；换队步骤由 max_hit 限定每个任务只执行一次。",
-        "recognition": {
-            "type": "And",
-            "param": {
-                "all_of": [
-                    "CommonActivityChallenge"
-                ]
-            }
-        },
-        "action": "DoNothing",
-        "next": [
-            "CommonActivityPreparation"
-        ]
-    },
     "CommonActivityPreparation": {
-        "doc": "每场挑战前经过此处；队伍预设启用时只在本任务首次进入时执行一次（max_hit），之后直接挑战。",
+        "doc": "每场挑战前经过此处，重置本轮点击与战斗节点计数后直接挑战。",
         "action": {
             "type": "Custom",
             "param": {
@@ -384,7 +281,6 @@
         },
         "next": [
             "[JumpBack]CommonBountyInterrupt",
-            "CommonActivityPreset",
             "SafeInput_CommonActivityChallenge"
         ],
         "timeout": 180000,
@@ -392,7 +288,7 @@
         "post_delay": 0
     },
     "CommonActivityBeforeChallenge": {
-        "doc": "确认挑战页后执行未完成的队伍预设准备。",
+        "doc": "确认挑战页后进入挑战前准备。",
         "recognition": {
             "type": "And",
             "param": {
