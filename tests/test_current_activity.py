@@ -90,7 +90,15 @@ class CommonActivityPipelineTest(unittest.TestCase):
         pipeline = json.loads((ROOT / "assets/resource/base/pipeline/CommonActivity.json").read_text(encoding="utf-8"))
         victory = pipeline["CommonActivityVictory"]
         drum, bag = victory["recognition"]["param"]["any_of"]
-        self.assertEqual(drum["recognition"]["param"]["template"], "Common/BattleWin.png")
+        self.assertEqual(drum["recognition"]["type"], "And")
+        shape, red = drum["recognition"]["param"]["all_of"]
+        self.assertEqual(drum["recognition"]["param"]["box_index"], 0)
+        self.assertEqual(shape["recognition"]["param"]["template"], "Common/BattleWin.png")
+        # The grey-purple defeat drum has the same shape (template 0.73 vs 0.8), so the red check is what tells them apart:
+        # red pixels in the matched box are 724 on a win and 0-1 on a defeat (debug/win.png, debug/lose.png).
+        self.assertEqual(red["recognition"]["type"], "ColorMatch")
+        self.assertEqual(red["recognition"]["param"]["roi"], shape["sub_name"])
+        self.assertEqual(red["recognition"]["param"]["count"], 200)
         self.assertEqual(bag, "CommonBattleRewardBag")
         self.assertTrue((ROOT / "assets/resource/base/image/Common/BattleWin.png").exists())
         x, y, w, h = victory["action"]["param"]["target"]

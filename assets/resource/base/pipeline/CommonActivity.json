@@ -187,7 +187,7 @@
     },
     "CommonActivityVictory": {
         "desc": "重复挑战：胜利结算（无继续提示）",
-        "doc": "胜利结算没有“点击屏幕继续”时：识别顶部胜利鼓（参考 OAS I_WIN，模板取自实机截图）或第二页“祝”字奖励袋（OAS I_REWARD），点击右侧空白安全区（OAS C_REWARD_3，避开下方奖励数字）。 胜利页同样把计数锚点切到“已战斗”。",
+        "doc": "胜利结算没有“点击屏幕继续”时：识别顶部胜利鼓（参考 OAS I_WIN，模板取自实机截图）或第二页“祝”字奖励袋（OAS I_REWARD），点击右侧空白安全区（避开下方奖励数字）。胜利鼓 = 鼓面形状模板 + 命中框内鲜红像素数：失败的灰紫鼓形状相近（模板分 0.73，阈值 0.8），红色像素胜利 724、失败 0–1（debug/win.png、debug/lose.png，2026-11-15），门槛 200。胜利页同样把计数锚点切到“已战斗”。",
         "recognition": {
             "type": "Or",
             "param": {
@@ -195,16 +195,48 @@
                     {
                         "sub_name": "CommonActivityWinDrum",
                         "recognition": {
-                            "type": "TemplateMatch",
+                            "type": "And",
                             "param": {
-                                "template": "Common/BattleWin.png",
-                                "threshold": 0.8,
-                                "roi": [
-                                    296,
-                                    33,
-                                    414,
-                                    224
-                                ]
+                                "all_of": [
+                                    {
+                                        "sub_name": "CommonActivityWinDrumShape",
+                                        "recognition": {
+                                            "type": "TemplateMatch",
+                                            "param": {
+                                                "template": "Common/BattleWin.png",
+                                                "threshold": 0.8,
+                                                "roi": [
+                                                    296,
+                                                    33,
+                                                    414,
+                                                    224
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "sub_name": "CommonActivityWinDrumRed",
+                                        "recognition": {
+                                            "type": "ColorMatch",
+                                            "param": {
+                                                "roi": "CommonActivityWinDrumShape",
+                                                "method": 4,
+                                                "lower": [
+                                                    171,
+                                                    0,
+                                                    0
+                                                ],
+                                                "upper": [
+                                                    255,
+                                                    59,
+                                                    69
+                                                ],
+                                                "count": 200
+                                            }
+                                        }
+                                    }
+                                ],
+                                "box_index": 0
                             }
                         }
                     },
