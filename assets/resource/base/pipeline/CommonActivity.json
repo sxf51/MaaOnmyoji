@@ -89,10 +89,10 @@
             "type": "Click",
             "param": {
                 "target": [
-                    1110,
+                    1011,
                     160,
-                    140,
-                    340
+                    182,
+                    216
                 ]
             }
         },
@@ -124,8 +124,16 @@
             }
         },
         "next": [
-            "NativeFlowFailed"
-        ]
+            "CommonActivityFailedContinue",
+            "NativeFlowFailed",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ],
+        "anchor": {
+            "CommonActivityStage": "CommonActivityChallenge",
+            "CommonActivityAfterBattle": "CommonActivityFallbackOff"
+        },
+        "doc": "战败后回到挑战页：锚点切回“未战斗”，战败不计数。选项“失败后继续”启用 CommonActivityFailedContinue 开下一场，否则（或失败次数用完）结束并报告失败。"
     },
     "CommonActivityBattleResult": {
         "desc": "重复挑战：点击屏幕继续",
@@ -208,10 +216,10 @@
             "type": "Click",
             "param": {
                 "target": [
-                    1110,
+                    1011,
                     160,
-                    140,
-                    340
+                    182,
+                    216
                 ]
             }
         },
@@ -305,6 +313,7 @@
                         "CommonActivityPrepare",
                         "CommonActivityBattleResult",
                         "CommonActivityVictory",
+                        "CommonActivityFailedBattleResult",
                         "CommonActivityChallenging",
                         "CommonClickAuto",
                         "CommonBattleEnteringWait",
@@ -453,10 +462,10 @@
             "type": "Click",
             "param": {
                 "target": [
-                    1110,
+                    1011,
                     160,
-                    140,
-                    340
+                    182,
+                    216
                 ]
             }
         },
@@ -488,5 +497,15 @@
     "CommonActivityFallbackOff": {
         "doc": "锚点 CommonActivityAfterBattle 的“未战斗”状态：节点禁用，列表里直接跳过，战斗前不会兜底点击。",
         "enabled": false
+    },
+    "CommonActivityFailedContinue": {
+        "doc": "选项“失败后继续”：战败后开下一场。max_hit 是本次任务的累计失败上限（不随每场重置），用完后落到 NativeFlowFailed，避免打不过时一直消耗体力。",
+        "enabled": false,
+        "max_hit": 10,
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "CommonActivityPreparation"
+        ]
     }
 }

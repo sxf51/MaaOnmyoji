@@ -94,9 +94,11 @@ class CommonActivityPipelineTest(unittest.TestCase):
         self.assertEqual(bag, "CommonBattleRewardBag")
         self.assertTrue((ROOT / "assets/resource/base/image/Common/BattleWin.png").exists())
         x, y, w, h = victory["action"]["param"]["target"]
-        # Right-side blank area (OAS C_REWARD_3), clear of the reward counter near (970-1110, 530-590).
-        self.assertGreaterEqual(x, 1092)
+        # Right-side blank area above the reward counter near (970-1110, 530-590); every safe tap shares it.
+        self.assertEqual([x, y, w, h], [1011, 160, 182, 216])
         self.assertLessEqual(y + h, 520)
+        for name in ("CommonActivityFailedBattleResult", "CommonActivityAfterBattleTap"):
+            self.assertEqual(pipeline[name]["action"]["param"]["target"], [x, y, w, h], name)
         self.assertIn("CommonActivityVictory", pipeline["CommonActivityPreparation"]["action"]["param"]["custom_action_param"]["nodes"])
     def test_hub_handles_battle_popups_like_the_other_loops(self) -> None:
         pipeline = json.loads((ROOT / "assets/resource/base/pipeline/CommonActivity.json").read_text(encoding="utf-8"))
@@ -111,6 +113,27 @@ class CommonActivityPipelineTest(unittest.TestCase):
         self.assertNotIn("[JumpBack]CommonSoulMismatchMute", hub)
         # The fallback tap is the last ordinary candidate.
         self.assertEqual(hub[-3:], ["[Anchor]CommonActivityAfterBattle", "[JumpBack]CommonBountyInterrupt", "CommonUnknownPopup"])
+
+    def test_defeat_option_stops_by_default_and_continue_is_capped(self) -> None:
+        pipeline = json.loads((ROOT / "assets/resource/base/pipeline/CommonActivity.json").read_text(encoding="utf-8"))
+        back = pipeline["CommonActivityFailedReturn"]
+        # Back to idle: the next stage sighting must not count the defeat.
+        self.assertEqual(back["anchor"], pipeline["CommonActivityTask"]["anchor"])
+        self.assertEqual(back["next"][:2], ["CommonActivityFailedContinue", "NativeFlowFailed"])
+        cont = pipeline["CommonActivityFailedContinue"]
+        self.assertFalse(cont["enabled"])
+        self.assertEqual(cont["next"], ["CommonActivityPreparation"])
+        resets = pipeline["CommonActivityPreparation"]["action"]["param"]["custom_action_param"]["nodes"]
+        self.assertIn("CommonActivityFailedBattleResult", resets)
+        # The defeat cap is per task: the per-round reset must not refill it.
+        self.assertNotIn("CommonActivityFailedContinue", resets)
+        task = load_jsonc(ROOT / "assets/tasks/CommonActivity.json")
+        option = task["option"]["重复挑战战斗失败处理"]
+        self.assertEqual(option["default_case"], "失败后停止")
+        cases = {c["name"]: c["pipeline_override"]["CommonActivityFailedContinue"]["enabled"] for c in option["cases"]}
+        self.assertEqual(cases, {"失败后停止": False, "失败后继续": True})
+        cap = task["option"]["重复挑战失败继续上限"]
+        self.assertEqual(cap["pipeline_override"]["CommonActivityFailedContinue"]["max_hit"], "{失败次数}")
 
     def test_fallback_tap_only_after_a_battle_and_bounded(self) -> None:
         pipeline = json.loads((ROOT / "assets/resource/base/pipeline/CommonActivity.json").read_text(encoding="utf-8"))

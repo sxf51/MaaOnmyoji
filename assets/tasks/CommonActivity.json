@@ -5,7 +5,8 @@
             "label": "$common_activity_task",
             "entry": "CommonActivityTask",
             "option": [
-                "重复挑战自定义作战次数"
+                "重复挑战自定义作战次数",
+                "重复挑战战斗失败处理"
             ],
             "description": "$common_activity_task_doc"
         }
@@ -52,6 +53,51 @@
                             }
                         }
                     }
+                }
+            }
+        },
+        "重复挑战战斗失败处理": {
+            "type": "select",
+            "label": "战斗失败时",
+            "description": "失败的场次不计入作战次数。",
+            "default_case": "失败后停止",
+            "cases": [
+                {
+                    "name": "失败后停止",
+                    "pipeline_override": {
+                        "CommonActivityFailedContinue": {
+                            "enabled": false
+                        }
+                    }
+                },
+                {
+                    "name": "失败后继续",
+                    "pipeline_override": {
+                        "CommonActivityFailedContinue": {
+                            "enabled": true
+                        }
+                    },
+                    "option": [
+                        "重复挑战失败继续上限"
+                    ]
+                }
+            ]
+        },
+        "重复挑战失败继续上限": {
+            "type": "input",
+            "label": "最多失败次数（本次任务累计，用完后停止）",
+            "inputs": [
+                {
+                    "name": "失败次数",
+                    "pipeline_type": "int",
+                    "default": "10",
+                    "verify": "^[1-9]\\d*$",
+                    "pattern_msg": "请输入失败次数上限，如10"
+                }
+            ],
+            "pipeline_override": {
+                "CommonActivityFailedContinue": {
+                    "max_hit": "{失败次数}"
                 }
             }
         }

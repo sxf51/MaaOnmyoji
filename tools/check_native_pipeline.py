@@ -695,6 +695,26 @@ def main():
             ("CommonActivityChallenge", {"CommonActivityChallenge"}),
             ("CommonActivityChallenge", {"CommonActivityChallenging"}),
             ("CommonActivityBattleResult", {"CommonActivityChallenge"})], expected_count=1, probe_events=ca_battle)
+        # Defeat is never counted. Default: close the result, back on the stage, report failure.
+        ca_lost = [("CommonActivityChallenge", {"DailyBattleFailed"}),
+                   ("CommonActivityFailedBattleResult", {"CommonActivityChallenge"})]
+        case("CommonActivity defeat stops by default without counting", "CommonActivityTask", {"CommonActivityChallenge"},
+            ca_lost, succeeds=False)
+        # Option 失败后继续: the next round starts idle, so seeing the stage again before a battle does not count the defeat.
+        ca_continue = {"CommonActivityFailedContinue": {"enabled": True}}
+        case("CommonActivity defeat continues with the option and counts only the later victory", "CommonActivityTask",
+            {"CommonActivityChallenge"}, [*ca_lost,
+            ("CommonActivityChallenge", {"CommonActivityChallenge"}),
+            ("CommonActivityChallenge", {"CommonActivityChallenging"}),
+            ("CommonActivityBattleResult", {"CommonActivityChallenge"})], expected_count=1, probe_events=ca_battle,
+            pipeline_override=ca_continue)
+        case("CommonActivity two defeats in a row continue and then count a victory", "CommonActivityTask",
+            {"CommonActivityChallenge"}, [*ca_lost, *ca_lost,
+            ("CommonActivityChallenge", {"CommonActivityBattleResult"}),
+            ("CommonActivityBattleResult", {"CommonActivityChallenge"})], expected_count=1, pipeline_override=ca_continue)
+        case("CommonActivity defeat cap ends the task with a failure", "CommonActivityTask", {"CommonActivityChallenge"},
+            [*ca_lost, *ca_lost], succeeds=False,
+            pipeline_override={"CommonActivityFailedContinue": {"enabled": True, "max_hit": 1}})
         case("CommonActivity unknown popup after a battle stops before the next challenge", "CommonActivityTask", {"CommonActivityChallenge"}, [
             ("CommonActivityChallenge", {"CommonActivityChallenging"}),
             ("CommonActivityBattleResult", {"TouchAreaRisk"})], succeeds=False, expect_popup_stop=True, probe_events=ca_battle)

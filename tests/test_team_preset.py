@@ -85,7 +85,7 @@ class TeamPresetTest(unittest.TestCase):
         self.assertEqual(self.nodes['CommonActivityPreparation']['next'],
                          ['CommonActivityChallenge',*self.nodes['CommonActivityTask']['next']])
         task=load_jsonc(ROOT/'assets/tasks/CommonActivity.json')
-        self.assertEqual(task['task'][0]['option'],['重复挑战自定义作战次数'])
+        self.assertEqual(task['task'][0]['option'],['重复挑战自定义作战次数','重复挑战战斗失败处理'])
         self.assertNotIn('重复挑战更换队伍预设',task['option'])
 
     def test_group_and_team_lists_are_searched_with_bezier_swipes(self):
