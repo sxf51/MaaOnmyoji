@@ -32,6 +32,7 @@
         {
             "name": "桌面端",
             "type": "Win32",
+            "display_short_side": 720, // 默认缩放分辨率的短边长度
             "win32": {
                 "class_regex": ".*",
                 "window_regex": "(阴阳师|Onmyoji).*",
