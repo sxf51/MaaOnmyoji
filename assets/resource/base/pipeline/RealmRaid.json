@@ -473,7 +473,9 @@
                 "custom_action_param": {
                     "nodes": [
                         "RealmRaidRetreatExit",
-                        "RealmRaidRetreatConfirm"
+                        "RealmRaidRetreatExitPending",
+                        "RealmRaidRetreatConfirm",
+                        "RealmRaidRetreatConfirmText"
                     ],
                     "strict": true
                 }
@@ -565,10 +567,13 @@
         }
     },
     "RealmRaidRetreatExitWait": {
-        "doc": "点返回后约1.3秒才弹出退出确认框，期间不重点返回；确认框出现立即确认。游戏直接进入失败页时交给再次挑战分支。2.5秒内未弹框才转入有界重点。",
+        "doc": "点返回后等待退出确认框，期间不重点返回；确认框出现立即按模板确认，未弹出时由RealmRaidRetreatExitPending只做模板判断快速重试。游戏直接进入失败页时交给再次挑战分支；返回按钮消失且不是失败页（已打完）时交给RealmRaidBattleSettle。2.5秒内未弹框才转入有界重点。",
         "next": [
             "RealmRaidRetreatConfirm",
+            "RealmRaidRetreatExitPending",
+            "RealmRaidRetreatConfirmText",
             "RealmRaidRetreatRetry",
+            "RealmRaidBattleSettle",
             "[JumpBack]CommonBountyInterrupt",
             "CommonUnknownPopup"
         ],
@@ -581,21 +586,96 @@
         ]
     },
     "RealmRaidRetreatExitRetry": {
-        "doc": "返回点击后未见确认框：确认框或失败页优先，返回按钮仍在时再点，点击预算3次用完后超时停止。",
+        "doc": "返回点击后未见确认框：确认框或失败页优先，返回按钮仍在时再点，点击预算3次用完后超时停止。返回按钮已消失且不是确认框/失败页时（来不及退出就打完了），交给RealmRaidBattleSettle按正常结算处理。",
         "pre_delay": 0,
         "post_delay": 0,
         "rate_limit": 100,
         "next": [
             "RealmRaidRetreatConfirm",
+            "RealmRaidRetreatConfirmText",
             "RealmRaidRetreatRetry",
             "RealmRaidRetreatExit",
+            "RealmRaidBattleSettle",
             "[JumpBack]CommonBountyInterrupt",
             "CommonUnknownPopup"
         ],
         "timeout": 10000
     },
     "RealmRaidRetreatConfirm": {
-        "doc": "退出战斗确认：提示须含退出类字样，按钮须为确定/确认。本地实测提示为“确认退出战斗吗?”，确定按钮中心约(752,436)，在 TanyaShue/MaaYYs@3f9a969 退出战斗_确认 ROI [643,359,194,113] 内。",
+        "doc": "退出战斗确认（模板）：提示“确认退出战斗吗?”与确定按钮两张模板均由本地1280x720实机截图裁剪（debug/raid_exit_dialog.png），只用模板不触发列表的合并OCR，确认框一出现即可在约0.1秒内点击。确认框弹出期间战斗继续，本地日志 2026-11-17 13:45 旧的OCR确认每轮约1~1.5秒，点返回到点确定约2.6秒，强队在此期间已打赢。模板未命中时由RealmRaidRetreatConfirmText按OCR兜底。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    {
+                        "recognition": {
+                            "type": "TemplateMatch",
+                            "param": {
+                                "template": "RealmRaid/RetreatConfirmPrompt.png",
+                                "roi": [
+                                    300,
+                                    200,
+                                    680,
+                                    160
+                                ],
+                                "threshold": 0.8
+                            }
+                        }
+                    },
+                    {
+                        "recognition": {
+                            "type": "TemplateMatch",
+                            "param": {
+                                "template": "RealmRaid/RetreatConfirmButton.png",
+                                "roi": [
+                                    643,
+                                    359,
+                                    194,
+                                    113
+                                ],
+                                "threshold": 0.8
+                            }
+                        }
+                    }
+                ],
+                "box_index": 1
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "next": [
+            "RealmRaidRetreatConfirmWait"
+        ],
+        "pre_delay": 0,
+        "post_delay": 500,
+        "pre_wait_freezes": 0,
+        "max_hit": 3
+    },
+    "RealmRaidRetreatExitPending": {
+        "doc": "点返回后确认框尚未弹出：战斗返回按钮仍在（确认框弹出后该模板也照常命中，因此排在RealmRaidRetreatConfirm之后），本轮只做模板判断就回到等待，不让后面的OCR节点触发约1秒的合并OCR，确认框一出现下一轮即可点确定。最多12次（约1~2秒，本地手动实测点返回0.8秒内已弹框），用完后才轮到OCR兜底与失败页判断，返回点击丢失时随后由等待超时转入有界重点。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "RealmRaidBattleExitIcon"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "RealmRaidRetreatExitWait"
+        ],
+        "pre_delay": 0,
+        "post_delay": 0,
+        "pre_wait_freezes": 0,
+        "max_hit": 12
+    },
+    "RealmRaidRetreatConfirmText": {
+        "doc": "退出战斗确认的OCR兜底（模板未命中时，例如换皮或字体变化）：提示须含退出类字样，按钮须为确定/确认。本地实测提示为“确认退出战斗吗?”，确定按钮中心约(752,436)，在 TanyaShue/MaaYYs@3f9a969 退出战斗_确认 ROI [643,359,194,113] 内。",
         "recognition": {
             "type": "And",
             "param": {
@@ -647,10 +727,12 @@
         "max_hit": 3
     },
     "RealmRaidRetreatConfirmWait": {
-        "doc": "确认退出后等待失败页的再次挑战；确认框仍在时有界重点。",
+        "doc": "确认退出后等待失败页的再次挑战；确认框仍在时有界重点。确认框弹出期间战斗继续，强队可能在点到确定前就打赢（本地日志 2026-11-17 13:45 点返回到点确定约2.6秒，随后出现胜利奖励页、等失败页超时）。确认框仍在时返回按钮模板照常命中，因此排在最后的RealmRaidBattleSettle（要求返回按钮消失）只在战斗已结束时进入，由它的列表处理失败页或胜利结算，胜利按正常一场计数。",
         "next": [
             "RealmRaidRetreatRetry",
             "RealmRaidRetreatConfirm",
+            "RealmRaidRetreatConfirmText",
+            "RealmRaidBattleSettle",
             "[JumpBack]CommonBountyInterrupt",
             "CommonUnknownPopup"
         ],

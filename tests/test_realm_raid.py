@@ -217,16 +217,17 @@ class RaidTest(unittest.TestCase):
 
     def test_retreat_resets_click_budgets_and_confirms_with_prompt(self):
         self.assertEqual(self.nodes['RealmRaidRetreatBegin']['action']['param']['custom_action_param'],
-                         {'nodes':['RealmRaidRetreatExit','RealmRaidRetreatConfirm'],'strict':True})
+                         {'nodes':['RealmRaidRetreatExit','RealmRaidRetreatExitPending','RealmRaidRetreatConfirm',
+                                   'RealmRaidRetreatConfirmText'],'strict':True})
         retry=self.nodes['RealmRaidRetreatRetry']['action']['param']['custom_action_param']
         self.assertTrue(retry['strict'])
         self.assertLessEqual({'RealmRaidRetreatLeave','RealmRaidRetreatReselect','RealmRaidAttack','DailyPrepare'},set(retry['nodes']))
         # The per-task retreat budget itself is never refilled.
         self.assertNotIn('RealmRaidRetreatRetry',retry['nodes'])
-        for click in ('RealmRaidRetreatExit','RealmRaidRetreatConfirm','RealmRaidRetreatLeave','RealmRaidRetreatReselect',
+        for click in ('RealmRaidRetreatExit','RealmRaidRetreatConfirm','RealmRaidRetreatConfirmText','RealmRaidRetreatLeave','RealmRaidRetreatReselect',
                       'RealmRaidRetreatAgain','RealmRaidRetreatAgainConfirm'):
             self.assertEqual(self.safe[click]['max_hit'],3,click)
-        for name in ('RealmRaidRetreatConfirm','RealmRaidRetreatAgainConfirm'):
+        for name in ('RealmRaidRetreatConfirmText','RealmRaidRetreatAgainConfirm'):
             prompt,button=self.nodes[name]['recognition']['param']['all_of']
             self.assertEqual(self.nodes[name]['recognition']['param']['box_index'],1)
             self.assertEqual(button['recognition']['param']['expected'],'^(确定|确认)$')
@@ -242,6 +243,34 @@ class RaidTest(unittest.TestCase):
             self.assertTrue(hit(text),text)
         for text in ('可以按照以下方式提升自己战斗力','再次挑战','夫败了吗','败北','胜'):
             self.assertFalse(hit(text),text)
+
+    def test_win_during_retreat_falls_back_to_normal_settle(self):
+        # The battle keeps running behind the exit dialog; a win there must reach the normal result handling.
+        for name in ('RealmRaidRetreatConfirmWait','RealmRaidRetreatExitRetry','RealmRaidRetreatExitWait'):
+            nxt=self.nodes[name]['next']
+            self.assertIn('RealmRaidBattleSettle',nxt,name)
+            for earlier in ('RealmRaidRetreatConfirm','RealmRaidRetreatRetry'):
+                self.assertLess(nxt.index(earlier),nxt.index('RealmRaidBattleSettle'),name)
+        settle=self.nodes['RealmRaidBattleSettle']
+        self.assertTrue(settle['inverse'])
+        self.assertIn('RealmRaidRetreatRetry',settle['next'])
+        self.assertIn('RealmRaidBattleResult',settle['next'])
+
+    def test_exit_dialog_is_confirmed_by_templates_before_any_ocr(self):
+        # Any OCR node in a next list triggers a merged OCR (~1s a round); the battle keeps running behind the dialog.
+        confirm=self.nodes['RealmRaidRetreatConfirm']['recognition']['param']
+        self.assertEqual([r['recognition']['type'] for r in confirm['all_of']],['TemplateMatch','TemplateMatch'])
+        self.assertEqual(confirm['box_index'],1)
+        for r in confirm['all_of']:
+            self.assertTrue((ROOT/'assets/resource/base/image'/r['recognition']['param']['template']).is_file())
+        self.assertEqual(confirm['all_of'][1]['recognition']['param']['roi'],[643,359,194,113])
+        wait=self.nodes['RealmRaidRetreatExitWait']['next']
+        self.assertEqual(wait[:3],['RealmRaidRetreatConfirm','RealmRaidRetreatExitPending','RealmRaidRetreatConfirmText'])
+        pending=self.nodes['RealmRaidRetreatExitPending']
+        self.assertEqual(pending['recognition']['param']['all_of'],['RealmRaidBattleExitIcon'])
+        self.assertEqual(pending['next'],['RealmRaidRetreatExitWait'])
+        self.assertLessEqual(pending['max_hit'],15)
+        self.assertEqual(self.nodes['RealmRaidRetreatConfirmText']['next'],['RealmRaidRetreatConfirmWait'])
 
     def test_zero_ticket_finishes_before_choosing_a_card(self):
         scan=self.nodes['RealmRaidScan']['next']

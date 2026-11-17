@@ -582,6 +582,17 @@ def main():
             ("RealmRaidRetreatExit", retreat_failed),
             ("RealmRaidRetreatLeave", {"PageRaid", "RealmRaidCard", "RaidNicknameMissing"})], succeeds=False,
             pipeline_override=retreat(1))
+        # The battle keeps running behind the exit dialog; a strong team can win before 确定 lands
+        # (local log 2026-11-17 13:45: reward page, then the failure-page wait timed out).
+        case("raid battle won behind the exit dialog counts as a normal win", "RealmRaidTask", {"PageRaid", "RealmRaidCard"}, [
+            ("RealmRaidSelect", {"PageRaidTarget"}), ("RealmRaidAttack", exit_ready),
+            ("RealmRaidRetreatExit", {"RealmRaidRetreatConfirm"}),
+            ("RealmRaidRetreatConfirm", {"DailyBattleResult"}),
+            ("RealmRaidBattleResult", {"PageRaid", "RealmRaidBroken"})], expected_count=1, pipeline_override=retreat(1))
+        case("raid battle won before the exit dialog appears counts as a normal win", "RealmRaidTask", {"PageRaid", "RealmRaidCard"}, [
+            ("RealmRaidSelect", {"PageRaidTarget"}), ("RealmRaidAttack", exit_ready),
+            ("RealmRaidRetreatExit", {"DailyBattleResult"}),
+            ("RealmRaidBattleResult", {"PageRaid", "RealmRaidBroken"})], expected_count=1, pipeline_override=retreat(1))
         case("all raid cards already marked", "RealmRaidTask", {"PageRaid"})
         case("raid failed battle skips attempted target", "RealmRaidTask", {"PageRaid", "RealmRaidCard"}, [
             ("RealmRaidSelect", {"PageRaidTarget"}), ("RealmRaidAttack", {"DailyBattleFailed", "DailyBattleResult"}),
