@@ -154,6 +154,30 @@ class RaidTest(unittest.TestCase):
         self.assertEqual(override['TeamPresetOut']['recognition']['param']['roi'],[894,503,120,44])
         self.assertNotIn('TeamPresetClose',override)
 
+    def test_retreat_failure_page_taps_blank_and_reattacks_the_same_card(self):
+        # OAS run_general_battle_back closes the failure page instead of pressing 再次挑战, then fire(index) the same card.
+        retry=self.nodes['RealmRaidRetreatRetry']
+        self.assertEqual(retry['next'],['RealmRaidRetreatLeave','[JumpBack]CommonBountyInterrupt','CommonUnknownPopup'])
+        leave=self.nodes['RealmRaidRetreatLeave']
+        x,y,w,h=leave['action']['param']['target']
+        again=self.nodes['RealmRaidRetreatAgain']['action']['param']['target']
+        # The blank area is clear of the 再次挑战 button.
+        self.assertTrue(x>again[0]+again[2] or y+h<again[1])
+        self.assertEqual(self.nodes['RealmRaidRetreatLeaveWait']['next'][:2],['RealmRaidRetreatReselect','RealmRaidRetreatLeave'])
+        reselect=self.nodes['RealmRaidRetreatReselect']
+        # The retreated card carries a failure corner, so it is clicked from the remembered box, not re-scanned.
+        self.assertEqual(reselect['recognition']['param']['all_of'],['PageRaid','RealmRaidNickname'])
+        self.assertNotIn('RealmRaidUnmarkedCorner',reselect['recognition']['param']['all_of'])
+        self.assertEqual(reselect['action']['param']['target'],'RealmRaidChoose')
+        self.assertEqual(reselect['action']['param']['target_offset'],
+                         self.nodes['RealmRaidSelect']['action']['param']['target_offset'])
+        self.assertEqual(self.nodes['RealmRaidRetreatReselectWait']['next'][:2],['RealmRaidAttack','RealmRaidRetreatReselect'])
+        reachable=set()
+        for name in ('RealmRaidRetreatRetry','RealmRaidRetreatLeave','RealmRaidRetreatLeaveWait',
+                     'RealmRaidRetreatReselect','RealmRaidRetreatReselectWait'):
+            reachable.update(self.nodes[name]['next'])
+        self.assertNotIn('RealmRaidRetreatAgain',reachable)
+
     def test_defeat_retry_is_per_card_and_after_retreat(self):
         battle=self.nodes['RealmRaidBattleSettle']['next']
         # Retreat failure pages come first; only a real defeat reaches the retry, then the failure options.
@@ -192,11 +216,16 @@ class RaidTest(unittest.TestCase):
         self.assertEqual(self.safe['RealmRaidRefreshConfirm']['max_hit'],3)
 
     def test_retreat_resets_click_budgets_and_confirms_with_prompt(self):
-        for gate,clicks in (('RealmRaidRetreatBegin',['RealmRaidRetreatExit','RealmRaidRetreatConfirm']),
-                            ('RealmRaidRetreatRetry',['RealmRaidRetreatAgain','RealmRaidRetreatAgainConfirm'])):
-            self.assertEqual(self.nodes[gate]['action']['param']['custom_action_param'],{'nodes':clicks,'strict':True})
-            for click in clicks:
-                self.assertEqual(self.safe[click]['max_hit'],3)
+        self.assertEqual(self.nodes['RealmRaidRetreatBegin']['action']['param']['custom_action_param'],
+                         {'nodes':['RealmRaidRetreatExit','RealmRaidRetreatConfirm'],'strict':True})
+        retry=self.nodes['RealmRaidRetreatRetry']['action']['param']['custom_action_param']
+        self.assertTrue(retry['strict'])
+        self.assertLessEqual({'RealmRaidRetreatLeave','RealmRaidRetreatReselect','RealmRaidAttack','DailyPrepare'},set(retry['nodes']))
+        # The per-task retreat budget itself is never refilled.
+        self.assertNotIn('RealmRaidRetreatRetry',retry['nodes'])
+        for click in ('RealmRaidRetreatExit','RealmRaidRetreatConfirm','RealmRaidRetreatLeave','RealmRaidRetreatReselect',
+                      'RealmRaidRetreatAgain','RealmRaidRetreatAgainConfirm'):
+            self.assertEqual(self.safe[click]['max_hit'],3,click)
         for name in ('RealmRaidRetreatConfirm','RealmRaidRetreatAgainConfirm'):
             prompt,button=self.nodes[name]['recognition']['param']['all_of']
             self.assertEqual(self.nodes[name]['recognition']['param']['box_index'],1)
@@ -204,6 +233,15 @@ class RaidTest(unittest.TestCase):
             self.assertFalse(re.search(prompt['recognition']['param']['expected'],'确认购买'))
         for i in range(1,7):
             self.assertTrue((ROOT/f'assets/resource/base/image/RealmRaid/BattleExit_{i}.png').is_file())
+
+    def test_raid_failure_title_misread_still_counts_as_failed(self):
+        # The live raid failure page's stylised "失败" OCRs as "夫败" (or just "败" if the first glyph drops); other page text must not match.
+        expected=load_jsonc(ROOT/'assets/resource/base/pipeline/DailyRewards.json')['DailyBattleFailed']['recognition']['param']['expected']
+        hit=lambda text:any(re.search(p,text) for p in expected)
+        for text in ('夫败','败','失败','战斗失败','挑战失败'):
+            self.assertTrue(hit(text),text)
+        for text in ('可以按照以下方式提升自己战斗力','再次挑战','夫败了吗','败北','胜'):
+            self.assertFalse(hit(text),text)
 
     def test_zero_ticket_finishes_before_choosing_a_card(self):
         scan=self.nodes['RealmRaidScan']['next']

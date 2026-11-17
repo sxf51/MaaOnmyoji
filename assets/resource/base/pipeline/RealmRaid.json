@@ -657,7 +657,7 @@
         "timeout": 15000
     },
     "RealmRaidRetreatRetry": {
-        "doc": "主动退出后的失败页点再次挑战，回到同一张卡；第n次退出后的这一下就是正式开打。最多n次，由任务选项写入max_hit。不回九宫格、不计数，失败卡片的角标不影响重开。",
+        "doc": "主动退出后的失败页（有再次挑战）：不点再次挑战，按 OAS 退四的做法点空白处回到九宫格，再点同一张卡进攻；共n次（打m退n中的n，任务选项写入max_hit，整个任务只扣这一份，不随选卡重置）。重置本次返回、重选与进攻的点击预算，以及每场的准备/过场等预算。参考 runhey/OnmyojiAutoScript@2d2f6d8962a5af17c95670c5d0fb2e384b247162 tasks/Component/GeneralBattle/general_battle.py::run_general_battle_back（点 I_FALSE 关掉失败页）与 tasks/RealmRaid/script_task.py::run_2（退四后 fire(index) 同一张卡）。",
         "max_hit": 0,
         "recognition": {
             "type": "And",
@@ -673,15 +673,109 @@
                 "custom_action": "ResetCount",
                 "custom_action_param": {
                     "nodes": [
-                        "RealmRaidRetreatAgain",
-                        "RealmRaidRetreatAgainConfirm"
+                        "RealmRaidRetreatLeave",
+                        "RealmRaidRetreatReselect",
+                        "RealmRaidAttack",
+                        "DailyPrepare",
+                        "CommonBattleEnteringWait",
+                        "DailyRewardPopup",
+                        "RealmRaidBattleResume",
+                        "CommonSoulMismatch",
+                        "CommonSoulMismatchConfirm"
                     ],
                     "strict": true
                 }
             }
         },
         "next": [
-            "RealmRaidRetreatAgain",
+            "RealmRaidRetreatLeave",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ]
+    },
+    "RealmRaidRetreatLeave": {
+        "doc": "主动退出的失败页：点右侧空白安全区关闭（与通用挑战结算同一区域，避开右下的再次挑战按钮与下方伤害条），回到个人突破九宫格。",
+        "recognition": {
+            "type": "Or",
+            "param": {
+                "any_of": [
+                    "RealmRaidRetreatAgain",
+                    "DailyBattleFailed"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    1011,
+                    160,
+                    182,
+                    216
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 1000,
+        "pre_wait_freezes": 0,
+        "max_hit": 3,
+        "next": [
+            "RealmRaidRetreatLeaveWait"
+        ]
+    },
+    "RealmRaidRetreatLeaveWait": {
+        "doc": "等回到九宫格后重选同一张卡；失败页还在时再点空白（预算3次）。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "timeout": 10000,
+        "next": [
+            "RealmRaidRetreatReselect",
+            "RealmRaidRetreatLeave",
+            "[JumpBack]DailyRewardPopup",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ]
+    },
+    "RealmRaidRetreatReselect": {
+        "doc": "回到九宫格后点刚才退出的那张卡：位置取自 RealmRaidChoose 记住的卡片框（退出后该卡右上角带失败角标，正常选卡会排除它，所以不重新扫描），昵称仍在才点；点击区域与 RealmRaidSelect 相同。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageRaid",
+                    "RealmRaidNickname"
+                ],
+                "box_index": 1
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": "RealmRaidChoose",
+                "target_offset": [
+                    90,
+                    30,
+                    -157,
+                    -85
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 1000,
+        "pre_wait_freezes": 0,
+        "max_hit": 3,
+        "next": [
+            "RealmRaidRetreatReselectWait"
+        ]
+    },
+    "RealmRaidRetreatReselectWait": {
+        "doc": "等进攻按钮出现后进攻（RealmRaidAttack 之后与首场相同：等开战、再按剩余退出次数决定退出还是正式战斗）；没弹出时再点卡片。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "timeout": 5000,
+        "next": [
+            "RealmRaidAttack",
+            "RealmRaidRetreatReselect",
             "[JumpBack]CommonBountyInterrupt",
             "CommonUnknownPopup"
         ]

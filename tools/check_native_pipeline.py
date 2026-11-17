@@ -530,15 +530,17 @@ def main():
         # The game shows the exit button only after the battle starts, never together with 准备.
         exit_ready = {"PageBattle", "RealmRaidBattleExitIcon"}
         prepare = {"DailyPrepare"}
+        # Retreat failure page: tap the blank area back to the board (the card now carries a failure corner),
+        # then click the remembered card again and attack (OAS run_general_battle_back + fire(index)).
+        board_after_retreat = {"PageRaid", "RealmRaidCard", "RaidCornerMarked"}
+        leave = [("RealmRaidRetreatLeave", board_after_retreat), ("RealmRaidRetreatReselect", {"PageRaidTarget"})]
+        retreat_failed = {"DailyBattleFailed", "RealmRaidRetreatAgain"}
         case("raid retreats twice on the same card then wins it", "RealmRaidTask", {"PageRaid", "RealmRaidCard"}, [
             ("RealmRaidSelect", {"PageRaidTarget"}), ("RealmRaidAttack", exit_ready),
             ("RealmRaidRetreatExit", {"RealmRaidRetreatConfirm"}),
-            ("RealmRaidRetreatConfirm", {"DailyBattleFailed", "RealmRaidRetreatAgain"}),
-            ("RealmRaidRetreatAgain", {"RealmRaidRetreatAgainConfirm"}),
-            ("RealmRaidRetreatAgainConfirm", exit_ready),
+            ("RealmRaidRetreatConfirm", retreat_failed), *leave, ("RealmRaidAttack", exit_ready),
             ("RealmRaidRetreatExit", {"RealmRaidRetreatConfirm"}),
-            ("RealmRaidRetreatConfirm", {"DailyBattleFailed", "RealmRaidRetreatAgain"}),
-            ("RealmRaidRetreatAgain", prepare),
+            ("RealmRaidRetreatConfirm", retreat_failed), *leave, ("RealmRaidAttack", prepare),
             ("DailyPrepare", {"DailyBattleResult"}),
             ("RealmRaidBattleResult", {"PageRaid", "RealmRaidBroken"})], expected_count=1, pipeline_override=retreat(2))
         case("raid retreat disabled prepares normally", "RealmRaidTask", {"PageRaid", "RealmRaidCard"}, [
@@ -547,8 +549,7 @@ def main():
             ("RealmRaidBattleResult", {"PageRaid", "RealmRaidBroken"})], expected_count=1)
         case("raid retreat exits during auto-started battle", "RealmRaidTask", {"PageRaid", "RealmRaidCard"}, [
             ("RealmRaidSelect", {"PageRaidTarget"}), ("RealmRaidAttack", {"PageBattle", "RealmRaidBattleExitIcon"}),
-            ("RealmRaidRetreatExit", {"DailyBattleFailed", "RealmRaidRetreatAgain"}),
-            ("RealmRaidRetreatAgain", {"DailyPrepare"}),
+            ("RealmRaidRetreatExit", retreat_failed), *leave, ("RealmRaidAttack", {"DailyPrepare"}),
             ("DailyPrepare", {"DailyBattleResult"}),
             ("RealmRaidBattleResult", {"PageRaid", "RealmRaidBroken"})], expected_count=1, pipeline_override=retreat(1))
         case("raid retreat without exit confirmation stops after three clicks", "RealmRaidTask", {"PageRaid", "RealmRaidCard"}, [
@@ -557,15 +558,30 @@ def main():
         case("raid retreat stops when retry has no ticket", "RealmRaidTask", {"PageRaid", "RealmRaidCard"}, [
             ("RealmRaidSelect", {"PageRaidTarget"}), ("RealmRaidAttack", exit_ready),
             ("RealmRaidRetreatExit", {"RealmRaidRetreatConfirm"}),
-            ("RealmRaidRetreatConfirm", {"DailyBattleFailed", "RealmRaidRetreatAgain"}),
-            ("RealmRaidRetreatAgain", {"DailyNoResource"})], pipeline_override=retreat(4))
+            ("RealmRaidRetreatConfirm", retreat_failed), *leave,
+            ("RealmRaidAttack", {"DailyNoResource"})], pipeline_override=retreat(4))
         case("raid real defeat after retreats is not retried", "RealmRaidTask", {"PageRaid", "RealmRaidCard"}, [
             ("RealmRaidSelect", {"PageRaidTarget"}), ("RealmRaidAttack", exit_ready),
             ("RealmRaidRetreatExit", {"RealmRaidRetreatConfirm"}),
-            ("RealmRaidRetreatConfirm", {"DailyBattleFailed", "RealmRaidRetreatAgain"}),
-            ("RealmRaidRetreatAgain", prepare),
+            ("RealmRaidRetreatConfirm", retreat_failed), *leave, ("RealmRaidAttack", prepare),
             ("DailyPrepare", {"DailyBattleFailed", "DailyBattleResult", "RealmRaidRetreatAgain"}),
             ("RealmRaidBattleFailedResult", {"PageRaid"})], pipeline_override=retreat(1))
+        case("raid retreat never taps 再次挑战 and taps the blank area again while the failure page stays", "RealmRaidTask",
+            {"PageRaid", "RealmRaidCard"}, [
+            ("RealmRaidSelect", {"PageRaidTarget"}), ("RealmRaidAttack", exit_ready),
+            ("RealmRaidRetreatExit", retreat_failed),
+            ("RealmRaidRetreatLeave", retreat_failed), *leave, ("RealmRaidAttack", prepare),
+            ("DailyPrepare", {"DailyBattleResult"}),
+            ("RealmRaidBattleResult", {"PageRaid", "RealmRaidBroken"})], expected_count=1, pipeline_override=retreat(1))
+        case("raid retreat stops when the failure page never closes", "RealmRaidTask", {"PageRaid", "RealmRaidCard"}, [
+            ("RealmRaidSelect", {"PageRaidTarget"}), ("RealmRaidAttack", exit_ready),
+            ("RealmRaidRetreatExit", retreat_failed),
+            *[("RealmRaidRetreatLeave", retreat_failed) for _ in range(3)]], succeeds=False, pipeline_override=retreat(1))
+        case("raid retreat stops when the remembered card is gone", "RealmRaidTask", {"PageRaid", "RealmRaidCard"}, [
+            ("RealmRaidSelect", {"PageRaidTarget"}), ("RealmRaidAttack", exit_ready),
+            ("RealmRaidRetreatExit", retreat_failed),
+            ("RealmRaidRetreatLeave", {"PageRaid", "RealmRaidCard", "RaidNicknameMissing"})], succeeds=False,
+            pipeline_override=retreat(1))
         case("all raid cards already marked", "RealmRaidTask", {"PageRaid"})
         case("raid failed battle skips attempted target", "RealmRaidTask", {"PageRaid", "RealmRaidCard"}, [
             ("RealmRaidSelect", {"PageRaidTarget"}), ("RealmRaidAttack", {"DailyBattleFailed", "DailyBattleResult"}),
@@ -573,8 +589,7 @@ def main():
         battle_exit = {"PageBattle", "RealmRaidBattleExitIcon"}
         case("raid mark waits until the retreat budget is spent", "RealmRaidTask", {"PageRaid", "RealmRaidCard"}, [
             ("RealmRaidSelect", {"PageRaidTarget"}), ("RealmRaidAttack", battle_exit),
-            ("RealmRaidRetreatExit", {"DailyBattleFailed", "RealmRaidRetreatAgain"}),
-            ("RealmRaidRetreatAgain", battle_exit),
+            ("RealmRaidRetreatExit", retreat_failed), *leave, ("RealmRaidAttack", battle_exit),
             ("RealmRaidBattleMark", {"DailyBattleResult"}),
             ("RealmRaidBattleResult", {"PageRaid", "RealmRaidBroken"})], expected_count=1,
             pipeline_override={**retreat(1), "RealmRaidBattleMark": {"enabled": True}})
@@ -617,8 +632,7 @@ def main():
             ("RealmRaidBattleResult", {"PageRaid", "RealmRaidBroken"})], expected_count=1, pipeline_override=fail_retry(1))
         case("raid retreat and defeat retry keep separate budgets", "RealmRaidTask", {"PageRaid", "RealmRaidCard"}, [
             ("RealmRaidSelect", {"PageRaidTarget"}), ("RealmRaidAttack", battle_exit),
-            ("RealmRaidRetreatExit", lost),
-            ("RealmRaidRetreatAgain", {"DailyPrepare"}), ("DailyPrepare", lost),
+            ("RealmRaidRetreatExit", lost), *leave, ("RealmRaidAttack", {"DailyPrepare"}), ("DailyPrepare", lost),
             ("RealmRaidRetreatAgain", {"DailyPrepare"}), ("DailyPrepare", {"DailyBattleResult"}),
             ("RealmRaidBattleResult", {"PageRaid", "RealmRaidBroken"})], expected_count=1,
             pipeline_override={**retreat(1), **fail_retry(1)})
