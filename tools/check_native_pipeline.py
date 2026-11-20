@@ -114,10 +114,15 @@ class Screen(CustomRecognition):
                 'AwakeningChallenging'})
         if name in ('RealmRaidSelectedCard', 'RealmRaidNickname', 'RealmRaidUnmarkedCorner'):
             matched = 'RealmRaidCard' in self.state.flags
+            # A card that only carries a failure corner still shows its nickname.
+            if name == 'RealmRaidNickname' and 'RaidFailedCard' in self.state.flags:
+                matched = True
             if name == 'RealmRaidNickname' and 'RaidNicknameMissing' in self.state.flags:
                 matched = False
             if name == 'RealmRaidUnmarkedCorner' and 'RaidCornerMarked' in self.state.flags:
                 matched = False
+        if name in ('RealmRaidFailedCornerScan', 'RealmRaidFailedCardBox', 'RealmRaidFailedCorner'):
+            matched = 'RaidFailedCard' in self.state.flags
         if name == 'PageRaidTarget':
             matched = bool(self.state.flags & {'PageRaidTarget', 'RealmRaidChallenge'})
         if matched and self.state.probe_events and self.state.probe_events[0][0] == name:
@@ -526,6 +531,105 @@ def main():
         case("raid tickets run out after a counted win", "RealmRaidTask", {"PageRaid", "RealmRaidCard"}, [
             ("RealmRaidSelect", {"PageRaidTarget"}), ("RealmRaidAttack", {"DailyBattleResult"}),
             ("RealmRaidBattleResult", {"PageRaid", "RealmRaidBroken", "RealmRaidTicketEmpty"})], requested_count=2, expected_count=1)
+        guild = {"PageGuildRaid", "GuildRaidCard", "GuildRaidUnmarkedCorner"}
+        # Every run first drags the list to the top; the second frame is unchanged.
+        top = lambda flags=guild: ("GuildRaidTopSwipe", set(flags) | {"GuildRaidAtTop"})
+        guild_win = [("GuildRaidSelect", {"PageGuildRaidTarget"}), ("GuildRaidAttack", {"DailyBattleResult"})]
+        won = lambda flags={"PageGuildRaid"}: ("GuildRaidBattleResult", set(flags))
+        case("guild raid counts a win after returning to the guild list", "GuildRaidTask", guild, [
+            top(), *guild_win, won()], expected_count=1)
+        case("guild raid continues with the next top card", "GuildRaidTask", guild, [
+            top(), *guild_win, won(guild), *guild_win, won()], requested_count=2, expected_count=2)
+        case("guild raid stops at the requested count even with attempts left", "GuildRaidTask", guild, [
+            top(), *guild_win, won(guild)], requested_count=1, expected_count=1)
+        case("guild raid keeps scrolling to the top until the list stops moving", "GuildRaidTask", guild, [
+            ("GuildRaidTopSwipe", guild), ("GuildRaidTopSwipe", guild), top(), *guild_win, won()], expected_count=1)
+        case("guild raid opens the guild tab from personal raid", "GuildRaidTask", {"PageRaid", "GuildRaidOpenTab"}, [
+            ("GuildRaidOpenTab", guild), top(), *guild_win, won()], expected_count=1)
+        # Zero attempts only stop the run during daytime (attempts are not consumed after 21:00).
+        case("guild raid zero attempts in daytime finishes before choosing", "GuildRaidTask",
+            guild | {"GuildRaidTicketEmpty", "GuildRaidTicketsCounted"}, [top(guild | {"GuildRaidTicketEmpty", "GuildRaidTicketsCounted"})])
+        case("guild raid zero attempts after 21:00 still attacks", "GuildRaidTask", guild | {"GuildRaidTicketEmpty"}, [
+            top(guild | {"GuildRaidTicketEmpty"}), *guild_win, won()], expected_count=1)
+        case("guild raid ends when only cleared cards remain", "GuildRaidTask", {"PageGuildRaid", "GuildRaidBrokenAny"}, [
+            top({"PageGuildRaid", "GuildRaidBrokenAny"})])
+        case("guild raid not open ends without input", "GuildRaidTask", {"GuildRaidTab", "GuildRaidTitle"})
+        case("guild raid closes a leftover attack popup first", "GuildRaidTask", {"PageGuildRaid", "PageGuildRaidTarget"}, [
+            ("GuildRaidDismissTarget", guild), top(), *guild_win, won()], expected_count=1)
+        failed_page = {"PageGuildRaid", "GuildRaidFailedCornerScan", "GuildRaidFailedCardBox"}
+        case("guild raid skips a page of failed cards by scrolling down", "GuildRaidTask", failed_page, [
+            top(failed_page), ("GuildRaidScroll", failed_page), ("GuildRaidScroll", guild), *guild_win, won()], expected_count=1)
+        case("guild raid ends at the list bottom when every remaining card failed", "GuildRaidTask", failed_page, [
+            top(failed_page), ("GuildRaidScroll", failed_page), ("GuildRaidScroll", failed_page | {"GuildRaidListEnd"})])
+        case("guild raid scroll budget ends the run", "GuildRaidTask", failed_page,
+            [top(failed_page)] + [("GuildRaidScroll", failed_page)] * 30)
+        also_failed = {"GuildRaidChoose": {"recognition": {"param": {"any_of": ["GuildRaidChooseFresh", "GuildRaidChooseFailed"]}}}}
+        failed_card = failed_page | {"GuildRaidFailedCorner"}
+        case("guild raid attack-failed mode fights a failed card instead of scrolling", "GuildRaidTask", failed_card, [
+            top(failed_card), ("GuildRaidSelect", {"PageGuildRaidTarget"}), ("GuildRaidAttack", {"DailyBattleResult"}), won()],
+            expected_count=1, pipeline_override=also_failed)
+        case("guild raid marked corner never clicks", "GuildRaidTask", {"PageGuildRaid", "GuildRaidCard"}, [
+            top({"PageGuildRaid", "GuildRaidCard"})], succeeds=False)
+        lost = lambda flags=guild: [guild_win[0], ("GuildRaidAttack", {"DailyBattleFailed", "DailyBattleResult"}),
+                                    ("GuildRaidBattleFailedResult", set(flags))]
+        case("guild raid defeat is not counted and the next card is fought", "GuildRaidTask", guild, [
+            top(), *lost(), *guild_win, won()], expected_count=1)
+        case("guild raid stops after ten defeats", "GuildRaidTask", guild, [top(), *lost() * 10], requested_count=30)
+        case("guild raid stop-on-defeat mode ends after the first defeat", "GuildRaidTask", guild, [top(), *lost()],
+            requested_count=6, pipeline_override={"GuildRaidFailStop": {"enabled": True}})
+        retry = {"GuildRaidFailRetry": {"max_hit": 1}}
+        again = {"DailyBattleFailed", "RealmRaidRetreatAgain"}
+        case("guild raid retries a defeat on the same card then wins", "GuildRaidTask", guild, [
+            top(), guild_win[0], ("GuildRaidAttack", again), ("GuildRaidRetryAgain", {"PageBattle", "RealmRaidBattleExitIcon"}),
+            ("GuildRaidBattleMark", {"DailyBattleResult"}), won()],
+            expected_count=1, pipeline_override={**retry, "GuildRaidBattleMark": {"enabled": True}})
+        case("guild raid no-resource prompt after attack stops", "GuildRaidTask", guild, [
+            top(), guild_win[0], ("GuildRaidAttack", {"DailyNoResource"})])
+        case("guild raid attempts-short text after attack stops", "GuildRaidTask", guild, [
+            top(), guild_win[0], ("GuildRaidAttack", {"GuildRaidNoResourceText"})])
+        # A card someone else already broke still shows as open; 进攻 only shows a tip and the page stays.
+        stale = [guild_win[0], ("GuildRaidAttack", guild | {"NavClose"})]
+        # Switching tabs does not reload the list: close Realm Raid with its X, reopen it, then pick the guild tab again.
+        reload_list = [("GuildRaidAttackRejectedConfirm", {"PageRaid", "GuildRaidOpenTab"}), ("GuildRaidOpenTab", guild)]
+        case("guild raid reloads the list after a stale card and wins the next one", "GuildRaidTask", guild, [
+            top(), *stale, *reload_list, top(), *guild_win, won()], expected_count=1)
+        case("guild raid confirm-style stale tip is closed then the list reloads", "GuildRaidTask", guild, [
+            top(), guild_win[0], ("GuildRaidAttack", {"GuildRaidRejectTip"}), ("GuildRaidRejectTip", guild | {"NavClose"}), *reload_list,
+            top(), *guild_win, won()], expected_count=1)
+        case("guild raid reload reopens Realm Raid from the explore map", "GuildRaidTask", guild, [
+            top(), *stale, ("GuildRaidAttackRejectedConfirm", {"PageExplore", "NavOpenRaid"}),
+            ("NativeToRaidNavOpenRaid", {"PageRaid", "GuildRaidOpenTab"}), ("GuildRaidOpenTab", guild),
+            top(), *guild_win, won()], expected_count=1)
+        case("guild raid stops after three rejected attacks", "GuildRaidTask", guild, [
+            top(), *stale, *reload_list, top(), *stale, *reload_list, top(), *stale, *reload_list, top(), *stale],
+            requested_count=6)
+        conquered = {"PageGuildRaid", "GuildRaidConqueredStamp"}
+        stop_conquered = {"GuildRaidConquered": {"enabled": True}}
+        case("guild raid conquered stamp is ignored by default", "GuildRaidTask", guild | conquered, [
+            top(guild | conquered), *guild_win, won()], expected_count=1)
+        case("guild raid already conquered at entry ends without input when chosen", "GuildRaidTask", guild | conquered,
+            pipeline_override=stop_conquered)
+        case("guild raid stops when the guild becomes conquered after a win", "GuildRaidTask", guild, [
+            top(), *guild_win, won(guild | conquered)], requested_count=30, expected_count=1, pipeline_override=stop_conquered)
+        case("guild raid late conquered stamp stops before clicking attack", "GuildRaidTask", guild, [
+            top(), guild_win[0][:1] + ({"PageGuildRaidTarget", "PageGuildRaid", "GuildRaidConqueredStamp"},)],
+            requested_count=30, pipeline_override=stop_conquered)
+        toast_popup = {"PageGuildRaid", "PageGuildRaidTarget", "GuildRaidStaleToast"}
+        case("guild raid stale-card toast closes the popup before reloading the list", "GuildRaidTask", guild, [
+            top(), guild_win[0], ("GuildRaidAttack", toast_popup),
+            ("GuildRaidRejectDismiss", guild | {"NavClose"}), *reload_list, top(), *guild_win, won()],
+            expected_count=1)
+        case("guild raid stale toast on a conquered guild still reloads instead of stopping", "GuildRaidTask", guild, [
+            top(), guild_win[0], ("GuildRaidAttack", toast_popup | {"GuildRaidConqueredStamp"}),
+            ("GuildRaidRejectDismiss", guild | {"NavClose"}), *reload_list, top(), *guild_win, won()],
+            expected_count=1, pipeline_override=stop_conquered | {"GuildRaidReady": {}, "GuildRaidWaitTarget": {"next": [
+                "GuildRaidAttack", "GuildRaidSelect", "[JumpBack]CommonBountyInterrupt", "CommonUnknownPopup"]}})
+        case("guild raid locks the team before choosing", "GuildRaidTask", {"PageGuildRaid", "GuildRaidTeamUnlocked"}, [
+            ("GuildRaidClickLock", guild | {"GuildRaidTeamLocked"}), top(guild | {"GuildRaidTeamLocked"}), *guild_win, won()],
+            expected_count=1, pipeline_override={"GuildRaidLockTeam": {"enabled": True}})
+        case("guild raid unlocks the team before choosing", "GuildRaidTask", guild | {"GuildRaidTeamLocked"}, [
+            ("GuildRaidClickUnlock", guild | {"GuildRaidTeamUnlocked"}), top(guild | {"GuildRaidTeamUnlocked"}), *guild_win, won()],
+            expected_count=1, pipeline_override={"GuildRaidUnlockTeam": {"enabled": True}})
         retreat = lambda n: {"RealmRaidRetreatBegin": {"max_hit": n}, "RealmRaidRetreatRetry": {"max_hit": n}}
         # The game shows the exit button only after the battle starts, never together with 准备.
         exit_ready = {"PageBattle", "RealmRaidBattleExitIcon"}
@@ -696,6 +800,24 @@ def main():
         case("raid failed battle skips attempted target", "RealmRaidTask", {"PageRaid", "RealmRaidCard"}, [
             ("RealmRaidSelect", {"PageRaidTarget"}), ("RealmRaidAttack", {"DailyBattleFailed", "DailyBattleResult"}),
             ("RealmRaidBattleFailedResult", {"PageRaid"})])
+        # OAS find_one keeps failed cards selectable: a board with only failed cards is not finished
+        # (local logs 2026-11-17 15:48 and 16:21 ended at 1/9 and 3/9).
+        failed_board = {"PageRaid", "RaidFailedCard"}
+        case("raid attacks a failed card when no fresh card is left", "RealmRaidTask", failed_board, [
+            ("RealmRaidSelect", {"PageRaidTarget"}), ("RealmRaidAttack", {"DailyBattleResult"}),
+            ("RealmRaidBattleResult", {"PageRaid", "RealmRaidBroken"})], expected_count=1)
+        case("raid fresh card still wins over a failed one", "RealmRaidTask", {"PageRaid", "RealmRaidCard", "RaidFailedCard"}, [
+            ("RealmRaidSelect", {"PageRaidTarget"}), ("RealmRaidAttack", {"DailyBattleResult"}),
+            ("RealmRaidBattleResult", {"PageRaid", "RealmRaidBroken"})], expected_count=1)
+        case("raid skip mode ends after three real defeats on failed cards", "RealmRaidTask", failed_board, [
+            *[step for _ in range(4) for step in (
+                ("RealmRaidSelect", {"PageRaidTarget"}), ("RealmRaidAttack", {"DailyBattleFailed", "DailyBattleResult"}),
+                ("RealmRaidBattleFailedResult", failed_board))]], requested_count=9)
+        # Every third break on a board pops a reward bag over the board (local log 2026-11-17 16:28).
+        case("raid closes the three-win reward before verifying the break", "RealmRaidTask", {"PageRaid", "RealmRaidCard"}, [
+            ("RealmRaidSelect", {"PageRaidTarget"}), ("RealmRaidAttack", {"DailyBattleResult"}),
+            ("RealmRaidBattleResult", {"PageRaid", "CommonBattleRewardBag"}),
+            ("RealmRaidThreeWinReward", {"PageRaid", "RealmRaidBroken"})], expected_count=1)
         battle_exit = {"PageBattle", "RealmRaidBattleExitIcon"}
         case("raid mark waits until the retreat budget is spent", "RealmRaidTask", {"PageRaid", "RealmRaidCard"}, [
             ("RealmRaidSelect", {"PageRaidTarget"}), ("RealmRaidAttack", battle_exit),
@@ -747,7 +869,7 @@ def main():
             ("RealmRaidBattleResult", {"PageRaid", "RealmRaidBroken"})], expected_count=1,
             pipeline_override={**retreat(1), **fail_retry(1)})
         exhausted_refresh = {**refresh_mode, "RealmRaidExhaustedRefresh": {"enabled": True}}
-        case("raid refresh mode refreshes a board with only failed cards", "RealmRaidTask", {"PageRaid", "RealmRaidRefreshButton"}, [
+        case("raid refresh mode refreshes a board with no attackable card", "RealmRaidTask", {"PageRaid", "RealmRaidRefreshButton"}, [
             ("RealmRaidRefresh", {"PageRaid", "RealmRaidRefreshConfirm"}),
             ("RealmRaidRefreshConfirm", {"PageRaid", "RealmRaidCard"}),
             ("RealmRaidSelect", {"PageRaidTarget"}), ("RealmRaidAttack", {"DailyBattleResult"}),

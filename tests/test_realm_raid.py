@@ -21,7 +21,10 @@ class RaidTest(unittest.TestCase):
         self.assertEqual(param['roi'],'RealmRaidChoose')
         self.assertEqual(param['roi_offset'],[90,15,-137,-80])
         self.assertIn('RealmRaidValidateChoice',self.nodes['RealmRaidChoose']['next'])
-        self.assertIn('RealmRaidUnmarkedCorner',self.nodes['RealmRaidSelect']['recognition']['param']['all_of'])
+        self.assertIn('RealmRaidChosenAvailable',self.nodes['RealmRaidSelect']['recognition']['param']['all_of'])
+        self.assertIn('RealmRaidNickname',self.nodes['RealmRaidSelect']['recognition']['param']['all_of'])
+        self.assertEqual(self.nodes['RealmRaidChosenAvailable']['recognition']['param']['any_of'],
+                         ['RealmRaidUnmarkedCorner','RealmRaidFailedCorner'])
 
     def test_corner_check_stays_clear_of_long_nicknames(self):
         # A long name ("我起的名字肯定欧") reached into the old y+12..40 corner and blocked an open card.
@@ -44,7 +47,7 @@ class RaidTest(unittest.TestCase):
 
     def test_each_choice_resets_only_click_budgets(self):
         param=self.nodes['RealmRaidValidateChoice']['action']['param']['custom_action_param']
-        self.assertEqual(param,{'nodes':['RealmRaidSelect','RealmRaidAttack',
+        self.assertEqual(param,{'nodes':['RealmRaidSelect','RealmRaidThreeWinReward','RealmRaidAttack',
                                          'RealmRaidBattleMark',
                                          'RealmRaidFailRetry','DailyPrepare',
                                          'RealmRaidBattleResult','RealmRaidBattleFailedResult',
@@ -201,7 +204,8 @@ class RaidTest(unittest.TestCase):
     def test_real_defeat_option_selects_one_route(self):
         self.assertEqual(self.nodes['RealmRaidBattleFailedReturn']['next'],[
             'RealmRaidFailStop','RealmRaidFailRefresh',
-            'RealmRaidFailRefreshUnavailable','RealmRaidScan','[JumpBack]CommonBountyInterrupt','CommonUnknownPopup'])
+            'RealmRaidFailRefreshUnavailable','RealmRaidSkipDefeat','RealmRaidSkipDefeatSpent',
+            '[JumpBack]CommonBountyInterrupt','CommonUnknownPopup'])
         gates=('RealmRaidFailStop','RealmRaidFailRefresh','RealmRaidFailRefreshUnavailable','RealmRaidExhaustedRefresh')
         for name in gates:
             self.assertFalse(self.nodes[name]['enabled'])
@@ -271,6 +275,51 @@ class RaidTest(unittest.TestCase):
         self.assertEqual(pending['next'],['RealmRaidRetreatExitWait'])
         self.assertLessEqual(pending['max_hit'],15)
         self.assertEqual(self.nodes['RealmRaidRetreatConfirmText']['next'],['RealmRaidRetreatConfirmWait'])
+
+    def test_failed_cards_are_a_fallback_after_fresh_ones(self):
+        # OAS find_one does not mask failed cards by default; a board with only failed cards is not finished.
+        self.assertEqual(self.nodes['RealmRaidChoose']['recognition'],
+                         {'type':'Or','param':{'any_of':['RealmRaidChooseFresh','RealmRaidChooseFailed']}})
+        self.assertEqual(self.nodes['RealmRaidChooseFresh']['recognition']['param'],
+                         {'all_of':['PageRaid','RealmRaidCard'],'box_index':1})
+        failed=self.nodes['RealmRaidChooseFailed']['recognition']['param']
+        self.assertEqual(failed['all_of'],['PageRaid','RealmRaidFailedCornerScan','RealmRaidFailedCardBox'])
+        self.assertEqual(failed['box_index'],2)
+        box=self.nodes['RealmRaidFailedCardBox']['recognition']
+        self.assertEqual(box['type'],'DirectHit')
+        self.assertEqual(box['param']['roi'],'RealmRaidFailedCornerScan')
+        # Corner [1085,146,44,56] on the live board maps back to the card [812,146,317,120].
+        corner=[1085,146,44,56]
+        self.assertEqual([c+o for c,o in zip(corner,box['param']['roi_offset'])],[812,146,317,120])
+        scan=self.nodes['RealmRaidFailedCornerScan']['recognition']['param']
+        self.assertEqual(scan['roi'],self.nodes['RealmRaidCard']['recognition']['param']['roi'])
+        self.assertGreaterEqual(scan['threshold'],0.85)
+        self.assertTrue((ROOT/'assets/resource/base/image'/scan['template']).is_file())
+        check=self.nodes['RealmRaidFailedCorner']['recognition']['param']
+        card=[812,146,317,120]
+        x,y,w,h=[c+o for c,o in zip(card,check['roi_offset'])]
+        self.assertTrue(x<=corner[0] and y<=corner[1] and x+w>=corner[0]+corner[2] and y+h>=corner[1]+corner[3])
+        self.assertEqual(self.nodes['RealmRaidScan']['next'].index('RealmRaidChoose')+1,
+                         self.nodes['RealmRaidScan']['next'].index('RealmRaidExhaustedPage'))
+
+    def test_three_win_reward_popup_is_closed_before_verifying(self):
+        reward=self.nodes['RealmRaidThreeWinReward']
+        self.assertEqual(reward['recognition']['param']['all_of'],['PageRaid','CommonBattleRewardBag'])
+        x,y,w,h=reward['action']['param']['target']
+        # Top frame above the board title, clear of cards, refresh and close buttons.
+        self.assertLess(y+h,72)
+        self.assertEqual(reward['max_hit'],3)
+        for name in ('RealmRaidVerify','RealmRaidScan'):
+            nxt=self.nodes[name]['next']
+            self.assertEqual(nxt[0],'[JumpBack]RealmRaidThreeWinReward',name)
+
+    def test_skip_mode_ends_after_three_real_defeats(self):
+        skip=self.nodes['RealmRaidSkipDefeat']
+        self.assertEqual(skip['max_hit'],3)
+        self.assertEqual(skip['next'],['RealmRaidScan'])
+        self.assertEqual(self.nodes['RealmRaidSkipDefeatSpent']['next'][0],'RealmRaidFinish')
+        for budget in self.nodes['RealmRaidValidateChoice']['action']['param']['custom_action_param']['nodes']:
+            self.assertNotEqual(budget,'RealmRaidSkipDefeat')
 
     def test_zero_ticket_finishes_before_choosing_a_card(self):
         scan=self.nodes['RealmRaidScan']['next']

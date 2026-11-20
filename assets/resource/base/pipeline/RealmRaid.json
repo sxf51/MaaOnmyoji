@@ -94,6 +94,7 @@
         "pre_delay": 0,
         "post_delay": 0,
         "next": [
+            "[JumpBack]RealmRaidThreeWinReward",
             "[JumpBack]DailyRewardPopup",
             "RealmRaidNoTicket",
             "RealmRaidChoose",
@@ -1162,11 +1163,49 @@
             "RealmRaidFailStop",
             "RealmRaidFailRefresh",
             "RealmRaidFailRefreshUnavailable",
-            "RealmRaidScan",
+            "RealmRaidSkipDefeat",
+            "RealmRaidSkipDefeatSpent",
             "[JumpBack]CommonBountyInterrupt",
             "CommonUnknownPopup"
         ],
-        "doc": "真实战败后回到个人突破页，按任务选项处理：默认跳过失败卡片继续（失败卡片右上角有失败角标，选卡时由RealmRaidUnmarkedCorner排除），或刷新后继续、或结束本轮。对应 runhey/OnmyojiAutoScript@2d2f6d8962a5af17c95670c5d0fb2e384b247162 tasks/RealmRaid/script_task.py::run_2 的 WhenAttackFail.CONTINUE / REFRESH / EXIT。"
+        "doc": "真实战败后回到个人突破页，按任务选项处理：默认继续选卡（新卡优先，没有新卡时也打失败卡，累计3次战败后结束，见RealmRaidSkipDefeat），或刷新后继续、或结束本轮。对应 runhey/OnmyojiAutoScript@2d2f6d8962a5af17c95670c5d0fb2e384b247162 tasks/RealmRaid/script_task.py::run_2 的 WhenAttackFail.CONTINUE / REFRESH / EXIT。"
+    },
+    "RealmRaidSkipDefeat": {
+        "doc": "“跳过失败目标”模式下的真实战败：继续选卡（新卡优先，没有新卡时也会再打失败卡）。失败卡打不过时会被反复选中，而失败不耗券，因此整个任务最多3次，不随选卡重置；用完后由RealmRaidSkipDefeatSpent结束本轮。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageRaid"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "RealmRaidScan"
+        ],
+        "max_hit": 3
+    },
+    "RealmRaidSkipDefeatSpent": {
+        "doc": "“跳过失败目标”模式下本任务已真实战败3次：结束本轮，不计入成功次数。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageRaid"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "RealmRaidFinish",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ]
     },
     "RealmRaidFailStop": {
         "doc": "战败后结束本轮（OAS WhenAttackFail.EXIT），不计入成功次数。",
@@ -1481,6 +1520,7 @@
         "pre_delay": 0,
         "post_delay": 0,
         "next": [
+            "[JumpBack]RealmRaidThreeWinReward",
             "[JumpBack]DailyRewardPopup",
             "RealmRaidSuccess",
             "RealmRaidSuccessBoardReset",
@@ -1565,14 +1605,14 @@
         }
     },
     "RealmRaidChoose": {
+        "doc": "选卡：先找未挑战的卡（RealmRaidChooseFresh），没有时再找带失败角标、未攻破的卡（RealmRaidChooseFailed）。两者都输出整张卡片框，后续昵称核对、点击、攻破验证与退出重选都引用本节点的框。对应 runhey/OnmyojiAutoScript@2d2f6d8962a5af17c95670c5d0fb2e384b247162 tasks/RealmRaid/script_task.py::find_one：默认（非 WhenAttackFail.CONTINUE）不屏蔽失败卡，失败卡照样挑战；失败不消耗突破券。本地日志 2026-11-17 15:48、16:21 九宫格只剩失败卡时被当成打完而提前结束（1/9、3/9）。",
         "recognition": {
-            "type": "And",
+            "type": "Or",
             "param": {
-                "all_of": [
-                    "PageRaid",
-                    "RealmRaidCard"
-                ],
-                "box_index": 1
+                "any_of": [
+                    "RealmRaidChooseFresh",
+                    "RealmRaidChooseFailed"
+                ]
             }
         },
         "action": "DoNothing",
@@ -1582,22 +1622,140 @@
             "CommonUnknownPopup"
         ]
     },
-    "RealmRaidSelect": {
+    "RealmRaidChooseFresh": {
+        "doc": "未挑战的卡片：输出卡片框。",
         "recognition": {
             "type": "And",
             "param": {
                 "all_of": [
                     "PageRaid",
-                    "RealmRaidSelectedCard",
-                    "RealmRaidUnmarkedCorner"
+                    "RealmRaidCard"
                 ],
                 "box_index": 1
+            }
+        }
+    },
+    "RealmRaidChooseFailed": {
+        "doc": "带失败角标的卡片（主动退出或战败后右上角的金色斜带与暗红三角，未攻破）：在九宫格内找角标，再按角标在卡片内的固定位置（卡片右上角向内273像素）换算出整张卡片框，与RealmRaidChooseFresh的框一致。多张时随机取一张，避免反复挑同一张打不过的卡。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageRaid",
+                    "RealmRaidFailedCornerScan",
+                    "RealmRaidFailedCardBox"
+                ],
+                "box_index": 2
+            }
+        }
+    },
+    "RealmRaidFailedCornerScan": {
+        "doc": "FailedCorner.png 由本地1280x720实机截图裁剪（debug/raid_board_after_retreat.png 第三张卡右上角 [1085,146,44,56]，卡片框 [812,146,317,120]）。实测失败卡1.00、弹出进攻框时0.93，未挑战卡角落0.68、攻破卡更低、失败页0.76，阈值取0.85。",
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": "RealmRaid/FailedCorner.png",
+                "roi": [
+                    148,
+                    146,
+                    981,
+                    390
+                ],
+                "threshold": 0.85,
+                "order_by": "Random"
+            }
+        }
+    },
+    "RealmRaidFailedCardBox": {
+        "doc": "由失败角标框换算整张卡片框：角标位于卡片 x+273、y+0，大小44×56，卡片317×120。",
+        "recognition": {
+            "type": "DirectHit",
+            "param": {
+                "roi": "RealmRaidFailedCornerScan",
+                "roi_offset": [
+                    -273,
+                    0,
+                    273,
+                    64
+                ]
+            }
+        }
+    },
+    "RealmRaidFailedCorner": {
+        "doc": "所选卡片右上角仍是失败角标（未攻破、未被换掉）。",
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": "RealmRaid/FailedCorner.png",
+                "roi": "RealmRaidChoose",
+                "roi_offset": [
+                    263,
+                    -5,
+                    -253,
+                    -50
+                ],
+                "threshold": 0.85
+            }
+        }
+    },
+    "RealmRaidChosenAvailable": {
+        "doc": "所选卡片仍可挑战：右上角为未挑战的空白，或为失败角标。",
+        "recognition": {
+            "type": "Or",
+            "param": {
+                "any_of": [
+                    "RealmRaidUnmarkedCorner",
+                    "RealmRaidFailedCorner"
+                ]
+            }
+        }
+    },
+    "RealmRaidThreeWinReward": {
+        "doc": "当前九宫格每攻破3张（3/6/9胜）返回九宫格时自动弹出奖励（福袋与“点击屏幕继续”，没有“获得奖励”标题，DailyRewardPopup认不出）：点九宫格正上方边框空白处关闭，与 runhey/OnmyojiAutoScript@2d2f6d8962a5af17c95670c5d0fb2e384b247162 tasks/RealmRaid/script_task.py::reward_detect_click（Rewards of three wins）及 fire 中点 (640,50) 清奖励一致。本地日志 2026-11-17 16:28 第9胜后福袋盖住九宫格，攻破验证8秒超时失败（debug/on_error/2026.11.17-16.28.19.737_RealmRaidVerify.png）。每张卡最多3次，选卡时重置。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageRaid",
+                    "CommonBattleRewardBag"
+                ]
             }
         },
         "action": {
             "type": "Click",
             "param": {
-                "target": true,
+                "target": [
+                    600,
+                    40,
+                    80,
+                    20
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 1000,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "next": [],
+        "on_error": [],
+        "max_hit": 3
+    },
+    "RealmRaidSelect": {
+        "doc": "点所选卡片的昵称区打开进攻框：卡片仍在（昵称可读）且仍可挑战（空白角或失败角标）。点击区域引用RealmRaidChoose的卡片框。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageRaid",
+                    "RealmRaidNickname",
+                    "RealmRaidChosenAvailable"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": "RealmRaidChoose",
                 "target_offset": [
                     90,
                     30,
@@ -1644,7 +1802,7 @@
                 "all_of": [
                     "PageRaid",
                     "RealmRaidNickname",
-                    "RealmRaidUnmarkedCorner"
+                    "RealmRaidChosenAvailable"
                 ]
             }
         },
@@ -1655,6 +1813,7 @@
                 "custom_action_param": {
                     "nodes": [
                         "RealmRaidSelect",
+                        "RealmRaidThreeWinReward",
                         "RealmRaidAttack",
                         "RealmRaidBattleMark",
                         "RealmRaidFailRetry",

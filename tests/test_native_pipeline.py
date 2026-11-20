@@ -66,7 +66,8 @@ class NativePipelineTests(unittest.TestCase):
         self.assertEqual(param['all_of'][0],'RealmRaidPersonalTab')
         button_roi=param['all_of'][param['box_index']]['recognition']['param']['roi']
         self.assertIs(self.nodes['RealmRaidAttack']['action']['param']['target'], True)
-        self.assertIs(self.nodes['RealmRaidSelect']['action']['param']['target'], True)
+        # Select clicks inside the chosen card's box, fresh or carrying a failure corner.
+        self.assertEqual(self.nodes['RealmRaidSelect']['action']['param']['target'], 'RealmRaidChoose')
         for name in ('NavDismissRaidTarget','NativeNavDismissRaidTarget'):
             target=self.nodes[name]['action']['param']['target']
             self.assertLess(target[1]+target[3],button_roi[1])
