@@ -17,7 +17,7 @@ class NativePipelineTests(unittest.TestCase):
                 self.nodes.update(load_jsonc(filename))
 
     def test_navigation_callers_check_destination_before_jumpback(self):
-        for name in ("ReturnMain", "MitamaDisableBuff", "RealmRaidTask",
+        for name in ("ReturnMain", "MitamaDisableBuff", "RealmRaidTask", "GuildRaidTask",
                      "DailyRewardsTask", "NativeRewardsToTasks", "NativeRewardsToRewards"):
             choices = self.nodes[name]["next"]
             self.assertEqual(choices[-2:], ["[JumpBack]CommonBountyInterrupt", "CommonUnknownPopup"], name)
@@ -41,7 +41,7 @@ class NativePipelineTests(unittest.TestCase):
                 self.assertGreater(routes.index(popup), arrive, name)
                 self.assertLess(routes.index(popup), routes.index("[JumpBack]NativeNavClose"), name)
         # Callers delegate to a Navigate* fallback that already handles them.
-        for caller in ("ReturnMain", "MitamaDisableBuff", "RealmRaidTask", "DailyRewardsTask"):
+        for caller in ("ReturnMain", "MitamaDisableBuff", "RealmRaidTask", "GuildRaidTask", "DailyRewardsTask"):
             self.assertFalse(set(popups) & set(self.nodes[caller]["next"]), caller)
         for startup in ("Startup", "startupMain"):
             self.assertIn(popups[0], self.nodes[startup]["next"])
@@ -49,7 +49,8 @@ class NativePipelineTests(unittest.TestCase):
     def test_battle_never_counts_waiting_room_without_settlement(self):
         # The raid loop checks settlement only once the battle exit button is gone.
         loops = {"ExplorationBattle": "ExplorationBattle", "TeamLeaderBattle": "TeamLeaderBattle",
-                 "RealmRaidBattle": "RealmRaidBattleSettle"}
+                 "RealmRaidBattle": "RealmRaidBattleSettle",
+                 "GuildRaidBattle": "GuildRaidBattleSettle"}
         for prefix, loop in loops.items():
             after = prefix + "AfterResult"
             self.assertNotIn(after, self.nodes[loop]["next"])

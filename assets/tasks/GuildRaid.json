@@ -1,0 +1,350 @@
+{
+    "task": [
+        {
+            "name": "guild_raid",
+            "label": "$guild_raid_task",
+            "entry": "GuildRaidTask",
+            "description": "$guild_raid_task_doc",
+            "option": [
+                "寮突破成功次数",
+                "寮突破锁定阵容",
+                "寮突破友方绿标",
+                "寮突破更换队伍预设",
+                "寮突破战败重试次数",
+                "寮突破战斗失败处理",
+                "寮突破已攻破后"
+            ]
+        }
+    ],
+    "option": {
+        "寮突破成功次数": {
+            "type": "input",
+            "label": "成功次数（达到次数即结束；另外击败次数为0（北京时间21点前）、能打的都已攻破或现存的都失败过时也结束）",
+            "inputs": [
+                {
+                    "name": "次数",
+                    "pipeline_type": "int",
+                    "default": "6",
+                    "verify": "^[1-9]\\d*$"
+                }
+            ],
+            "pipeline_override": {
+                "GuildRaidTask": {
+                    "action": {
+                        "param": {
+                            "custom_action_param": {
+                                "target_count": "{次数}"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "寮突破锁定阵容": {
+            "type": "select",
+            "label": "锁定阵容",
+            "default_case": "保持现状",
+            "description": "选卡前处理寮突破页左栏“阵容”锁：锁定后直接用锁定阵容出战，解锁后每场需在准备界面确认（自动处理）。",
+            "cases": [
+                {
+                    "name": "保持现状",
+                    "pipeline_override": {
+                        "GuildRaidLockTeam": {
+                            "enabled": false
+                        },
+                        "GuildRaidUnlockTeam": {
+                            "enabled": false
+                        }
+                    }
+                },
+                {
+                    "name": "锁定",
+                    "pipeline_override": {
+                        "GuildRaidLockTeam": {
+                            "enabled": true
+                        },
+                        "GuildRaidUnlockTeam": {
+                            "enabled": false
+                        }
+                    }
+                },
+                {
+                    "name": "解锁",
+                    "pipeline_override": {
+                        "GuildRaidLockTeam": {
+                            "enabled": false
+                        },
+                        "GuildRaidUnlockTeam": {
+                            "enabled": true
+                        }
+                    }
+                }
+            ]
+        },
+        "寮突破友方绿标": {
+            "type": "switch",
+            "label": "友方绿标",
+            "description": "按固定战斗镜头下的友方站位点击，每场正式战斗最多一次；默认关闭。",
+            "default_case": "No",
+            "cases": [
+                {
+                    "name": "No",
+                    "pipeline_override": {
+                        "GuildRaidBattleMark": {
+                            "enabled": false
+                        }
+                    }
+                },
+                {
+                    "name": "Yes",
+                    "pipeline_override": {
+                        "GuildRaidBattleMark": {
+                            "enabled": true
+                        }
+                    },
+                    "option": [
+                        "寮突破绿标站位"
+                    ]
+                }
+            ]
+        },
+        "寮突破绿标站位": {
+            "type": "select",
+            "label": "绿标站位",
+            "default_case": "左一",
+            "cases": [
+                {
+                    "name": "左一",
+                    "pipeline_override": {
+                        "GuildRaidBattleMark": {
+                            "action": {
+                                "param": {
+                                    "target": [
+                                        205,
+                                        530,
+                                        60,
+                                        50
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "左二",
+                    "pipeline_override": {
+                        "GuildRaidBattleMark": {
+                            "action": {
+                                "param": {
+                                    "target": [
+                                        425,
+                                        495,
+                                        60,
+                                        50
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "左三",
+                    "pipeline_override": {
+                        "GuildRaidBattleMark": {
+                            "action": {
+                                "param": {
+                                    "target": [
+                                        614,
+                                        450,
+                                        45,
+                                        35
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "左四",
+                    "pipeline_override": {
+                        "GuildRaidBattleMark": {
+                            "action": {
+                                "param": {
+                                    "target": [
+                                        780,
+                                        495,
+                                        55,
+                                        50
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "左五",
+                    "pipeline_override": {
+                        "GuildRaidBattleMark": {
+                            "action": {
+                                "param": {
+                                    "target": [
+                                        955,
+                                        495,
+                                        60,
+                                        50
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "阴阳师",
+                    "pipeline_override": {
+                        "GuildRaidBattleMark": {
+                            "action": {
+                                "param": {
+                                    "target": [
+                                        585,
+                                        575,
+                                        60,
+                                        45
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "寮突破更换队伍预设": {
+            "type": "switch",
+            "label": "更换队伍预设",
+            "default_case": "No",
+            "cases": [
+                {
+                    "name": "No",
+                    "pipeline_override": {
+                        "GuildRaidPreset": {
+                            "enabled": false
+                        }
+                    }
+                },
+                {
+                    "name": "Yes",
+                    "pipeline_override": {
+                        "GuildRaidPreset": {
+                            "enabled": true
+                        }
+                    },
+                    "option": [
+                        "结界突破预设分组与队伍"
+                    ]
+                }
+            ],
+            "description": "进入寮突破页后、选卡前通过右侧“队伍预设”换队，分组与队伍的填写和个人突破共用同一组输入项；未找到入口或预设窗口时停止。"
+        },
+        "寮突破战败重试次数": {
+            "type": "input",
+            "label": "真实战败后重打同一张卡的次数（0为不重试）",
+            "description": "失败页有“再次挑战”时点它重打同一张卡，每张卡单独计数；失败页没有该按钮时直接按“战斗失败（打不过）时”处理。",
+            "inputs": [
+                {
+                    "name": "重试次数",
+                    "pipeline_type": "int",
+                    "default": "0",
+                    "verify": "^[0-9]$"
+                }
+            ],
+            "pipeline_override": {
+                "GuildRaidFailRetry": {
+                    "max_hit": "{重试次数}"
+                }
+            }
+        },
+        "寮突破战斗失败处理": {
+            "type": "select",
+            "label": "战斗失败（打不过）时",
+            "default_case": "跳过失败结界",
+            "description": "只针对真实战败（重试次数用完后）。寮突破没有刷新按钮。“跳过失败结界”：之后不再选带失败标记的卡，当页都失败就下滑找，滑到底仍没有可打的卡即结束；“也挑战失败结界”：未挑战卡优先，当页没有未挑战卡时再打失败卡；“结束本轮”：战败后直接结束。前两种累计真实战败10次也会结束。",
+            "cases": [
+                {
+                    "name": "跳过失败结界",
+                    "pipeline_override": {
+                        "GuildRaidChoose": {
+                            "recognition": {
+                                "param": {
+                                    "any_of": [
+                                        "GuildRaidChooseFresh"
+                                    ]
+                                }
+                            }
+                        },
+                        "GuildRaidFailStop": {
+                            "enabled": false
+                        }
+                    }
+                },
+                {
+                    "name": "也挑战失败结界",
+                    "pipeline_override": {
+                        "GuildRaidChoose": {
+                            "recognition": {
+                                "param": {
+                                    "any_of": [
+                                        "GuildRaidChooseFresh",
+                                        "GuildRaidChooseFailed"
+                                    ]
+                                }
+                            }
+                        },
+                        "GuildRaidFailStop": {
+                            "enabled": false
+                        }
+                    }
+                },
+                {
+                    "name": "结束本轮",
+                    "pipeline_override": {
+                        "GuildRaidChoose": {
+                            "recognition": {
+                                "param": {
+                                    "any_of": [
+                                        "GuildRaidChooseFresh"
+                                    ]
+                                }
+                            }
+                        },
+                        "GuildRaidFailStop": {
+                            "enabled": true
+                        }
+                    }
+                }
+            ]
+        },
+        "寮突破已攻破后": {
+            "type": "select",
+            "label": "本寮已攻破（寮徽出现“已攻破”，即90%结界被攻破）后",
+            "default_case": "继续挑战",
+            "description": "“继续挑战”：照常打剩余未挑战卡，仍按成功次数、击败次数、全部攻破或都失败过结束。“结束本轮”：看到“已攻破”即停止。",
+            "cases": [
+                {
+                    "name": "继续挑战",
+                    "pipeline_override": {
+                        "GuildRaidConquered": {
+                            "enabled": false
+                        }
+                    }
+                },
+                {
+                    "name": "结束本轮",
+                    "pipeline_override": {
+                        "GuildRaidConquered": {
+                            "enabled": true
+                        }
+                    }
+                }
+            ]
+        }
+    }
+}

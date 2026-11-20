@@ -78,6 +78,7 @@
         "tasks/BondlingSearch.json",
         "tasks/Exploration.json",
         "tasks/RealmRaid.json",
+        "tasks/GuildRaid.json",
         "tasks/DailyRewards.json",
         "tasks/Shutdown.json",
         "tasks/CommonActivity.json"

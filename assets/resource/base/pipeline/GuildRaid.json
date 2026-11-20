@@ -1,0 +1,1935 @@
+{
+    "GuildRaidTask": {
+        "doc": "$guild_raid_task_doc",
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "TargetCountInit",
+                "custom_action_param": {
+                    "target_count": 6
+                }
+            }
+        },
+        "next": [
+            "NativeNavigationBlocked",
+            "NativeResultBlocked",
+            "[JumpBack]NativeDailyRewardPopup",
+            "[JumpBack]NativeNavCancelNoResource",
+            "[JumpBack]NativeNavConfirmExitExplore",
+            "[JumpBack]NativeNavConfirmExitTeam",
+            "[JumpBack]NativeNavDismissRaidTarget",
+            "[JumpBack]NativeNavCancelInvite",
+            "[JumpBack]NativeNavCancelCreate",
+            "[JumpBack]NativeLoading",
+            "GuildRaidReady",
+            "GuildRaidNotOpen",
+            "[JumpBack]GuildRaidOpenTab",
+            "[JumpBack]NavigateRaid",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ]
+    },
+    "GuildRaidTab": {
+        "doc": "右侧选中的“阴阳寮”标签。GuildTab.png 由本项目1280x720寮突破实机截图裁剪（原图[1206,383,48,100]）；寮突页与进攻框均为1.0，个人突破页（该标签未选中）0.71。",
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": "Navigation/GuildTab.png",
+                "threshold": 0.9,
+                "roi": [
+                    1170,
+                    350,
+                    105,
+                    160
+                ]
+            }
+        }
+    },
+    "GuildRaidTitle": {
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "结界突破",
+                "roi": [
+                    558,
+                    70,
+                    151,
+                    52
+                ]
+            }
+        }
+    },
+    "GuildRaidTicketLabel": {
+        "doc": "左栏下方“击败次数：6/6”。本地寮突破截图整行OCR为一段文字，框约[156,555,192,37]。",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "击败次数",
+                "roi": [
+                    150,
+                    550,
+                    210,
+                    50
+                ]
+            }
+        }
+    },
+    "GuildRaidTicketEmpty": {
+        "doc": "击败次数读数为0时才命中；要求冒号后紧跟0，避免把6/6等当成无次数。参考 runhey/OnmyojiAutoScript@2d2f6d8962a5af17c95670c5d0fb2e384b247162 tasks/RyouToppa/script_task.py::has_ticket（cu==0）。",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "[:：]\\s*0\\s*/\\s*\\d+$",
+                "roi": [
+                    150,
+                    550,
+                    210,
+                    50
+                ]
+            }
+        }
+    },
+    "PageGuildRaid": {
+        "doc": "寮突破页：阴阳寮标签选中且左栏有击败次数。进攻框打开时同样命中。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "GuildRaidTab",
+                    "GuildRaidTicketLabel"
+                ]
+            }
+        }
+    },
+    "PageGuildRaidTarget": {
+        "doc": "寮突破进攻框：框跟随所点卡片出现，含“组队”“进攻”两个按钮，输出进攻按钮框。本地截图第一张卡的进攻按钮约[617,351,84,58]。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "GuildRaidTab",
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "expected": "^进攻$",
+                                "roi": [
+                                    400,
+                                    125,
+                                    780,
+                                    540
+                                ]
+                            }
+                        }
+                    }
+                ],
+                "box_index": 1
+            }
+        }
+    },
+    "GuildRaidConqueredStamp": {
+        "doc": "左栏寮徽上的“已攻破”印章：本寮已有90%的结界（卡片）被攻破，剩余卡片仍可挑战。GuildConquered.png 由本项目寮突破实机截图裁剪[218,186,86,42]（进度92.55%）：有印章1.00，未出现印章的寮突页、进攻框、个人突破页均≤0.19。",
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": "RealmRaid/GuildConquered.png",
+                "roi": [
+                    190,
+                    160,
+                    150,
+                    90
+                ],
+                "threshold": 0.8
+            }
+        }
+    },
+    "GuildRaidConquered": {
+        "doc": "选项“本寮已攻破（90%）后=结束本轮”：寮徽出现“已攻破”即结束，不再进攻；默认“继续挑战”时 enabled=false，原生跳过。参考 runhey/OnmyojiAutoScript@2d2f6d8962a5af17c95670c5d0fb2e384b247162 tasks/RyouToppa/script_task.py::run 中 I_SUCCESS_PENETRATION 出现即退出、次日再执行的思路。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageGuildRaid",
+                    "GuildRaidConqueredStamp"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "GuildRaidFinish",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ],
+        "enabled": false
+    },
+    "GuildRaidOpenTab": {
+        "doc": "从个人突破页点右侧“阴阳寮”标签。实测关闭后重新打开结界突破总是先到个人页，因此导航复用 NavigateRaid 后再切标签。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageRaid",
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "expected": "阴阳寮",
+                                "roi": [
+                                    1195,
+                                    370,
+                                    70,
+                                    130
+                                ]
+                            }
+                        }
+                    }
+                ],
+                "box_index": 1
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 1500,
+        "max_hit": 5,
+        "next": []
+    },
+    "GuildRaidNotOpen": {
+        "doc": "阴阳寮标签已选中却读不到击败次数：可能是寮突破未开启（OAS 以“选择阴阳寮”按钮或晴明画面判断，本项目暂无该截图），也可能只是页面还在载入。先等2秒再判断一次。",
+        "pre_delay": 0,
+        "post_delay": 2000,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "GuildRaidTab",
+                    "GuildRaidTitle"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "max_hit": 3,
+        "next": [
+            "GuildRaidReady",
+            "GuildRaidNotOpenConfirm",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ]
+    },
+    "GuildRaidNotOpenConfirm": {
+        "doc": "等待后仍读不到击败次数：按寮突破未开启结束本轮，不计次数，也不替寮管理开启寮突。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "GuildRaidTab",
+                    "GuildRaidTitle"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "GuildRaidFinish",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ]
+    },
+    "GuildRaidPreset": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "doc": "寮突破页右侧“队伍预设”与个人突破页位置相同（图标约1228,553），预设窗口偏移沿用 RealmRaidPreset；只把所在页面换成寮突破页、返回点换成 GuildRaidPresetDone。",
+        "enabled": false,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "NodeOverride",
+                "custom_action_param": {
+                    "TeamPresetContext": {
+                        "recognition": {
+                            "type": "And",
+                            "param": {
+                                "all_of": [
+                                    "PageGuildRaid"
+                                ]
+                            }
+                        }
+                    },
+                    "TeamPresetEntryText": {
+                        "recognition": {
+                            "param": {
+                                "roi": [
+                                    1170,
+                                    568,
+                                    110,
+                                    42
+                                ]
+                            }
+                        }
+                    },
+                    "TeamPresetOpen": {
+                        "action": {
+                            "param": {
+                                "target": [
+                                    1206,
+                                    532,
+                                    44,
+                                    42
+                                ]
+                            }
+                        }
+                    },
+                    "TeamPresetFrameTemplate": {
+                        "recognition": {
+                            "param": {
+                                "roi": [
+                                    621,
+                                    161,
+                                    155,
+                                    30
+                                ]
+                            }
+                        }
+                    },
+                    "TeamPresetFooter": {
+                        "recognition": {
+                            "param": {
+                                "roi": [
+                                    771,
+                                    503,
+                                    380,
+                                    44
+                                ]
+                            }
+                        }
+                    },
+                    "TeamPresetGroupAtBottom": {
+                        "recognition": {
+                            "param": {
+                                "custom_recognition_param": {
+                                    "regions": [
+                                        [
+                                            637,
+                                            182,
+                                            112,
+                                            372
+                                        ]
+                                    ],
+                                    "max_changed_ratio": 0.15
+                                }
+                            }
+                        }
+                    },
+                    "TeamPresetTeamAtBottom": {
+                        "recognition": {
+                            "param": {
+                                "custom_recognition_param": {
+                                    "regions": [
+                                        [
+                                            770,
+                                            181,
+                                            376,
+                                            320
+                                        ]
+                                    ],
+                                    "max_changed_ratio": 0.15
+                                }
+                            }
+                        }
+                    },
+                    "TeamPresetGroupScroll": {
+                        "action": {
+                            "type": "Custom",
+                            "param": {
+                                "custom_action": "BezierSwipe",
+                                "custom_action_param": {
+                                    "begin": [
+                                        681,
+                                        481,
+                                        24,
+                                        24
+                                    ],
+                                    "end": [
+                                        681,
+                                        241,
+                                        24,
+                                        24
+                                    ],
+                                    "duration": 500,
+                                    "duration_random": 80,
+                                    "segments": 24,
+                                    "deviation": 8,
+                                    "easing": true
+                                }
+                            }
+                        }
+                    },
+                    "TeamPresetTeamScroll": {
+                        "action": {
+                            "type": "Custom",
+                            "param": {
+                                "custom_action": "BezierSwipe",
+                                "custom_action_param": {
+                                    "begin": [
+                                        946,
+                                        441,
+                                        40,
+                                        24
+                                    ],
+                                    "end": [
+                                        946,
+                                        221,
+                                        40,
+                                        24
+                                    ],
+                                    "duration": 500,
+                                    "duration_random": 80,
+                                    "segments": 24,
+                                    "deviation": 8,
+                                    "easing": true
+                                }
+                            }
+                        }
+                    },
+                    "TeamPresetOut": {
+                        "recognition": {
+                            "param": {
+                                "roi": [
+                                    894,
+                                    503,
+                                    120,
+                                    44
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "anchor": {
+            "TeamPresetReturn": "GuildRaidPresetDone"
+        },
+        "next": [
+            "TeamPresetRun"
+        ]
+    },
+    "GuildRaidCard": {
+        "doc": "复用个人突破的蒙版模板 RealmRaid/UnchallengedCard.png：寮突破卡片同为317×120，本地截图六张完整卡均0.99，被列表下沿截断的半张卡0.97~0.98以下不命中。ROI覆盖两列列表区域。",
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": "RealmRaid/UnchallengedCard.png",
+                "green_mask": true,
+                "method": 10001,
+                "threshold": 0.98,
+                "roi": [
+                    410,
+                    125,
+                    680,
+                    535
+                ],
+                "order_by": "Vertical"
+            }
+        }
+    },
+    "GuildRaidUnmarkedCorner": {
+        "doc": "所选卡片右上角仍为米色空白（未攻破、未失败），区域与 RealmRaidUnmarkedCorner 相同。寮突破有昵称为空的卡，因此不像个人突破那样要求读到昵称。",
+        "recognition": {
+            "type": "ColorMatch",
+            "param": {
+                "roi": "GuildRaidChoose",
+                "roi_offset": [
+                    290,
+                    4,
+                    -297,
+                    -102
+                ],
+                "method": 4,
+                "lower": [
+                    195,
+                    185,
+                    165
+                ],
+                "upper": [
+                    240,
+                    225,
+                    210
+                ],
+                "count": 300
+            }
+        }
+    },
+    "GuildRaidSelect": {
+        "doc": "点所选卡片的昵称区打开进攻框（本地实测点卡片x+177、y+41即弹出），右上角须仍可挑战。寮突破有昵称为空的卡，因此不要求读到昵称。点击区域引用 GuildRaidChoose 的卡片框。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageGuildRaid",
+                    "GuildRaidChosenAvailable"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": "GuildRaidChoose",
+                "target_offset": [
+                    90,
+                    30,
+                    -157,
+                    -85
+                ]
+            }
+        },
+        "next": [
+            "GuildRaidWaitTarget"
+        ],
+        "pre_delay": 0,
+        "post_delay": 1000,
+        "pre_wait_freezes": 0,
+        "max_hit": 3
+    },
+    "GuildRaidWaitTarget": {
+        "next": [
+            "GuildRaidConquered",
+            "GuildRaidAttack",
+            "GuildRaidSelect",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ],
+        "timeout": 5000,
+        "doc": "等进攻框出现。点进攻前再看一次寮徽：胜利刚回到列表时“已攻破”印章可能稍晚出现，此时不再进攻。"
+    },
+    "GuildRaidAttack": {
+        "doc": "点进攻框里的“进攻”（不点“组队”）。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageGuildRaidTarget"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "next": [
+            "GuildRaidWaitBattleStart"
+        ],
+        "pre_delay": 0,
+        "post_delay": 1000,
+        "pre_wait_freezes": 0,
+        "max_hit": 3
+    },
+    "GuildRaidBattleStarted": {
+        "doc": "复用个人突破的开战判断（载入、过场、战斗、准备、结算或资源不足）。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "RealmRaidBattleStarted"
+                ]
+            }
+        },
+        "next": [
+            "GuildRaidBattle"
+        ],
+        "pre_delay": 0,
+        "post_delay": 0
+    },
+    "GuildRaidBattleResume": {
+        "doc": "战斗返回按钮已出现，回到只做模板判断的快速循环。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "RealmRaidBattleExitIcon"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "GuildRaidBattle"
+        ],
+        "max_hit": 30
+    },
+    "GuildRaidBattleFailure": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "DailyBattleFailed"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "GuildRaidBattleFailedResult",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ],
+        "timeout": 30000
+    },
+    "GuildRaidBrokenAny": {
+        "doc": "列表可见区域里任一张卡的“破”字印记。复用 RealmRaid/Broken.png：本地寮突破列表底部截图七张攻破卡0.956~0.986，未挑战卡区域最高0.31。",
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": "RealmRaid/Broken.png",
+                "roi": [
+                    410,
+                    120,
+                    680,
+                    540
+                ],
+                "threshold": 0.8
+            }
+        }
+    },
+    "GuildRaidTicketsCounted": {
+        "doc": "北京时间5:00~21:00：击败次数随胜利扣除，读数为0即不能再打。21点后到次日5点击败次数不再扣除，读数不作为停止条件，与 runhey/OnmyojiAutoScript@2d2f6d8962a5af17c95670c5d0fb2e384b247162 tasks/RyouToppa/script_task.py::has_ticket（hour>=21 or hour<=5 直接返回True）一致。用本机时钟换算UTC+8；这是游戏规则的时间数据，原生识别无法提供，因此用 BeijingTimeWindow 自定义识别。",
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "BeijingTimeWindow",
+                "custom_recognition_param": {
+                    "start_hour": 5,
+                    "end_hour": 21
+                }
+            }
+        }
+    },
+    "GuildRaidReady": {
+        "doc": "已在寮突破页：按选项处理阵容锁定，再换预设，最后把列表滑到顶部再开始选卡。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageGuildRaid"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "GuildRaidConquered",
+            "GuildRaidLockTeam",
+            "GuildRaidUnlockTeam",
+            "GuildRaidPrepared",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ]
+    },
+    "GuildRaidTeamLocked": {
+        "doc": "左栏“阵容”左侧锁图标为锁定样式（紫色菱形、闭合锁）。GuildTeamLocked.png 由本项目寮突破截图裁剪[196,598,34,40]：锁定1.00、未锁定0.41、进攻框打开时1.00。位置与 runhey/OnmyojiAutoScript@2d2f6d8962a5af17c95670c5d0fb2e384b247162 tasks/RyouToppa/assets.py I_TOPPA_LOCK_TEAM (203,602,26,32) 相同。",
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": "RealmRaid/GuildTeamLocked.png",
+                "roi": [
+                    170,
+                    570,
+                    100,
+                    90
+                ],
+                "threshold": 0.85
+            }
+        }
+    },
+    "GuildRaidTeamUnlocked": {
+        "doc": "锁图标为未锁定样式（深色菱形、打开的锁）。GuildTeamUnlocked.png 同位置裁剪：未锁定1.00、锁定0.30。",
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": "RealmRaid/GuildTeamUnlocked.png",
+                "roi": [
+                    170,
+                    570,
+                    100,
+                    90
+                ],
+                "threshold": 0.85
+            }
+        }
+    },
+    "GuildRaidLockTeam": {
+        "doc": "选项“锁定阵容=锁定”：已锁定即继续，未锁定点锁图标后回到本列表复核。对应 runhey/OnmyojiAutoScript@2d2f6d8962a5af17c95670c5d0fb2e384b247162 tasks/RyouToppa/script_task.py::run 中 lock_team_enable 为真时 ui_click(I_TOPPA_UNLOCK_TEAM, I_TOPPA_LOCK_TEAM)。",
+        "enabled": false,
+        "pre_delay": 0,
+        "post_delay": 0,
+        "action": "DoNothing",
+        "next": [
+            "GuildRaidLocked",
+            "[JumpBack]GuildRaidClickLock",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ]
+    },
+    "GuildRaidLocked": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageGuildRaid",
+                    "GuildRaidTeamLocked"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "GuildRaidPrepared",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ]
+    },
+    "GuildRaidClickLock": {
+        "doc": "点未锁定的锁图标。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageGuildRaid",
+                    "GuildRaidTeamUnlocked"
+                ],
+                "box_index": 1
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 1000,
+        "pre_wait_freezes": 0,
+        "max_hit": 3,
+        "next": []
+    },
+    "GuildRaidUnlockTeam": {
+        "doc": "选项“锁定阵容=解锁”：对应 OAS lock_team_enable 为假时 ui_click(I_TOPPA_LOCK_TEAM, I_TOPPA_UNLOCK_TEAM)。解锁后每场需要准备，由 DailyPrepare 处理。",
+        "enabled": false,
+        "pre_delay": 0,
+        "post_delay": 0,
+        "action": "DoNothing",
+        "next": [
+            "GuildRaidUnlocked",
+            "[JumpBack]GuildRaidClickUnlock",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ]
+    },
+    "GuildRaidUnlocked": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageGuildRaid",
+                    "GuildRaidTeamUnlocked"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "GuildRaidPrepared",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ]
+    },
+    "GuildRaidClickUnlock": {
+        "doc": "点已锁定的锁图标。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageGuildRaid",
+                    "GuildRaidTeamLocked"
+                ],
+                "box_index": 1
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 1000,
+        "pre_wait_freezes": 0,
+        "max_hit": 3,
+        "next": []
+    },
+    "GuildRaidPrepared": {
+        "doc": "阵容处理完毕（或保持现状）。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageGuildRaid"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "GuildRaidPreset",
+            "GuildRaidTopRemember",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ]
+    },
+    "GuildRaidPresetDone": {
+        "doc": "确认预设已应用并返回寮突破页。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageGuildRaid"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "GuildRaidTopRemember",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ]
+    },
+    "GuildRaidTopRemember": {
+        "doc": "选卡前把列表滑到最上面：记下滑动前画面，再下拉一次；画面不变即已到顶。任务从列表中间开始或刷新后都从第一张卡找起。整个任务最多25次（列表可有几十行，从底部回顶需要多次）。必须真正到顶：停在底部时可见的攻破卡会被当成“都打过了”。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageGuildRaid"
+                ]
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "RememberFrame"
+            }
+        },
+        "max_hit": 25,
+        "next": [
+            "[JumpBack]GuildRaidDismissTarget",
+            "GuildRaidTopSwipe",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ]
+    },
+    "GuildRaidTopSwipe": {
+        "doc": "BezierSwipe 在列表区内快速下拉（手指上→下约400像素、250ms，带惯性甩动），起止都是区域。",
+        "pre_delay": 0,
+        "post_delay": 1000,
+        "pre_wait_freezes": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageGuildRaid"
+                ]
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "BezierSwipe",
+                "custom_action_param": {
+                    "begin": [
+                        660,
+                        190,
+                        160,
+                        20
+                    ],
+                    "end": [
+                        660,
+                        590,
+                        160,
+                        20
+                    ],
+                    "duration": 250,
+                    "duration_random": 50,
+                    "segments": 24,
+                    "deviation": 6,
+                    "easing": true
+                }
+            }
+        },
+        "next": [
+            "GuildRaidTopCheck"
+        ]
+    },
+    "GuildRaidTopCheck": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "action": "DoNothing",
+        "next": [
+            "GuildRaidAtTop",
+            "GuildRaidTopRemember",
+            "GuildRaidScan",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ]
+    },
+    "GuildRaidAtTop": {
+        "doc": "下拉后列表区没变：已在顶部。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "FrameUnchanged",
+                "custom_recognition_param": {
+                    "regions": [
+                        [
+                            430,
+                            130,
+                            650,
+                            520
+                        ]
+                    ],
+                    "max_changed_ratio": 0.05
+                }
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "GuildRaidScan"
+        ]
+    },
+    "GuildRaidScan": {
+        "doc": "寮突破没有刷新按钮，列表两列、可上下滑动，排序为未攻破在前、已攻破（灰底“破”字）沉底，与 runhey/OnmyojiAutoScript@2d2f6d8962a5af17c95670c5d0fb2e384b247162 tasks/RyouToppa/script_task.py 一致。顺序：残留进攻框先关；白天击败次数为0结束；选卡（默认只选未挑战卡，选项可加上失败卡）；没有可选卡且看到攻破卡说明能打的都打过了；否则（当页都是失败卡）下滑继续，滑到底仍没有则结束。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "[JumpBack]GuildRaidDismissTarget",
+            "[JumpBack]DailyRewardPopup",
+            "GuildRaidConquered",
+            "GuildRaidNoTicket",
+            "GuildRaidChoose",
+            "GuildRaidAllDone",
+            "GuildRaidScrollRemember",
+            "GuildRaidScrollSpent",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ]
+    },
+    "GuildRaidDismissTarget": {
+        "doc": "选卡前若残留进攻框（漏点或任务从进攻框开始），点顶部边框外空白关闭，与 NavDismissRaidTarget 同一区域。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageGuildRaidTarget"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    450,
+                    10,
+                    280,
+                    45
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 1000,
+        "pre_wait_freezes": 0,
+        "max_hit": 5,
+        "next": []
+    },
+    "GuildRaidNoTicket": {
+        "doc": "北京时间5~21点击败次数为0时结束本轮，不计成功次数。21点后不扣次数，读数为0也继续。读不到时不命中，由进攻后的次数不足提示兜底。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageGuildRaid",
+                    "GuildRaidTicketEmpty",
+                    "GuildRaidTicketsCounted"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "GuildRaidFinish",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ]
+    },
+    "GuildRaidChooseFresh": {
+        "doc": "最上面一张未挑战卡，输出卡片框。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageGuildRaid",
+                    "GuildRaidCard"
+                ],
+                "box_index": 1
+            }
+        }
+    },
+    "GuildRaidFailedCornerScan": {
+        "doc": "失败卡右上角的失败角标。OAS 寮突与个人突破共用同一失败标识 tasks/RyouToppa/dev/loser_sign_1.png（见 tasks/RealmRaid/script_task.py false_image），寮突卡片尺寸与个人突破相同，因此复用个人突破 FailedCorner.png（本项目截图裁剪）与同样阈值，ROI换成寮突列表区。本项目尚无寮突失败卡截图。",
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": "RealmRaid/FailedCorner.png",
+                "roi": [
+                    410,
+                    120,
+                    690,
+                    545
+                ],
+                "threshold": 0.85,
+                "order_by": "Random"
+            }
+        }
+    },
+    "GuildRaidFailedCardBox": {
+        "doc": "由失败角标框换算整张卡片框（同 RealmRaidFailedCardBox：角标在卡片 x+273、y+0）。",
+        "recognition": {
+            "type": "DirectHit",
+            "param": {
+                "roi": "GuildRaidFailedCornerScan",
+                "roi_offset": [
+                    -273,
+                    0,
+                    273,
+                    64
+                ]
+            }
+        }
+    },
+    "GuildRaidChooseFailed": {
+        "doc": "带失败角标、未攻破的卡（只在“也挑战失败结界”模式下由 GuildRaidChoose 引用）。多张时随机取一张。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageGuildRaid",
+                    "GuildRaidFailedCornerScan",
+                    "GuildRaidFailedCardBox"
+                ],
+                "box_index": 2
+            }
+        }
+    },
+    "GuildRaidChoose": {
+        "doc": "选卡并保存卡片框，后续点击与复核都引用本节点的框。默认只认未挑战卡（跳过失败结界）；“也挑战失败结界”模式由任务选项把 any_of 改为 [未挑战, 失败卡]，未挑战卡仍优先。同时重置本卡的点击与结算预算（不改变成功次数、战败次数、滑动和被拒预算）。",
+        "recognition": {
+            "type": "Or",
+            "param": {
+                "any_of": [
+                    "GuildRaidChooseFresh"
+                ]
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ResetCount",
+                "custom_action_param": {
+                    "nodes": [
+                        "GuildRaidSelect",
+                        "GuildRaidAttack",
+                        "GuildRaidDismissTarget",
+                        "GuildRaidRejectTip",
+                        "GuildRaidBattleMark",
+                        "GuildRaidFailRetry",
+                        "GuildRaidRetryAgain",
+                        "GuildRaidRetryConfirm",
+                        "DailyPrepare",
+                        "GuildRaidBattleResult",
+                        "GuildRaidBattleFailedResult",
+                        "CommonBattleEnteringWait",
+                        "DailyRewardPopup",
+                        "GuildRaidBattleResume",
+                        "CommonRewardItemDetail",
+                        "CommonSoulMismatch",
+                        "CommonSoulMismatchConfirm"
+                    ],
+                    "strict": true
+                }
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "GuildRaidSelect",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ]
+    },
+    "GuildRaidFailedCorner": {
+        "doc": "所选卡片右上角仍是失败角标。",
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": "RealmRaid/FailedCorner.png",
+                "roi": "GuildRaidChoose",
+                "roi_offset": [
+                    263,
+                    -5,
+                    -253,
+                    -50
+                ],
+                "threshold": 0.85
+            }
+        }
+    },
+    "GuildRaidChosenAvailable": {
+        "doc": "所选卡片仍可挑战：右上角为未挑战的空白，或为失败角标（只有失败卡模式会选到）。",
+        "recognition": {
+            "type": "Or",
+            "param": {
+                "any_of": [
+                    "GuildRaidUnmarkedCorner",
+                    "GuildRaidFailedCorner"
+                ]
+            }
+        }
+    },
+    "GuildRaidAllDone": {
+        "doc": "没有可选卡、但已能看到沉底的攻破卡：等列表动画结束再确认一次。对应 runhey/OnmyojiAutoScript@2d2f6d8962a5af17c95670c5d0fb2e384b247162 tasks/RyouToppa/script_task.py::check_area 中 finished_sign 出现即结束。",
+        "pre_delay": 0,
+        "post_delay": 1500,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageGuildRaid",
+                    "GuildRaidBrokenAny"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "GuildRaidChoose",
+            "GuildRaidAllDoneConfirmed",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ]
+    },
+    "GuildRaidAllDoneConfirmed": {
+        "doc": "再次确认仍没有未挑战卡且有攻破卡：能打的都已打过，结束本轮。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageGuildRaid",
+                    "GuildRaidBrokenAny"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "GuildRaidFinish",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ]
+    },
+    "GuildRaidScrollRemember": {
+        "doc": "当页没有可选卡也没有攻破卡（都是失败卡）：记下画面后下滑。对应 runhey/OnmyojiAutoScript@2d2f6d8962a5af17c95670c5d0fb2e384b247162 tasks/RyouToppa/script_task.py::flush_area_cache（所有区域都失败后滑动列表）。整个任务最多30次。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageGuildRaid"
+                ]
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "RememberFrame"
+            }
+        },
+        "max_hit": 30,
+        "next": [
+            "GuildRaidScroll",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ]
+    },
+    "GuildRaidScroll": {
+        "doc": "BezierSwipe 在列表区内向上拖约300像素（手指下→上），起止都是区域。实测线性600ms拖270像素列表移动约223像素、无惯性，一次约露出两行新卡，不会越过整页漏看。",
+        "pre_delay": 0,
+        "post_delay": 1200,
+        "pre_wait_freezes": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageGuildRaid"
+                ]
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "BezierSwipe",
+                "custom_action_param": {
+                    "begin": [
+                        660,
+                        565,
+                        160,
+                        16
+                    ],
+                    "end": [
+                        660,
+                        265,
+                        160,
+                        16
+                    ],
+                    "duration": 600,
+                    "duration_random": 80,
+                    "segments": 24,
+                    "deviation": 6,
+                    "easing": true
+                }
+            }
+        },
+        "next": [
+            "GuildRaidAfterScroll"
+        ]
+    },
+    "GuildRaidAfterScroll": {
+        "doc": "滑动后先找卡；列表没变说明已到底。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "action": "DoNothing",
+        "next": [
+            "GuildRaidChoose",
+            "GuildRaidAllDone",
+            "GuildRaidListEnd",
+            "GuildRaidScan",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ]
+    },
+    "GuildRaidListEnd": {
+        "doc": "下滑后列表没变：已到底仍没有可打的卡（现存的都失败过），结束本轮。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "Custom",
+            "param": {
+                "custom_recognition": "FrameUnchanged",
+                "custom_recognition_param": {
+                    "regions": [
+                        [
+                            430,
+                            130,
+                            650,
+                            520
+                        ]
+                    ],
+                    "max_changed_ratio": 0.05
+                }
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "GuildRaidFinish",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ]
+    },
+    "GuildRaidScrollSpent": {
+        "doc": "滑动次数用完仍没有可打的卡：结束本轮。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageGuildRaid"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "GuildRaidFinish",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ]
+    },
+    "GuildRaidWaitBattleStart": {
+        "doc": "点进攻后：开战即进入战斗；次数不足提示结束；出现“该结界已被攻破”（这张卡已被别人打掉）走被拒处理；进攻框仍在时有界重点；进攻框消失却仍停在寮突破页也按被拒处理。",
+        "next": [
+            "GuildRaidBattleStarted",
+            "[JumpBack]CommonSoulMismatch",
+            "GuildRaidBattleNoResource",
+            "GuildRaidRejectTip",
+            "GuildRaidAttackStale",
+            "GuildRaidAttack",
+            "GuildRaidAttackRejected",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ],
+        "timeout": 15000
+    },
+    "GuildRaidRejectTip": {
+        "doc": "进攻被拒的确认式提示（文字含已被/攻破/击破/无法进攻），点确定后按被拒处理。本项目尚无该提示截图，仅在文字明确时命中；其它确认框仍由 CommonUnknownPopup 停止。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "expected": "已被|攻破|击破|无法进攻|不能进攻",
+                                "roi": [
+                                    289,
+                                    206,
+                                    709,
+                                    160
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "expected": "^(确定|确认)$",
+                                "roi": [
+                                    240,
+                                    300,
+                                    800,
+                                    240
+                                ]
+                            }
+                        }
+                    }
+                ],
+                "box_index": 1
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 1000,
+        "pre_wait_freezes": 0,
+        "max_hit": 3,
+        "next": [
+            "GuildRaidRejectDismiss",
+            "GuildRaidAttackRejectedConfirm",
+            "GuildRaidRejectSpent",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ]
+    },
+    "GuildRaidStaleToast": {
+        "doc": "点进攻后屏幕中部的浮动提示“该结界已被攻破”（进攻框仍开着，约2秒后消失）：这张卡已被寮里其他人攻破，但本地列表还没更新。与左栏寮徽的“已攻破”（本寮90%结界被攻破）无关。本地实机截图两张卡的提示框都在[545,223,189,31]。",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "已被攻破",
+                "roi": [
+                    500,
+                    210,
+                    280,
+                    60
+                ]
+            }
+        }
+    },
+    "GuildRaidAttackStale": {
+        "doc": "进攻被拒（这张卡已被别人攻破）：不再重点进攻，关掉进攻框后切标签重载列表。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "GuildRaidStaleToast"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "GuildRaidRejectDismiss",
+            "GuildRaidAttackRejectedConfirm",
+            "GuildRaidRejectSpent",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ]
+    },
+    "GuildRaidRejectDismiss": {
+        "doc": "被拒后进攻框仍开着：先点顶部边框外空白关掉。2026-11-21 03:06 实测框开着时直接点“个人”标签只会关框，不会切页，列表没有重载，于是反复选到同一张已被攻破的卡。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageGuildRaidTarget"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    450,
+                    10,
+                    280,
+                    45
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 1000,
+        "pre_wait_freezes": 0,
+        "max_hit": 10,
+        "next": [
+            "GuildRaidRejectDismiss",
+            "GuildRaidAttackRejectedConfirm",
+            "GuildRaidRejectSpent",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ]
+    },
+    "GuildRaidAttackRejected": {
+        "doc": "进攻框里重点进攻已用完、或框已消失但还在寮突破页：等1.5秒（载入画面可能稍晚出现），开战就继续战斗，否则按被拒处理（关框后切标签重载列表）。对应 runhey/OnmyojiAutoScript@2d2f6d8962a5af17c95670c5d0fb2e384b247162 tasks/RyouToppa/script_task.py::attack_area 中点进攻后 I_TOPPA_RECORD 仍在的分支。",
+        "pre_delay": 0,
+        "post_delay": 1500,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageGuildRaid"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "GuildRaidBattleStarted",
+            "GuildRaidBattleNoResource",
+            "GuildRaidRejectTip",
+            "GuildRaidAttackStale",
+            "GuildRaidRejectDismiss",
+            "GuildRaidAttackRejectedConfirm",
+            "GuildRaidRejectSpent",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ]
+    },
+    "GuildRaidAttackRejectedConfirm": {
+        "doc": "进攻被拒且进攻框已关：点结界突破窗口右上角关闭按钮（NavClose，寮突破页实测[1181,104,52,53]）退出，再由 NavigateRaid 重新进入、切回阴阳寮标签，让游戏重新拉取列表。实测只在“个人/阴阳寮”标签间切换不会刷新列表，必须退出结界突破再进入。OAS 连点5次无效后跳到下一区域；本项目重载后从顶部重新选卡。整个任务最多3次，用完由 GuildRaidRejectSpent 结束。",
+        "pre_delay": 0,
+        "post_delay": 1500,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageGuildRaid",
+                    "NavClose"
+                ],
+                "box_index": 1
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "max_hit": 3,
+        "next": [
+            "GuildRaidRefreshReopen"
+        ]
+    },
+    "GuildRaidRefreshReopen": {
+        "doc": "关闭后重新进入：已回到寮突破页即完成（关闭漏点时也直接继续）；在个人突破页点阴阳寮标签；其它页面（探索地图等）交给 NavigateRaid 打开结界突破。先认目标页再回跳导航。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "action": "DoNothing",
+        "next": [
+            "GuildRaidRefreshed",
+            "[JumpBack]GuildRaidOpenTab",
+            "[JumpBack]NavigateRaid",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ]
+    },
+    "GuildRaidRefreshed": {
+        "doc": "重新进入寮突破页，列表已重新载入：回到顶部选卡。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageGuildRaid"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "GuildRaidTopRemember",
+            "GuildRaidScan",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ]
+    },
+    "GuildRaidRejectSpent": {
+        "doc": "已连续3次碰到已被攻破的卡（重载列表后仍是）：多半列表无法更新，结束本轮，不计成功。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageGuildRaid"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "GuildRaidFinish",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ]
+    },
+    "GuildRaidBattle": {
+        "doc": "战斗快速循环：战斗返回按钮可见时只检查绿标（模板），其它判断留给按钮消失后的 GuildRaidBattleSettle，避免同列表OCR合并识别拖慢。结构同 RealmRaidBattle，不含主动退出（打m退n是个人突破刷新九宫格的玩法）。",
+        "next": [
+            "[JumpBack]GuildRaidBattleMark",
+            "GuildRaidBattleSettle",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ],
+        "timeout": 300000,
+        "pre_delay": 0,
+        "post_delay": 0,
+        "rate_limit": 300
+    },
+    "GuildRaidBattleMark": {
+        "doc": "按用户配置站位点击友方绿标，每场最多一次（选卡与再次挑战时重置）。站位同 RealmRaidBattleMark，对应 OAS GeneralBattleConfig green_enable/green_mark。",
+        "enabled": false,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "RealmRaidBattleExitIcon"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    205,
+                    530,
+                    60,
+                    50
+                ]
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 200,
+        "max_hit": 1,
+        "next": [],
+        "pre_wait_freezes": 0
+    },
+    "GuildRaidBattleSettle": {
+        "doc": "战斗返回按钮不可见时进入：处理次数不足、战败重试、失败与胜利结算、过场、准备和奖励弹窗；按钮重新出现时回到快速循环。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "RealmRaidBattleExitIcon"
+                ]
+            }
+        },
+        "inverse": true,
+        "action": "DoNothing",
+        "next": [
+            "GuildRaidBattleNoResource",
+            "GuildRaidFailRetry",
+            "GuildRaidBattleFailure",
+            "[JumpBack]CommonRewardItemDetail",
+            "GuildRaidBattleResult",
+            "[JumpBack]CommonBattleEnteringWait",
+            "[JumpBack]CommonSoulMismatch",
+            "[JumpBack]DailyPrepare",
+            "[JumpBack]DailyRewardPopup",
+            "GuildRaidBattleResume",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ],
+        "rate_limit": 300,
+        "timeout": 180000
+    },
+    "GuildRaidNoResourceText": {
+        "doc": "寮突破次数不足的文字提示（通用资源不足之外的说法）。",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "击败次数不足",
+                    "进攻次数不足",
+                    "次数不足"
+                ],
+                "roi": [
+                    289,
+                    206,
+                    709,
+                    277
+                ]
+            }
+        }
+    },
+    "GuildRaidBattleNoResource": {
+        "doc": "次数/资源不足提示：结束本轮。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "Or",
+            "param": {
+                "any_of": [
+                    "DailyNoResource",
+                    "GuildRaidNoResourceText"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "GuildRaidFinish",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ]
+    },
+    "GuildRaidFailRetry": {
+        "doc": "真实战败后失败页若有“再次挑战”，点它重打同一张卡；每张卡最多N次，N由任务选项写入max_hit，默认0即关闭，选卡时清零。失败页没有该按钮时不命中，按战斗失败处理。复用个人突破的再次挑战识别（TanyaShue/MaaYYs@3f9a969 突破_再次挑战）。",
+        "max_hit": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "RealmRaidRetreatAgain"
+                ]
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ResetCount",
+                "custom_action_param": {
+                    "nodes": [
+                        "GuildRaidRetryAgain",
+                        "GuildRaidRetryConfirm",
+                        "GuildRaidBattleMark",
+                        "DailyPrepare",
+                        "GuildRaidBattleResult",
+                        "GuildRaidBattleFailedResult",
+                        "CommonBattleEnteringWait",
+                        "DailyRewardPopup",
+                        "GuildRaidBattleResume",
+                        "CommonRewardItemDetail",
+                        "CommonSoulMismatch",
+                        "CommonSoulMismatchConfirm"
+                    ],
+                    "strict": true
+                }
+            }
+        },
+        "pre_delay": 0,
+        "post_delay": 0,
+        "next": [
+            "GuildRaidRetryAgain",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ]
+    },
+    "GuildRaidRetryAgain": {
+        "doc": "点失败页再次挑战（点击区域同 RealmRaidRetreatAgain）。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "RealmRaidRetreatAgain"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    832,
+                    491,
+                    54,
+                    31
+                ]
+            }
+        },
+        "next": [
+            "GuildRaidRetryWait"
+        ],
+        "pre_delay": 0,
+        "post_delay": 1500,
+        "pre_wait_freezes": 0,
+        "max_hit": 3
+    },
+    "GuildRaidRetryWait": {
+        "next": [
+            "GuildRaidRetryConfirm",
+            "GuildRaidRetryRestarted",
+            "GuildRaidRetryAgain",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ],
+        "timeout": 15000
+    },
+    "GuildRaidRetryConfirm": {
+        "doc": "再次挑战的确认框（复用 RealmRaidRetreatAgainConfirm 的提示与按钮识别）。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "RealmRaidRetreatAgainConfirm"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "next": [
+            "GuildRaidRetryConfirmedWait"
+        ],
+        "pre_delay": 0,
+        "post_delay": 1000,
+        "pre_wait_freezes": 0,
+        "max_hit": 3
+    },
+    "GuildRaidRetryConfirmedWait": {
+        "next": [
+            "GuildRaidRetryRestarted",
+            "GuildRaidRetryConfirm",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ],
+        "timeout": 15000
+    },
+    "GuildRaidRetryRestarted": {
+        "doc": "新一场已开始或次数不足提示出现。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "RealmRaidRetreatRestarted"
+                ]
+            }
+        },
+        "next": [
+            "GuildRaidBattle"
+        ],
+        "pre_delay": 0,
+        "post_delay": 0
+    },
+    "GuildRaidBattleResult": {
+        "doc": "关闭胜利结算，回到寮突破页后计数。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "DailyBattleResult"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "post_delay": 1200,
+        "next": [
+            "GuildRaidBattleNoResource",
+            "GuildRaidBattleFailure",
+            "GuildRaidBattleResult",
+            "[JumpBack]DailyRewardPopup",
+            "GuildRaidBattleAfterResult",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ],
+        "timeout": 30000,
+        "pre_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "max_hit": 5
+    },
+    "GuildRaidBattleAfterResult": {
+        "doc": "胜利结算关闭并回到寮突破页才计一次成功。攻破的卡会沉到列表底部，原位置换成下一张卡，所以不像个人突破那样回看原卡片的攻破印记。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageGuildRaid"
+                ]
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "TargetCountProgress",
+                "custom_action_param": {
+                    "count": 1,
+                    "continue_node": "GuildRaidScan",
+                    "finish_node": "GuildRaidFinish"
+                }
+            }
+        },
+        "next": [
+            "GuildRaidScan"
+        ]
+    },
+    "GuildRaidBattleFailedResult": {
+        "doc": "关闭失败结算，回到寮突破页。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "DailyBattleResult"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "post_delay": 1200,
+        "next": [
+            "GuildRaidBattleFailedResult",
+            "[JumpBack]DailyRewardPopup",
+            "GuildRaidFailStop",
+            "GuildRaidBattleFailedReturn",
+            "GuildRaidDefeatSpent",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ],
+        "pre_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "max_hit": 5
+    },
+    "GuildRaidFailStop": {
+        "doc": "选项“战斗失败处理=结束本轮”：战败回到寮突破页后结束，不计成功（同 RealmRaidFailStop）。",
+        "enabled": false,
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageGuildRaid"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "GuildRaidFinish",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ]
+    },
+    "GuildRaidBattleFailedReturn": {
+        "doc": "战败后回到寮突破页继续选卡。跳过模式下失败卡带角标、不再被选（对应 OAS check_area 遇 fail_sign 跳过）；失败卡模式下没有未挑战卡时会再打失败卡。整个任务放行前9次（max_hit 9，不随选卡重置），第10次战败由 GuildRaidDefeatSpent 结束，防止标记未出现或打不过时反复挑战。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageGuildRaid"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "max_hit": 9,
+        "next": [
+            "GuildRaidScan"
+        ]
+    },
+    "GuildRaidDefeatSpent": {
+        "doc": "本任务已真实战败10次：结束本轮，不计入成功次数。",
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageGuildRaid"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "GuildRaidFinish",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ]
+    },
+    "GuildRaidFinish": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "TargetCountFinish",
+                "custom_action_param": {}
+            }
+        }
+    }
+}
