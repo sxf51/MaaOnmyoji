@@ -165,6 +165,7 @@ class Input(CustomAction):
 STEP_DONE = {
     "MitamaLockedTeam", "MitamaPresetDone", "MitamaCheckBuffStatusOpen", "MitamaCheckBuffStatusClose",
     "AwakeningLockedTeam", "AwakeningPresetDone", "AwakeningBuffEnabled", "AwakeningBuffDisabled",
+    "ExploreRaidLoopRound",
 }
 
 
@@ -448,14 +449,45 @@ def main():
         case("frozen screen stops: member accept never joins", "TeamMemberTask", invite, [("TeamMemberAccept", invite)] * 5, succeeds=False)
         case("frozen screen stops: member settlement never closes", "TeamMemberTask", {"DailyBattleResult"},
              [("TeamMemberBattleResult", {"DailyBattleResult"})] * 8, succeeds=False)
-        case("exploration counts after settlement", "ExplorationTask", {"PageChapterField", "ExplorationEnemyProbe"}, [
+        boss = {"PageChapterField", "ExplorationBossProbe"}
+        boss_tail = [("ExplorationFindBoss", {"DailyBattleResult"}), ("ExplorationBossResult", {"PageChapterField", "ExplorationBossDrop"}),
+                     ("ExplorationBossDrop", {"PageChapter"})]
+        case("exploration counts a chapter only after the boss", "ExplorationTask", {"PageChapterField", "ExplorationEnemyProbe"}, [
             ("ExplorationFindEnemy", {"DailyBattleResult"}),
-            ("ExplorationBattleResult", {"PageChapterField"})], expected_count=1)
-        case("exploration merged loop counts two battles and stops", "ExplorationTask", {"PageChapterField", "ExplorationEnemyProbe"}, [
+            ("ExplorationBattleResult", boss), *boss_tail], expected_count=1)
+        case("exploration normal win alone never counts", "ExplorationTask", {"PageChapterField", "ExplorationEnemyProbe"}, [
             ("ExplorationFindEnemy", {"DailyBattleResult"}),
             ("ExplorationBattleResult", {"PageChapterField", "ExplorationEnemyProbe"}),
+            ("ExplorationFindEnemy", {"DailyBattleFailed", "DailyBattleResult"}),
+            ("ExplorationBattleFailedResult", {"PageChapterField"})], succeeds=False)
+        case("exploration two chapters re-enter from the entrance", "ExplorationTask", boss, [
+            ("ExplorationFindBoss", {"DailyBattleResult"}),
+            ("ExplorationBossResult", {"PageChapter", "ExplorationEnterChapter"}),
+            ("ExplorationEnterChapter", boss), *boss_tail], requested_count=2, expected_count=2)
+        case("exploration boss wins over a plain button", "ExplorationTask",
+            boss | {"ExplorationEnemyProbe"}, boss_tail, expected_count=1)
+        case("exploration swipes back left when the right side is empty", "ExplorationTask", {"PageChapterField"}, [
+            *[("ExplorationEnemySwipe", {"PageChapterField"}) for _ in range(4)],
+            ("ExplorationEnemySwipeBack", boss), *boss_tail], expected_count=1)
+        case("exploration rescans after a click that never starts a battle", "ExplorationTask", {"PageChapterField", "ExplorationEnemyProbe"}, [
+            ("ExplorationFindEnemy", {"PageChapterField", "ExplorationEnemyProbe"}),
             ("ExplorationFindEnemy", {"DailyBattleResult"}),
-            ("ExplorationBattleResult", {"PageChapterField"})], requested_count=2, expected_count=2)
+            ("ExplorationBattleResult", boss), *boss_tail], expected_count=1)
+        case("exploration stops after ten missed clicks", "ExplorationTask", {"PageChapterField", "ExplorationEnemyProbe"},
+            [("ExplorationFindEnemy", {"PageChapterField", "ExplorationEnemyProbe"})] * 11, succeeds=False)
+        case("exploration collects a leftover boss drop on entry and counts the chapter", "ExplorationTask",
+            {"PageChapterField", "ExplorationBossDrop", "ExplorationEnemyProbe"}, [("ExplorationBossDrop", {"PageChapter"})], expected_count=1)
+        case("exploration stops when the boss drop never exits", "ExplorationTask", boss, [
+            ("ExplorationFindBoss", {"DailyBattleResult"}), ("ExplorationBossResult", {"PageChapterField", "ExplorationBossDrop"}),
+            *[("ExplorationBossDrop", {"PageChapterField", "ExplorationBossDrop"})] * 3], succeeds=False)
+        case("exploration selects the difficulty before entering", "ExplorationTask", {"PageChapter", "ExplorationSelectDifficulty"}, [
+            ("ExplorationSelectDifficulty", {"PageChapter", "ExplorationEnterChapter"}),
+            ("ExplorationEnterChapter", boss), *boss_tail], expected_count=1)
+        case("exploration stops when the difficulty never selects", "ExplorationTask", {"PageChapter", "ExplorationSelectDifficulty"},
+            [("ExplorationSelectDifficulty", {"PageChapter", "ExplorationSelectDifficulty"})] * 3, succeeds=False)
+        case("exploration locks the team before fighting", "ExplorationTask", boss | {"ExplorationUnlockTeam"}, [
+            ("ExplorationUnlockTeam", boss), *boss_tail], expected_count=1,
+            pipeline_override={"ExplorationUnlockTeam": {"enabled": True}})
         case("exploration failure is not a victory", "ExplorationTask", {"PageChapterField", "ExplorationEnemyProbe"}, [
             ("ExplorationFindEnemy", {"DailyBattleFailed", "DailyBattleResult"}),
             ("ExplorationBattleFailedResult", {"PageChapterField"})], succeeds=False)
@@ -464,26 +496,62 @@ def main():
             pipeline_override=ticket_stop)
         case("exploration ticket threshold finishes at chapter entrance", "ExplorationTask",
             {"PageChapter", "ExplorationEnterChapter", "ExplorationTicketCountEntrance"}, pipeline_override=ticket_stop)
-        case("exploration ticket threshold stops in field after counting the battle", "ExplorationTask",
+        case("exploration ticket threshold stops in field after a normal battle", "ExplorationTask",
             {"PageChapterField", "ExplorationEnemyProbe"}, [
             ("ExplorationFindEnemy", {"DailyBattleResult"}),
             ("ExplorationBattleResult", {"PageChapterField", "ExplorationEnemyProbe", "ExplorationTicketCountField"})],
-            requested_count=3, expected_count=1, pipeline_override=ticket_stop)
+            requested_count=3, expected_count=0, pipeline_override=ticket_stop)
         case("exploration ticket count read for another page is ignored", "ExplorationTask",
             {"PageChapterField", "ExplorationEnemyProbe", "ExplorationTicketCountMap", "ExplorationTicketCountEntrance"}, [
             ("ExplorationFindEnemy", {"DailyBattleResult"}),
-            ("ExplorationBattleResult", {"PageChapterField"})], expected_count=1, pipeline_override=ticket_stop)
+            ("ExplorationBattleResult", boss | {"ExplorationTicketCountMap", "ExplorationTicketCountEntrance"}),
+            *boss_tail], expected_count=1, pipeline_override=ticket_stop)
         case("exploration ticket threshold disabled enters chapter", "ExplorationTask",
             {"PageChapter", "ExplorationEnterChapter", "ExplorationTicketCountEntrance"}, [
-            ("ExplorationEnterChapter", {"PageChapterField", "ExplorationEnemyProbe"}),
-            ("ExplorationFindEnemy", {"DailyBattleResult"}),
-            ("ExplorationBattleResult", {"PageChapterField"})], expected_count=1)
+            ("ExplorationEnterChapter", boss), *boss_tail], expected_count=1)
+        sweep = [*[("ExplorationEnemySwipe", {"PageChapterField", "NavBack"}) for _ in range(4)],
+                 *[("ExplorationEnemySwipeBack", {"PageChapterField", "NavBack"}) for _ in range(8)]]
         case("empty chapter reenters only once", "ExplorationTask", {"PageChapterField", "NavBack"}, [
-            *[("ExplorationEnemySwipe", {"PageChapterField", "NavBack"}) for _ in range(6)],
+            *sweep,
             ("NativeToChapterNavBack", {"PageExitExplore", "NavConfirmExitExplore"}),
             ("NativeNavConfirmExitExplore", {"PageChapter", "ExplorationEnterChapter"}),
             ("ExplorationReenterClick", {"PageChapterField", "NavBack"}),
-            *[("ExplorationEnemySwipe", {"PageChapterField", "NavBack"}) for _ in range(6)]], succeeds=False)
+            *sweep], succeeds=False)
+        # Task-level wiring exactly as the UI posts it, plus the option-controlled round budget.
+        loop_task = load_jsonc(ROOT / "assets/tasks/ExploreRaidLoop.json")["task"][0]["pipeline_override"]
+        def loop_override(rounds):
+            return {**loop_task, "ExploreRaidLoopRound": {"max_hit": rounds}}
+        no_raid = {"PageRaid", "RealmRaidCard", "RealmRaidTicketEmpty"}
+        enough = {"PageChapter", "ExplorationTicketCountEntrance"}
+        # Explore first; only an entrance/map read of 10+ tickets leads to one raid board.
+        case("explore-raid loop raids right away when tickets are already enough", "ExploreRaidLoopTask",
+            {"PageExplore", "ExplorationTicketCountMap", "PageRaid", "RealmRaidCard"}, [
+            ("RealmRaidSelect", {"PageRaidTarget"}), ("RealmRaidAttack", {"DailyBattleResult"}),
+            ("RealmRaidBattleResult", no_raid | {"RealmRaidBroken"})],
+            requested_count=9, expected_count=1, pipeline_override=loop_override(1), expected_steps=["ExploreRaidLoopRound"] * 1)
+        case("explore-raid loop stops after the round budget even when raids make no progress", "ExploreRaidLoopTask",
+            no_raid | {"PageExplore", "ExplorationTicketCountMap"}, pipeline_override=loop_override(3),
+            expected_steps=["ExploreRaidLoopRound"] * 3)
+        case("explore-raid loop finishes the chapter before checking tickets", "ExploreRaidLoopTask",
+            no_raid | {"PageChapterField", "ExplorationEnemyProbe", "ExplorationTicketCountField"}, [
+            ("ExplorationFindEnemy", {"DailyBattleResult"}),
+            ("ExplorationBattleResult", {"PageChapterField", "ExplorationBossProbe", "ExplorationTicketCountField"}),
+            ("ExplorationFindBoss", {"DailyBattleResult"}),
+            ("ExplorationBossResult", no_raid | enough)],
+            requested_count=5, pipeline_override=loop_override(1), expected_steps=["ExploreRaidLoopRound"] * 1)
+        case("explore-raid loop runs the next round after a raid", "ExploreRaidLoopTask",
+            no_raid | {"PageChapterField", "ExplorationBossProbe"}, [
+            ("ExplorationFindBoss", {"DailyBattleResult"}),
+            ("ExplorationBossResult", no_raid | enough)],
+            requested_count=5, pipeline_override=loop_override(3), expected_steps=["ExploreRaidLoopRound"] * 3)
+        case("explore-raid loop never raids when stamina runs out short of tickets", "ExploreRaidLoopTask",
+            {"PageChapterField", "ExplorationEnemyProbe", "PageRaid", "RealmRaidCard"}, [
+            ("ExplorationFindEnemy", {"DailyNoResource"})], pipeline_override=loop_override(3), expected_steps=["ExploreRaidLoopRound"] * 1)
+        case("explore-raid loop never raids when the chapter cap ends exploration short of tickets", "ExploreRaidLoopTask",
+            {"PageChapterField", "ExplorationBossProbe", "PageRaid", "RealmRaidCard"}, [
+            ("ExplorationFindBoss", {"DailyBattleResult"}),
+            ("ExplorationBossResult", {"PageChapter", "PageRaid", "RealmRaidCard"})],
+            requested_count=1, expected_count=1, pipeline_override=loop_override(3), expected_steps=["ExploreRaidLoopRound"] * 1)
         case("raid nickname missing never clicks", "RealmRaidTask", {"PageRaid", "RealmRaidCard", "RaidNicknameMissing"}, succeeds=False)
         case("raid selected corner mark never clicks", "RealmRaidTask", {"PageRaid", "RealmRaidCard", "RaidCornerMarked"}, succeeds=False)
         case("raid selection changes before click", "RealmRaidTask", {"PageRaid", "RealmRaidCard"}, succeeds=False,
@@ -795,6 +863,12 @@ def main():
         case("raid battle won before the exit dialog appears counts as a normal win", "RealmRaidTask", {"PageRaid", "RealmRaidCard"}, [
             ("RealmRaidSelect", {"PageRaidTarget"}), ("RealmRaidAttack", exit_ready),
             ("RealmRaidRetreatExit", {"DailyBattleResult"}),
+            ("RealmRaidBattleResult", {"PageRaid", "RealmRaidBroken"})], expected_count=1, pipeline_override=retreat(1))
+        # Log 2026-11-22: the 4th retreat's dialog popped up over the reward page after the win was already being settled.
+        case("raid late exit dialog over a win is cancelled and the win counts", "RealmRaidTask", {"PageRaid", "RealmRaidCard"}, [
+            ("RealmRaidSelect", {"PageRaidTarget"}), ("RealmRaidAttack", exit_ready),
+            ("RealmRaidRetreatExit", {"DailyBattleResult", "RealmRaidRetreatLateCancel"}),
+            ("RealmRaidRetreatLateCancel", {"DailyBattleResult"}),
             ("RealmRaidBattleResult", {"PageRaid", "RealmRaidBroken"})], expected_count=1, pipeline_override=retreat(1))
         case("all raid cards already marked", "RealmRaidTask", {"PageRaid"})
         case("raid failed battle skips attempted target", "RealmRaidTask", {"PageRaid", "RealmRaidCard"}, [
@@ -1248,13 +1322,11 @@ def main():
         case("exploration prepare tapped during the automatic transition", "ExplorationTask", {"PageChapterField", "ExplorationEnemyProbe"}, [
             ("ExplorationFindEnemy", {"DailyPrepare"}),
             ("DailyPrepare", {"DailyBattleResult"}),
-            ("ExplorationBattleResult", {"PageChapterField"})], expected_count=1)
+            ("ExplorationBattleResult", boss), *boss_tail], expected_count=1)
         case("exploration switches gameplay tab back to mainline", "ExplorationEnsureMainline", {"PageExplore", "ExplorationOpenMainline"}, [
             ("ExplorationOpenMainline", {"PageExplore", "ExplorationMainlineReady", "ExplorationSelectChapter"}),
             ("ExplorationSelectChapter", {"PageChapter", "ExplorationEnterChapter"}),
-            ("ExplorationEnterChapter", {"PageChapterField", "ExplorationEnemyProbe"}),
-            ("ExplorationFindEnemy", {"DailyBattleResult"}),
-            ("ExplorationBattleResult", {"PageChapterField"})], expected_count=1)
+            ("ExplorationEnterChapter", boss), *boss_tail], expected_count=1)
         case("missing mainline panel never causes blind chapter swipes", "ExplorationEnsureMainline", {"PageExplore"}, succeeds=False)
         case("raid selection miss retries the same card", "RealmRaidTask", {"PageRaid", "RealmRaidCard"}, [
             ("RealmRaidSelect", {"PageRaid", "RealmRaidCard"}),
@@ -1474,14 +1546,12 @@ def main():
         case("collapsed chapter panel expands before chapter search", "ExplorationEnsureMainline", {"PageExplore", "ExplorationExpandChapterPanel"}, [
             ("ExplorationExpandChapterPanel", {"PageExplore", "ExplorationMainlineReady", "ExplorationSelectChapter"}),
             ("ExplorationSelectChapter", {"PageChapter", "ExplorationEnterChapter"}),
-            ("ExplorationEnterChapter", {"PageChapterField", "ExplorationEnemyProbe"}),
-            ("ExplorationFindEnemy", {"DailyBattleResult"}),
-            ("ExplorationBattleResult", {"PageChapterField"})], expected_count=1)
-        case("chapter chest is collected before final battle count", "ExplorationTask", {"PageChapterField", "ExplorationEnemyProbe"}, [
+            ("ExplorationEnterChapter", boss), *boss_tail], expected_count=1)
+        case("chapter chest is collected before the boss", "ExplorationTask", {"PageChapterField", "ExplorationEnemyProbe"}, [
             ("ExplorationFindEnemy", {"DailyBattleResult"}),
             ("ExplorationBattleResult", {"PageChapterField", "ExplorationCollectChest"}),
             ("ExplorationCollectChest", {"PageChapterField", "DailyRewardPopup"}),
-            ("DailyRewardPopup", {"PageChapterField"})], expected_count=1)
+            ("DailyRewardPopup", boss), *boss_tail], expected_count=1)
         case("solo statistics execute once before settlement input", "MitamaChallenge", {"MitamaChallenge"}, [
             ("MitamaChallenge", {"MitamaBattleResult"}),
             ("MitamaBattleResult", {"MitamaFinishOnce"})], expected_count=1,

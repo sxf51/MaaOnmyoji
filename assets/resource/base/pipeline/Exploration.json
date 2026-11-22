@@ -8,12 +8,12 @@
             "param": {
                 "custom_action": "TargetCountInit",
                 "custom_action_param": {
-                    "target_count": 10
+                    "target_count": 3
                 }
             }
         },
         "next": [
-            "ExplorationRun"
+            "ExplorationSetup"
         ]
     },
     "ExplorationRun": {
@@ -175,15 +175,26 @@
     },
     "ExplorationEnterChapter": {
         "recognition": {
-            "type": "OCR",
+            "type": "And",
             "param": {
-                "expected": "^探索$",
-                "roi": [
-                    1061,
-                    573,
-                    156,
-                    92
-                ]
+                "all_of": [
+                    "ExplorationDifficultySelected",
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "expected": "^探索$",
+                                "roi": [
+                                    960,
+                                    560,
+                                    300,
+                                    120
+                                ]
+                            }
+                        }
+                    }
+                ],
+                "box_index": 1
             }
         },
         "action": {
@@ -203,7 +214,7 @@
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
         "on_error": [],
-        "doc": "从章节入口进入探索场景。",
+        "doc": "难度已选好后，从章节入口进入探索场景；普通难度没有组队按钮，探索按钮左移，ROI 覆盖两种位置。",
         "max_hit": 3
     },
     "ExplorationFindEnemy": {
@@ -226,7 +237,7 @@
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
         "on_error": [],
-        "doc": "点击识别到的探索敌人并进入战斗。"
+        "doc": "没有首领时，点击普通双剑按钮进入战斗。"
     },
     "ExplorationProgress": {
         "action": {
@@ -245,7 +256,7 @@
         ],
         "pre_delay": 0,
         "post_delay": 0,
-        "doc": "结算返回章节且处理完奖励后，累计成功次数并决定继续探索或结束。"
+        "doc": "完成一次整章探索（击败首领并退出）后累计次数，决定继续探索或结束。"
     },
     "ExplorationFinish": {
         "pre_delay": 0,
@@ -273,15 +284,21 @@
                 "custom_action_param": {
                     "nodes": [
                         "ExplorationEnemySwipe",
+                        "ExplorationEnemySwipeBack",
                         "ExplorationReenter",
+                        "ExplorationUnlockTeam",
                         "DailyPrepare",
                         "ExplorationBattleResult",
+                        "ExplorationBossResult",
                         "ExplorationBattleFailedResult",
                         "DailyRewardPopup",
                         "CommonBattleEnteringWait",
                         "CommonRewardItemDetail",
                         "CommonSoulMismatch",
-                        "CommonSoulMismatchConfirm"
+                        "CommonSoulMismatchConfirm",
+                        "ExplorationBattleMissed",
+                        "ExplorationBossMissed",
+                        "ExplorationBossDrop"
                     ]
                 }
             }
@@ -289,8 +306,13 @@
         "next": [
             "[JumpBack]DailyRewardPopup",
             "[JumpBack]ExplorationCollectChest",
+            "ExplorationBossDrop",
+            "[JumpBack]ExplorationUnlockTeam",
+            "ExplorationPreset",
+            "ExplorationFindBoss",
             "ExplorationFindEnemy",
             "ExplorationEnemySwipe",
+            "ExplorationEnemySwipeBack",
             "ExplorationReenter",
             "[JumpBack]CommonBountyInterrupt",
             "CommonUnknownPopup"
@@ -298,7 +320,7 @@
         "timeout": 20000,
         "pre_delay": 0,
         "post_delay": 0,
-        "doc": "确认章节场景后重置扫描和重进预算，直接优先处理奖励、宝箱，再寻找敌人。"
+        "doc": "确认章节场景后重置扫描和重进预算；先处理奖励、宝箱、阵容锁与队伍预设，再按 首领 > 普通 的优先级找怪，找不到时左右滑动，仍没有再重进一次章节。"
     },
     "ExplorationChapterReady": {
         "recognition": {
@@ -312,6 +334,7 @@
         "action": "DoNothing",
         "next": [
             "ExplorationEnterChapter",
+            "ExplorationSelectDifficulty",
             "[JumpBack]CommonBountyInterrupt",
             "CommonUnknownPopup"
         ]
@@ -424,9 +447,12 @@
                 "custom_action_param": {
                     "nodes": [
                         "ExplorationEnemySwipe",
+                        "ExplorationEnemySwipeBack",
                         "ExplorationReenter",
+                        "ExplorationUnlockTeam",
                         "DailyPrepare",
                         "ExplorationBattleResult",
+                        "ExplorationBossResult",
                         "ExplorationBattleFailedResult",
                         "DailyRewardPopup",
                         "CommonBattleEnteringWait",
@@ -445,8 +471,13 @@
         "next": [
             "[JumpBack]DailyRewardPopup",
             "[JumpBack]ExplorationCollectChest",
+            "ExplorationBossDrop",
+            "[JumpBack]ExplorationUnlockTeam",
+            "ExplorationPreset",
+            "ExplorationFindBoss",
             "ExplorationFindEnemy",
             "ExplorationEnemySwipe",
+            "ExplorationEnemySwipeBack",
             "ExplorationReenter",
             "[JumpBack]CommonBountyInterrupt",
             "CommonUnknownPopup"
@@ -462,7 +493,7 @@
                 ]
             }
         },
-        "max_hit": 6,
+        "max_hit": 4,
         "action": {
             "type": "Custom",
             "param": {
@@ -496,7 +527,7 @@
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
         "on_error": [],
-        "doc": "滑动探索场景，查找可挑战的敌人。"
+        "doc": "向右查看场景（手指右往左滑）寻找挑战按钮，最多 4 次。"
     },
     "ExplorationReenter": {
         "recognition": {
@@ -561,7 +592,8 @@
                 "custom_action": "ResetCount",
                 "custom_action_param": {
                     "nodes": [
-                        "ExplorationEnemySwipe"
+                        "ExplorationEnemySwipe",
+                        "ExplorationEnemySwipeBack"
                     ]
                 }
             }
@@ -579,6 +611,7 @@
             "[JumpBack]CommonSoulMismatch",
             "[JumpBack]DailyPrepare",
             "[JumpBack]DailyRewardPopup",
+            "ExplorationBattleMissed",
             "[JumpBack]CommonBountyInterrupt",
             "CommonUnknownPopup"
         ],
@@ -632,7 +665,7 @@
         "pre_wait_freezes": 0,
         "post_wait_freezes": 0,
         "on_error": [],
-        "doc": "关闭探索成功结算，返回场景后再记录成功次数。",
+        "doc": "关闭普通战斗胜利结算，返回场景后继续探索（普通战斗不计次数）。",
         "max_hit": 5
     },
     "ExplorationBattleAfterResult": {
@@ -921,11 +954,715 @@
         "max_hit": 3
     },
     "ExplorationPostBattleRewards": {
-        "doc": "处理通关宝箱及奖励展示后，再计数并判断是否结束探索。",
+        "doc": "普通战斗后处理奖励和宝箱，再回到探索主循环（会先检查突破券阈值）。",
         "next": [
             "[JumpBack]DailyRewardPopup",
             "[JumpBack]ExplorationCollectChest",
+            "ExplorationNormalWin",
+            "ExplorationTooManyBattles",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ]
+    },
+    "ExplorationSetup": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "doc": "每次进入探索阶段时重置只做一次的准备步骤（队伍预设），循环任务的每一轮也会重新换一次。",
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ResetCount",
+                "custom_action_param": {
+                    "nodes": [
+                        "ExplorationPreset"
+                    ]
+                }
+            }
+        },
+        "next": [
+            "ExplorationRun"
+        ]
+    },
+    "ExplorationDifficultySelected": {
+        "doc": "章节入口左栏当前难度行是否为选中（红底）。默认困难；“探索难度”选项改 ROI，选“不切换”时改为 DirectHit。选中红底约 RGB(110-165,35-65,20-35)，未选中约 RGB(20-45)。",
+        "recognition": {
+            "type": "ColorMatch",
+            "param": {
+                "roi": [
+                    20,
+                    308,
+                    180,
+                    50
+                ],
+                "method": 4,
+                "lower": [
+                    100,
+                    30,
+                    15
+                ],
+                "upper": [
+                    175,
+                    75,
+                    45
+                ],
+                "count": 1500
+            }
+        }
+    },
+    "ExplorationSelectDifficulty": {
+        "doc": "点击章节入口左栏配置的难度（困难/普通）。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageChapter",
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "expected": "困难",
+                                "roi": [
+                                    20,
+                                    300,
+                                    180,
+                                    66
+                                ]
+                            }
+                        }
+                    }
+                ],
+                "box_index": 1
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "post_delay": 1000,
+        "max_hit": 3,
+        "pre_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "on_error": [],
+        "next": [
+            "ExplorationEnterChapter",
+            "ExplorationSelectDifficulty",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ]
+    },
+    "ExplorationUnlockTeam": {
+        "doc": "可选：探索场景右下“固定阵容”锁未锁定时点击锁定；关闭时不检查也不改变。",
+        "enabled": false,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageChapterField",
+                    {
+                        "recognition": {
+                            "type": "TemplateMatch",
+                            "param": {
+                                "template": "Exploration/FormationUnlocked.png",
+                                "roi": [
+                                    866,
+                                    628,
+                                    80,
+                                    76
+                                ],
+                                "threshold": 0.85
+                            }
+                        }
+                    }
+                ],
+                "box_index": 1
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "post_delay": 1000,
+        "max_hit": 3,
+        "pre_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "on_error": [],
+        "next": []
+    },
+    "ExplorationPreset": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "doc": "可选：进入探索场景后通过右下“队伍预设”换预设御魂。探索的预设窗口没有“出战”按钮（整体在 x360-910,y225-610），应用后直接点窗口外左上空白处关闭；每个探索阶段只做一次（ExplorationSetup 重置）。",
+        "enabled": false,
+        "max_hit": 1,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageChapterField"
+                ]
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "NodeOverride",
+                "custom_action_param": {
+                    "TeamPresetContext": {
+                        "recognition": {
+                            "type": "And",
+                            "param": {
+                                "all_of": [
+                                    "PageChapterField"
+                                ]
+                            }
+                        }
+                    },
+                    "TeamPresetEntryText": {
+                        "recognition": {
+                            "param": {
+                                "roi": [
+                                    690,
+                                    672,
+                                    100,
+                                    40
+                                ]
+                            }
+                        }
+                    },
+                    "TeamPresetOpen": {
+                        "action": {
+                            "param": {
+                                "target": [
+                                    712,
+                                    638,
+                                    46,
+                                    42
+                                ]
+                            }
+                        }
+                    },
+                    "TeamPresetFrameTemplate": {
+                        "recognition": {
+                            "param": {
+                                "template": "Exploration/PresetFrame.png",
+                                "roi": [
+                                    340,
+                                    210,
+                                    170,
+                                    30
+                                ]
+                            }
+                        }
+                    },
+                    "TeamPresetFooter": {
+                        "recognition": {
+                            "type": "And",
+                            "param": {
+                                "all_of": [
+                                    "TeamPresetFrameTemplate"
+                                ]
+                            }
+                        }
+                    },
+                    "TeamPresetGroupAtBottom": {
+                        "recognition": {
+                            "param": {
+                                "custom_recognition_param": {
+                                    "regions": [
+                                        [
+                                            365,
+                                            232,
+                                            112,
+                                            300
+                                        ]
+                                    ],
+                                    "max_changed_ratio": 0.15
+                                }
+                            }
+                        }
+                    },
+                    "TeamPresetTeamAtBottom": {
+                        "recognition": {
+                            "param": {
+                                "custom_recognition_param": {
+                                    "regions": [
+                                        [
+                                            495,
+                                            232,
+                                            390,
+                                            370
+                                        ]
+                                    ],
+                                    "max_changed_ratio": 0.15
+                                }
+                            }
+                        }
+                    },
+                    "TeamPresetGroupScroll": {
+                        "action": {
+                            "param": {
+                                "custom_action_param": {
+                                    "begin": [
+                                        420,
+                                        470,
+                                        24,
+                                        24
+                                    ],
+                                    "end": [
+                                        420,
+                                        260,
+                                        24,
+                                        24
+                                    ],
+                                    "duration": 500,
+                                    "duration_random": 80,
+                                    "segments": 24,
+                                    "deviation": 8,
+                                    "easing": true
+                                }
+                            }
+                        }
+                    },
+                    "TeamPresetTeamScroll": {
+                        "action": {
+                            "param": {
+                                "custom_action_param": {
+                                    "begin": [
+                                        690,
+                                        520,
+                                        40,
+                                        24
+                                    ],
+                                    "end": [
+                                        690,
+                                        290,
+                                        40,
+                                        24
+                                    ],
+                                    "duration": 500,
+                                    "duration_random": 80,
+                                    "segments": 24,
+                                    "deviation": 8,
+                                    "easing": true
+                                }
+                            }
+                        }
+                    },
+                    "TeamPresetClose": {
+                        "action": {
+                            "param": {
+                                "target": [
+                                    150,
+                                    120,
+                                    120,
+                                    80
+                                ]
+                            }
+                        }
+                    },
+                    "TeamPresetApply": {
+                        "next": [
+                            "TeamPresetInUse",
+                            "ExplorationPresetConfirm",
+                            "[JumpBack]TeamPresetApplyIcon",
+                            "[JumpBack]CommonBountyInterrupt",
+                            "CommonUnknownPopup"
+                        ]
+                    },
+                    "TeamPresetInUse": {
+                        "next": [
+                            "TeamPresetClose",
+                            "[JumpBack]CommonBountyInterrupt",
+                            "CommonUnknownPopup"
+                        ]
+                    },
+                    "TeamPresetCloseRetry": {
+                        "next": [
+                            "TeamPresetWindowClosed",
+                            "TeamPresetClose",
+                            "[JumpBack]CommonBountyInterrupt",
+                            "CommonUnknownPopup"
+                        ]
+                    }
+                }
+            }
+        },
+        "anchor": {
+            "TeamPresetReturn": "ExplorationPresetDone"
+        },
+        "next": [
+            "TeamPresetRun"
+        ]
+    },
+    "ExplorationPresetConfirm": {
+        "doc": "探索预设：确认“即将更换…预设御魂”后不等“全队正在使用”提示，直接关窗口（探索窗口没有出战按钮）。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "TeamPresetConfirm"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "post_delay": 1200,
+        "max_hit": 3,
+        "pre_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "on_error": [],
+        "next": [
+            "TeamPresetInUse",
+            "TeamPresetClose",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ]
+    },
+    "ExplorationPresetDone": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "doc": "预设已应用且窗口已关，回到场景继续找怪。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageChapterField"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "ExplorationScan",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ]
+    },
+    "ExplorationBossProbe": {
+        "doc": "首领挑战按钮（红鞘刀与花），与普通双剑按钮不同。",
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": "Exploration/BossEnemy.png",
+                "roi": [
+                    100,
+                    120,
+                    1170,
+                    478
+                ],
+                "threshold": 0.75
+            }
+        }
+    },
+    "ExplorationFindBoss": {
+        "doc": "首领出现后优先挑战首领；击败首领后游戏自动退出探索，算完成一次整章探索。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageChapterField",
+                    "ExplorationBossProbe"
+                ],
+                "box_index": 1
+            }
+        },
+        "action": "Click",
+        "post_delay": 1000,
+        "pre_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "on_error": [],
+        "next": [
+            "ExplorationBossBattle"
+        ]
+    },
+    "ExplorationEnemySwipeBack": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageChapterField"
+                ]
+            }
+        },
+        "max_hit": 8,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "BezierSwipe",
+                "custom_action_param": {
+                    "begin": [
+                        328,
+                        458,
+                        24,
+                        24
+                    ],
+                    "end": [
+                        1038,
+                        458,
+                        24,
+                        24
+                    ],
+                    "duration": 500,
+                    "duration_random": 80,
+                    "segments": 24,
+                    "deviation": 20,
+                    "easing": true
+                }
+            }
+        },
+        "post_delay": 1000,
+        "next": [
+            "ExplorationScan"
+        ],
+        "pre_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "on_error": [],
+        "doc": "右侧找不到时向左查看场景（手指左往右滑）寻找挑战按钮，最多 8 次，可回到场景最左端。"
+    },
+    "ExplorationBossBattle": {
+        "doc": "首领战斗中，等待结算。",
+        "next": [
+            "ExplorationBattleNoResource",
+            "ExplorationBattleFailure",
+            "[JumpBack]CommonRewardItemDetail",
+            "ExplorationBossResult",
+            "[JumpBack]CommonSoulMismatch",
+            "[JumpBack]DailyPrepare",
+            "[JumpBack]DailyRewardPopup",
+            "ExplorationBossMissed",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ],
+        "timeout": 180000
+    },
+    "ExplorationNormalWin": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "doc": "普通战斗胜利，继续找怪。一章内最多 40 场普通战斗，击败首领时重置；超过说明一直没出首领，停止。",
+        "max_hit": 40,
+        "next": [
+            "ExplorationRun"
+        ]
+    },
+    "ExplorationTooManyBattles": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageChapterField"
+                ]
+            }
+        },
+        "focus": {
+            "Node.Recognition.Succeeded": "本章已打 40 场普通战斗仍未出现首领，任务停止"
+        },
+        "action": "DoNothing",
+        "next": [
+            "NativeFlowFailed"
+        ]
+    },
+    "ExplorationBossResult": {
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "DailyBattleResult"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "post_delay": 1200,
+        "pre_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "on_error": [],
+        "doc": "关闭首领战斗胜利结算；回到场景后拾取首领掉落宝箱，游戏随即退出到章节入口。",
+        "max_hit": 5,
+        "timeout": 30000,
+        "next": [
+            "ExplorationBattleFailure",
+            "ExplorationBossResult",
+            "[JumpBack]DailyRewardPopup",
+            "ExplorationBossExited",
+            "ExplorationBossDrop",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ]
+    },
+    "ExplorationBossExited": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "doc": "拾取首领掉落后游戏退出探索；回到章节入口或探索地图即完成一次整章探索。",
+        "recognition": {
+            "type": "Or",
+            "param": {
+                "any_of": [
+                    "PageChapter",
+                    "PageExplore"
+                ]
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ResetCount",
+                "custom_action_param": {
+                    "nodes": [
+                        "ExplorationNormalWin"
+                    ]
+                }
+            }
+        },
+        "timeout": 30000,
+        "next": [
             "ExplorationProgress",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ]
+    },
+    "ExplorationBattleMissed": {
+        "pre_delay": 0,
+        "doc": "点击挑战按钮后仍停在探索场景：角色可能还在走向怪物，等 3 秒再看；仍在场景说明怪物走开没点中，回去重新找。每章最多 10 次（FieldReady 重置）。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageChapterField"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "post_delay": 3000,
+        "max_hit": 10,
+        "next": [
+            "ExplorationBattleStillField",
+            "ExplorationBattle",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ]
+    },
+    "ExplorationBattleStillField": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "doc": "等待后仍在探索场景，没有进入战斗，重新找挑战按钮。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageChapterField"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "ExplorationScan",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ]
+    },
+    "ExplorationBossMissed": {
+        "pre_delay": 0,
+        "doc": "点击挑战按钮后仍停在探索场景：角色可能还在走向怪物，等 3 秒再看；仍在场景说明怪物走开没点中，回去重新找。每章最多 10 次（FieldReady 重置）。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageChapterField"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "post_delay": 3000,
+        "max_hit": 10,
+        "next": [
+            "ExplorationBossStillField",
+            "ExplorationBossBattle",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ]
+    },
+    "ExplorationBossStillField": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "doc": "等待后仍在探索场景，没有进入战斗，重新找挑战按钮。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageChapterField"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "ExplorationScan",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ]
+    },
+    "ExplorationBossDrop": {
+        "doc": "击败首领后场景里角色旁会出现发光的宝箱掉落图标（不会自己消失）；点它拾取后游戏才加载并退出到章节入口。2026-11-22 模拟器实测：不点时 30 秒以上仍停在场景，点后约 3 秒回到章节入口。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageChapterField",
+                    {
+                        "recognition": {
+                            "type": "TemplateMatch",
+                            "param": {
+                                "template": "Exploration/BossDrop.png",
+                                "roi": [
+                                    100,
+                                    120,
+                                    1170,
+                                    478
+                                ],
+                                "threshold": 0.8
+                            }
+                        }
+                    }
+                ],
+                "box_index": 1
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "post_delay": 1500,
+        "max_hit": 3,
+        "timeout": 30000,
+        "pre_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "on_error": [],
+        "next": [
+            "ExplorationBossExited",
+            "[JumpBack]NativeLoading",
+            "[JumpBack]DailyRewardPopup",
+            "ExplorationBossDrop",
             "[JumpBack]CommonBountyInterrupt",
             "CommonUnknownPopup"
         ]

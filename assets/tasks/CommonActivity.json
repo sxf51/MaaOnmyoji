@@ -5,53 +5,30 @@
             "label": "$common_activity_task",
             "entry": "CommonActivityTask",
             "option": [
-                "重复挑战自定义作战次数",
+                "重复挑战作战次数",
                 "重复挑战战斗失败处理"
             ],
             "description": "$common_activity_task_doc"
         }
     ],
     "option": {
-        "重复挑战自定义作战次数": {
-            "type": "switch",
-            "label": "自定义作战次数",
-            "default_case": "Yes",
-            "cases": [
-                {
-                    "name": "No",
-                    "pipeline_override": {}
-                },
-                {
-                    "name": "Yes",
-                    "pipeline_override": {},
-                    "option": [
-                        "重复挑战作战次数"
-                    ]
-                }
-            ],
-            "description": "关闭时会持续挑战"
-        },
         "重复挑战作战次数": {
             "type": "input",
-            "label": "次数",
+            "label": "$battle_count",
             "inputs": [
                 {
                     "name": "作战次数",
                     "pipeline_type": "int",
                     "default": "30",
-                    "pattern_msg": "请输入作战次数，如30",
+                    "pattern_msg": "请输入作战次数，失败不计入；达到次数或活动体力不足时停止",
                     "verify": "^[1-9]\\d*$",
-                    "description": "请输入作战次数，如30"
+                    "description": "请输入作战次数，失败不计入；达到次数或活动体力不足时停止"
                 }
             ],
             "pipeline_override": {
                 "CommonActivityTask": {
-                    "action": {
-                        "param": {
-                            "custom_action_param": {
-                                "target_count": "{作战次数}"
-                            }
-                        }
+                    "attach": {
+                        "target_count": "{作战次数}"
                     }
                 }
             }

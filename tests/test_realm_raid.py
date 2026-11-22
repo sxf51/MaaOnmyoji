@@ -52,7 +52,8 @@ class RaidTest(unittest.TestCase):
                                          'RealmRaidFailRetry','DailyPrepare',
                                          'RealmRaidBattleResult','RealmRaidBattleFailedResult',
                                          'CommonBattleEnteringWait','DailyRewardPopup',
-                                         'RealmRaidBattleResume','CommonRewardItemDetail','CommonSoulMismatch','CommonSoulMismatchConfirm'],'strict':True})
+                                         'RealmRaidBattleResume','CommonRewardItemDetail','CommonSoulMismatch','CommonSoulMismatchConfirm',
+                                         'RealmRaidRetreatLateCancel'],'strict':True})
 
     def test_no_target_finish_requires_confirmed_page(self):
         self.assertEqual(self.nodes['RealmRaidExhaustedPage']['recognition']['param']['all_of'],['PageRaid'])
@@ -76,8 +77,13 @@ class RaidTest(unittest.TestCase):
         # The exit button only exists after the battle starts and strong teams win in ~5s: check it first.
         self.assertEqual(battle[:2],['RealmRaidRetreatBegin','[JumpBack]RealmRaidBattleMark'])
         # MaaFW batches every OCR in a next list (~1.2s here): while the exit button shows, only templates run.
-        self.assertEqual(battle,['RealmRaidRetreatBegin','[JumpBack]RealmRaidBattleMark','RealmRaidBattleSettle',
-                                 '[JumpBack]CommonBountyInterrupt','CommonUnknownPopup'])
+        self.assertEqual(battle,['RealmRaidRetreatBegin','[JumpBack]RealmRaidBattleMark','[JumpBack]RealmRaidRetreatLateCancel',
+                                 'RealmRaidRetreatConfirm','RealmRaidBattleSettle','[JumpBack]CommonBountyInterrupt','CommonUnknownPopup'])
+        # The exit icon vanishes while the dialog fades in, so a late dialog lands here: confirm it, unless the
+        # battle is already won (dimmed 点击屏幕继续 under the dialog), then cancel. Templates only, no OCR.
+        late=self.nodes['RealmRaidRetreatLateCancel']
+        self.assertEqual([c['recognition']['type'] for c in late['recognition']['param']['all_of']],['TemplateMatch','TemplateMatch'])
+        self.assertEqual(self.nodes['RealmRaidBattleSettle']['next'][:2],['[JumpBack]RealmRaidRetreatLateCancel','RealmRaidRetreatConfirm'])
         settle=self.nodes['RealmRaidBattleSettle']
         self.assertTrue(settle['inverse'])
         self.assertEqual(settle['recognition']['param']['all_of'],['RealmRaidBattleExitIcon'])

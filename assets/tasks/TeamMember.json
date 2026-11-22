@@ -52,21 +52,21 @@
         },
         "组队队员次数": {
             "type": "input",
-            "label": "作战次数",
+            "label": "$battle_count",
             "inputs": [
                 {
-                    "name": "队员作战次数",
+                    "name": "作战次数",
                     "pipeline_type": "int",
                     "default": "15",
-                    "pattern_msg": "请输入作战次数，如15",
-                    "description": "按成功结算次数停止",
-                    "verify": "^[1-9]\\d*$"
+                    "pattern_msg": "请输入作战次数，按成功结算计数，达到次数时停止",
+                    "verify": "^[1-9]\\d*$",
+                    "description": "请输入作战次数，按成功结算计数，达到次数时停止"
                 }
             ],
             "pipeline_override": {
                 "TeamMemberTask": {
                     "attach": {
-                        "target_count": "{队员作战次数}"
+                        "target_count": "{作战次数}"
                     }
                 }
             }

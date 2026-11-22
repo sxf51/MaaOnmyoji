@@ -1,0 +1,201 @@
+{
+    "task": [
+        {
+            "name": "explore_raid_loop",
+            "label": "$explore_raid_loop_task",
+            "entry": "ExploreRaidLoopTask",
+            "description": "$explore_raid_loop_task_doc",
+            "pipeline_override": {
+                "ExplorationTicketThreshold": {
+                    "enabled": true,
+                    "recognition": {
+                        "type": "Or",
+                        "param": {
+                            "any_of": [
+                                "ExplorationTicketMap",
+                                "ExplorationTicketEntrance"
+                            ]
+                        }
+                    },
+                    "next": [
+                        "ExploreRaidLoopTicketsReady",
+                        "[JumpBack]CommonBountyInterrupt",
+                        "CommonUnknownPopup"
+                    ]
+                },
+                "ExplorationFinish": {
+                    "next": [
+                        "ExploreRaidLoopExploreShort"
+                    ]
+                },
+                "RealmRaidFinish": {
+                    "next": [
+                        "ExploreRaidLoopAfterRaid"
+                    ]
+                }
+            },
+            "option": [
+                "循环轮数",
+                "循环突破券阈值",
+                "循环每轮探索次数上限",
+                "探索章节",
+                "探索难度",
+                "探索锁定阵容",
+                "循环每轮突破次数",
+                "循环突破主动退出次数",
+                "结界突破友方绿标",
+                "结界突破更换队伍预设",
+                "结界突破战败重试次数",
+                "结界突破战斗失败处理"
+            ]
+        }
+    ],
+    "option": {
+        "循环轮数": {
+            "type": "input",
+            "label": "循环轮数（每轮：探索攒够突破券，再打一轮结界突破）",
+            "description": "探索没攒够券就因体力不足或次数上限结束时，提前结束循环。",
+            "inputs": [
+                {
+                    "name": "轮数",
+                    "pipeline_type": "int",
+                    "default": "3",
+                    "verify": "^[1-9]\\d*$"
+                }
+            ],
+            "pipeline_override": {
+                "ExploreRaidLoopRound": {
+                    "max_hit": "{轮数}"
+                }
+            }
+        },
+        "循环突破券阈值": {
+            "type": "select",
+            "label": "突破券达到多少张后去结界突破",
+            "description": "只在打完一整章回到章节入口（或在探索地图）时读突破券，章节内不中断；默认超过9张（≥10）才打一轮结界突破，开始时已够则直接去突破。",
+            "default_case": "10张及以上",
+            "cases": [
+                {
+                    "name": "10张及以上",
+                    "pipeline_override": {
+                        "ExplorationTicketCountMap": {
+                            "recognition": {
+                                "param": {
+                                    "expected": "^([12][0-9]|30)\\s*/\\s*30$"
+                                }
+                            }
+                        },
+                        "ExplorationTicketCountEntrance": {
+                            "recognition": {
+                                "param": {
+                                    "expected": "^([12][0-9]|30)\\s*/\\s*30$"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "25张及以上",
+                    "pipeline_override": {
+                        "ExplorationTicketCountMap": {
+                            "recognition": {
+                                "param": {
+                                    "expected": "^(2[5-9]|30)\\s*/\\s*30$"
+                                }
+                            }
+                        },
+                        "ExplorationTicketCountEntrance": {
+                            "recognition": {
+                                "param": {
+                                    "expected": "^(2[5-9]|30)\\s*/\\s*30$"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "30张（已满）",
+                    "pipeline_override": {
+                        "ExplorationTicketCountMap": {
+                            "recognition": {
+                                "param": {
+                                    "expected": "^30\\s*/\\s*30$"
+                                }
+                            }
+                        },
+                        "ExplorationTicketCountEntrance": {
+                            "recognition": {
+                                "param": {
+                                    "expected": "^30\\s*/\\s*30$"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "循环每轮探索次数上限": {
+            "type": "input",
+            "label": "每轮探索次数上限",
+            "inputs": [
+                {
+                    "name": "作战次数",
+                    "pipeline_type": "int",
+                    "default": "10",
+                    "pattern_msg": "请输入作战次数，每轮最多完成几次整章探索（兜底，正常由突破券阈值或体力耗尽结束本轮探索）",
+                    "verify": "^[1-9]\\d*$",
+                    "description": "请输入作战次数，每轮最多完成几次整章探索（兜底，正常由突破券阈值或体力耗尽结束本轮探索）"
+                }
+            ],
+            "pipeline_override": {
+                "ExplorationTask": {
+                    "attach": {
+                        "target_count": "{作战次数}"
+                    }
+                }
+            }
+        },
+        "循环每轮突破次数": {
+            "type": "input",
+            "label": "每轮结界突破次数",
+            "inputs": [
+                {
+                    "name": "作战次数",
+                    "pipeline_type": "int",
+                    "default": "9",
+                    "pattern_msg": "请输入作战次数，每轮结界突破的成功次数，默认9即打完一轮九宫格；突破券用完时提前结束本轮突破",
+                    "verify": "^[1-9]\\d*$",
+                    "description": "请输入作战次数，每轮结界突破的成功次数，默认9即打完一轮九宫格；突破券用完时提前结束本轮突破"
+                }
+            ],
+            "pipeline_override": {
+                "RealmRaidTask": {
+                    "attach": {
+                        "target_count": "{作战次数}"
+                    }
+                }
+            }
+        },
+        "循环突破主动退出次数": {
+            "type": "input",
+            "label": "每轮结界突破开局主动退出次数（打9退4中的4，0为关闭）",
+            "description": "每轮突破都重新退n次（第一张卡开打后退出判负，不消耗突破券），再正常打。",
+            "inputs": [
+                {
+                    "name": "退出次数",
+                    "pipeline_type": "int",
+                    "default": "4",
+                    "verify": "^[0-9]$"
+                }
+            ],
+            "pipeline_override": {
+                "RealmRaidRetreatBegin": {
+                    "max_hit": "{退出次数}"
+                },
+                "RealmRaidRetreatRetry": {
+                    "max_hit": "{退出次数}"
+                }
+            }
+        }
+    }
+}

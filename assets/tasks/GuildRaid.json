@@ -19,23 +19,21 @@
     "option": {
         "寮突破成功次数": {
             "type": "input",
-            "label": "成功次数（达到次数即结束；另外击败次数为0（北京时间21点前）、能打的都已攻破或现存的都失败过时也结束）",
+            "label": "$battle_count",
             "inputs": [
                 {
-                    "name": "次数",
+                    "name": "作战次数",
                     "pipeline_type": "int",
                     "default": "6",
-                    "verify": "^[1-9]\\d*$"
+                    "pattern_msg": "请输入作战次数，按成功次数计；达到次数、击败次数为0（北京时间21点前）、能打的都已攻破或现存的都失败过时停止",
+                    "verify": "^[1-9]\\d*$",
+                    "description": "请输入作战次数，按成功次数计；达到次数、击败次数为0（北京时间21点前）、能打的都已攻破或现存的都失败过时停止"
                 }
             ],
             "pipeline_override": {
                 "GuildRaidTask": {
-                    "action": {
-                        "param": {
-                            "custom_action_param": {
-                                "target_count": "{次数}"
-                            }
-                        }
+                    "attach": {
+                        "target_count": "{作战次数}"
                     }
                 }
             }

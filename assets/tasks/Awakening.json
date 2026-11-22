@@ -1119,9 +1119,9 @@
                     "name": "作战次数",
                     "pipeline_type": "int",
                     "default": "10",
-                    "pattern_msg": "请输入作战次数，如10",
+                    "pattern_msg": "请输入作战次数，达到次数或体力耗尽时停止",
                     "verify": "^[1-9]\\d*$",
-                    "description": "请输入作战次数，如10"
+                    "description": "请输入作战次数，达到次数或体力耗尽时停止"
                 }
             ],
             "pipeline_override": {

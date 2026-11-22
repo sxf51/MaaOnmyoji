@@ -18,23 +18,21 @@
     "option": {
         "结界突破成功次数": {
             "type": "input",
-            "label": "成功次数（达到次数或突破券用完即结束；九张打完游戏会自动刷新，继续挑战）",
+            "label": "$battle_count",
             "inputs": [
                 {
-                    "name": "次数",
+                    "name": "作战次数",
                     "pipeline_type": "int",
                     "default": "30",
-                    "verify": "^[1-9]\\d*$"
+                    "pattern_msg": "请输入作战次数，按成功次数计；达到次数或突破券用完时停止（九张打完游戏会自动刷新，继续挑战）",
+                    "verify": "^[1-9]\\d*$",
+                    "description": "请输入作战次数，按成功次数计；达到次数或突破券用完时停止（九张打完游戏会自动刷新，继续挑战）"
                 }
             ],
             "pipeline_override": {
                 "RealmRaidTask": {
-                    "action": {
-                        "param": {
-                            "custom_action_param": {
-                                "target_count": "{次数}"
-                            }
-                        }
+                    "attach": {
+                        "target_count": "{作战次数}"
                     }
                 }
             }

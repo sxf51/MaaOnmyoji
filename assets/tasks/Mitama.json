@@ -6,7 +6,7 @@
             "entry": "MitamaTask",
             "option": [
                 "选择关卡",
-                "自定义作战次数",
+                "御魂作战次数",
                 "御魂掉落加成",
                 "御魂锁定阵容",
                 "御魂更换队伍预设",
@@ -138,25 +138,6 @@
                 }
             ]
         },
-        "自定义作战次数": {
-            "type": "switch",
-            "label": "自定义作战次数",
-            "default_case": "Yes",
-            "cases": [
-                {
-                    "name": "No",
-                    "pipeline_override": {}
-                },
-                {
-                    "name": "Yes",
-                    "pipeline_override": {},
-                    "option": [
-                        "御魂作战次数"
-                    ]
-                }
-            ],
-            "description": "关闭时会清空体力"
-        },
         "御魂作战次数": {
             "type": "input",
             "label": "$battle_count",
@@ -165,9 +146,9 @@
                     "name": "作战次数",
                     "pipeline_type": "int",
                     "default": "15",
-                    "pattern_msg": "请输入作战次数，如30",
+                    "pattern_msg": "请输入作战次数，达到次数或体力耗尽时停止",
                     "verify": "^[1-9]\\d*$",
-                    "description": "请输入作战次数，如30"
+                    "description": "请输入作战次数，达到次数或体力耗尽时停止"
                 }
             ],
             "pipeline_override": {

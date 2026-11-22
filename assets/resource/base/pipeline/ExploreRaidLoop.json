@@ -1,0 +1,77 @@
+{
+    "ExploreRaidLoopTask": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "doc": "$explore_raid_loop_task_doc",
+        "next": [
+            "ExploreRaidLoopRound",
+            "ExploreRaidLoopDone",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ]
+    },
+    "ExploreRaidLoopRound": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "doc": "每轮先探索攒突破券：每打完一整章回到章节入口读券，超过9张（默认）才去打一轮结界突破（默认9次、开局退4）。开始时券已够则探索0章直接去突破。max_hit 即总轮数（由任务选项设置，框架原生计数），用完后落到 ExploreRaidLoopDone。",
+        "max_hit": 3,
+        "next": [
+            "ExplorationTask"
+        ]
+    },
+    "ExploreRaidLoopTicketsReady": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "doc": "探索在章节入口或地图读到突破券达到阈值，去打一轮结界突破。",
+        "next": [
+            "ExploreRaidLoopRaidSetup"
+        ]
+    },
+    "ExploreRaidLoopExploreShort": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "doc": "探索没攒够突破券就结束了（体力不足或达到每轮探索次数上限）：不打不满一轮的结界突破，结束循环。",
+        "next": [
+            "ExploreRaidLoopDone",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ]
+    },
+    "ExploreRaidLoopRaidSetup": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "doc": "结界突破的主动退出次数和“跳过失败目标”的战败次数按整个任务计；循环里每轮突破前重置，使每轮都重新打9退4。",
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ResetCount",
+                "custom_action_param": {
+                    "nodes": [
+                        "RealmRaidRetreatBegin",
+                        "RealmRaidRetreatRetry",
+                        "RealmRaidSkipDefeat"
+                    ]
+                }
+            }
+        },
+        "next": [
+            "RealmRaidTask"
+        ]
+    },
+    "ExploreRaidLoopAfterRaid": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "doc": "一轮结界突破结束（打满默认9次、券用完或战败结束）后进入下一轮；轮数用完时 ExploreRaidLoopRound 不再命中，落到结束。券够但卡都打不过时每轮只会打到“跳过失败目标”的3次战败（失败不耗券），由轮数兜底结束。",
+        "next": [
+            "ExploreRaidLoopRound",
+            "ExploreRaidLoopDone",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ]
+    },
+    "ExploreRaidLoopDone": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "doc": "循环结束。"
+    }
+}

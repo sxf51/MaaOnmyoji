@@ -7,31 +7,353 @@
             "option": [
                 "探索作战次数",
                 "探索章节",
+                "探索难度",
+                "探索锁定阵容",
+                "探索更换队伍预设",
                 "探索突破券阈值"
             ],
             "description": "$exploration_task_doc"
         }
     ],
     "option": {
+        "探索难度": {
+            "type": "select",
+            "label": "探索难度",
+            "description": "进入章节前在入口左栏选择难度；“不切换”沿用当前选中的难度。",
+            "default_case": "困难",
+            "cases": [
+                {
+                    "name": "困难",
+                    "pipeline_override": {
+                        "ExplorationDifficultySelected": {
+                            "recognition": {
+                                "type": "ColorMatch",
+                                "param": {
+                                    "roi": [
+                                        20,
+                                        308,
+                                        180,
+                                        50
+                                    ],
+                                    "method": 4,
+                                    "lower": [
+                                        100,
+                                        30,
+                                        15
+                                    ],
+                                    "upper": [
+                                        175,
+                                        75,
+                                        45
+                                    ],
+                                    "count": 1500
+                                }
+                            }
+                        },
+                        "ExplorationSelectDifficulty": {
+                            "recognition": {
+                                "type": "And",
+                                "param": {
+                                    "all_of": [
+                                        "PageChapter",
+                                        {
+                                            "recognition": {
+                                                "type": "OCR",
+                                                "param": {
+                                                    "expected": "困难",
+                                                    "roi": [
+                                                        20,
+                                                        300,
+                                                        180,
+                                                        66
+                                                    ]
+                                                }
+                                            }
+                                        }
+                                    ],
+                                    "box_index": 1
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "普通",
+                    "pipeline_override": {
+                        "ExplorationDifficultySelected": {
+                            "recognition": {
+                                "type": "ColorMatch",
+                                "param": {
+                                    "roi": [
+                                        20,
+                                        220,
+                                        180,
+                                        50
+                                    ],
+                                    "method": 4,
+                                    "lower": [
+                                        100,
+                                        30,
+                                        15
+                                    ],
+                                    "upper": [
+                                        175,
+                                        75,
+                                        45
+                                    ],
+                                    "count": 1500
+                                }
+                            }
+                        },
+                        "ExplorationSelectDifficulty": {
+                            "recognition": {
+                                "type": "And",
+                                "param": {
+                                    "all_of": [
+                                        "PageChapter",
+                                        {
+                                            "recognition": {
+                                                "type": "OCR",
+                                                "param": {
+                                                    "expected": "普通",
+                                                    "roi": [
+                                                        20,
+                                                        212,
+                                                        180,
+                                                        66
+                                                    ]
+                                                }
+                                            }
+                                        }
+                                    ],
+                                    "box_index": 1
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "不切换",
+                    "pipeline_override": {
+                        "ExplorationDifficultySelected": {
+                            "recognition": {
+                                "type": "DirectHit"
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "探索锁定阵容": {
+            "type": "switch",
+            "label": "锁定阵容",
+            "description": "进入探索场景后确认右下“固定阵容”已锁定，未锁定时点击锁定；关闭时不检查也不改变锁定状态。",
+            "default_case": "Yes",
+            "cases": [
+                {
+                    "name": "No",
+                    "pipeline_override": {
+                        "ExplorationUnlockTeam": {
+                            "enabled": false
+                        }
+                    }
+                },
+                {
+                    "name": "Yes",
+                    "pipeline_override": {
+                        "ExplorationUnlockTeam": {
+                            "enabled": true
+                        }
+                    }
+                }
+            ]
+        },
+        "探索更换队伍预设": {
+            "type": "switch",
+            "label": "更换队伍预设",
+            "description": "进入探索场景后通过右下“队伍预设”应用预设御魂。探索的预设窗口没有“出战”按钮，确认应用后直接关闭窗口；每次探索阶段只换一次，之后再进场景时跳过。分组或队伍不在当前一屏时下滑查找，找不到时停止。",
+            "default_case": "No",
+            "cases": [
+                {
+                    "name": "No",
+                    "pipeline_override": {
+                        "ExplorationPreset": {
+                            "enabled": false
+                        }
+                    }
+                },
+                {
+                    "name": "Yes",
+                    "pipeline_override": {
+                        "ExplorationPreset": {
+                            "enabled": true
+                        }
+                    },
+                    "option": [
+                        "探索预设分组与队伍"
+                    ]
+                }
+            ]
+        },
+        "探索预设分组与队伍": {
+            "type": "input",
+            "label": "预设分组与队伍",
+            "inputs": [
+                {
+                    "name": "分组",
+                    "pipeline_type": "string",
+                    "default": "默认分组",
+                    "pattern_msg": "分组名称",
+                    "description": "分组名称",
+                    "verify": "^.*\\S.*$"
+                },
+                {
+                    "name": "队伍",
+                    "pipeline_type": "string",
+                    "default": "默认队伍",
+                    "pattern_msg": "队伍名称",
+                    "description": "队伍名称",
+                    "verify": "^.*\\S.*$"
+                }
+            ],
+            "pipeline_override": {
+                "TeamPresetSelectGroup": {
+                    "recognition": {
+                        "param": {
+                            "expected": [
+                                "{分组}"
+                            ],
+                            "roi": [
+                                365,
+                                232,
+                                112,
+                                300
+                            ]
+                        }
+                    }
+                },
+                "TeamPresetGroupSelected": {
+                    "recognition": {
+                        "param": {
+                            "all_of": [
+                                {
+                                    "sub_name": "TeamPresetSelectedGroupText",
+                                    "recognition": {
+                                        "type": "OCR",
+                                        "param": {
+                                            "roi": [
+                                                365,
+                                                232,
+                                                112,
+                                                300
+                                            ],
+                                            "expected": [
+                                                "{分组}"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "recognition": {
+                                        "type": "ColorMatch",
+                                        "param": {
+                                            "roi": "TeamPresetSelectedGroupText",
+                                            "method": 4,
+                                            "lower": [
+                                                235,
+                                                175,
+                                                80
+                                            ],
+                                            "upper": [
+                                                255,
+                                                230,
+                                                175
+                                            ],
+                                            "count": 50
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                },
+                "TeamPresetSelectTeamConfigured": {
+                    "recognition": {
+                        "param": {
+                            "expected": [
+                                "{队伍}"
+                            ],
+                            "roi": [
+                                495,
+                                232,
+                                390,
+                                370
+                            ]
+                        }
+                    }
+                },
+                "TeamPresetApplyIcon": {
+                    "recognition": {
+                        "param": {
+                            "all_of": [
+                                {
+                                    "sub_name": "TeamPresetTeamText",
+                                    "recognition": {
+                                        "type": "OCR",
+                                        "param": {
+                                            "roi": [
+                                                495,
+                                                232,
+                                                390,
+                                                370
+                                            ],
+                                            "expected": [
+                                                "{队伍}"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "recognition": {
+                                        "type": "TemplateMatch",
+                                        "param": {
+                                            "roi": "TeamPresetTeamText",
+                                            "roi_offset": [
+                                                0,
+                                                -5,
+                                                300,
+                                                15
+                                            ],
+                                            "template": [
+                                                "Exploration/PresetApply.png"
+                                            ],
+                                            "threshold": 0.8
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
         "探索作战次数": {
             "type": "input",
             "label": "$battle_count",
             "inputs": [
                 {
-                    "name": "次数",
+                    "name": "作战次数",
                     "pipeline_type": "int",
-                    "default": "10",
-                    "verify": "^[1-9]\\d*$"
+                    "default": "3",
+                    "pattern_msg": "请输入作战次数，完成一次整章探索（击败首领后自动退出）计1次；达到次数、体力耗尽或突破券达到阈值时停止",
+                    "verify": "^[1-9]\\d*$",
+                    "description": "请输入作战次数，完成一次整章探索（击败首领后自动退出）计1次；达到次数、体力耗尽或突破券达到阈值时停止"
                 }
             ],
             "pipeline_override": {
                 "ExplorationTask": {
-                    "action": {
-                        "param": {
-                            "custom_action_param": {
-                                "target_count": "{次数}"
-                            }
-                        }
+                    "attach": {
+                        "target_count": "{作战次数}"
                     }
                 }
             }

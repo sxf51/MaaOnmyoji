@@ -396,6 +396,8 @@
         "next": [
             "RealmRaidRetreatBegin",
             "[JumpBack]RealmRaidBattleMark",
+            "[JumpBack]RealmRaidRetreatLateCancel",
+            "RealmRaidRetreatConfirm",
             "RealmRaidBattleSettle",
             "[JumpBack]CommonBountyInterrupt",
             "CommonUnknownPopup"
@@ -421,6 +423,8 @@
         "inverse": true,
         "action": "DoNothing",
         "next": [
+            "[JumpBack]RealmRaidRetreatLateCancel",
+            "RealmRaidRetreatConfirm",
             "RealmRaidBattleNoResource",
             "RealmRaidRetreatRetry",
             "RealmRaidFailRetry",
@@ -603,7 +607,7 @@
         "timeout": 10000
     },
     "RealmRaidRetreatConfirm": {
-        "doc": "退出战斗确认（模板）：提示“确认退出战斗吗?”与确定按钮两张模板均由本地1280x720实机截图裁剪（debug/raid_exit_dialog.png），只用模板不触发列表的合并OCR，确认框一出现即可在约0.1秒内点击。确认框弹出期间战斗继续，本地日志 2026-11-17 13:45 旧的OCR确认每轮约1~1.5秒，点返回到点确定约2.6秒，强队在此期间已打赢。模板未命中时由RealmRaidRetreatConfirmText按OCR兜底。",
+        "doc": "退出战斗确认（模板）：提示“确认退出战斗吗?”与确定按钮两张模板均由本地1280x720实机截图裁剪（debug/raid_exit_dialog.png），只用模板不触发列表的合并OCR，确认框一出现即可在约0.1秒内点击。确认框弹出期间战斗继续，本地日志 2026-11-17 13:45 旧的OCR确认每轮约1~1.5秒，点返回到点确定约2.6秒，强队在此期间已打赢。模板未命中时由RealmRaidRetreatConfirmText按OCR兜底。另：点返回后确认框淡入时返回按钮暂时识别不到，流程会先落到 RealmRaidBattleSettle 甚至回到 RealmRaidBattle，因此二者列表最前面也放本节点，迟到的确认框照常确认（2026-11-22 实测）。",
         "recognition": {
             "type": "And",
             "param": {
@@ -764,7 +768,8 @@
                         "DailyRewardPopup",
                         "RealmRaidBattleResume",
                         "CommonSoulMismatch",
-                        "CommonSoulMismatchConfirm"
+                        "CommonSoulMismatchConfirm",
+                        "RealmRaidRetreatLateCancel"
                     ],
                     "strict": true
                 }
@@ -891,7 +896,8 @@
                         "RealmRaidBattleResume",
                         "CommonRewardItemDetail",
                         "CommonSoulMismatch",
-                        "CommonSoulMismatchConfirm"
+                        "CommonSoulMismatchConfirm",
+                        "RealmRaidRetreatLateCancel"
                     ],
                     "strict": true
                 }
@@ -1825,7 +1831,8 @@
                         "RealmRaidBattleResume",
                         "CommonRewardItemDetail",
                         "CommonSoulMismatch",
-                        "CommonSoulMismatchConfirm"
+                        "CommonSoulMismatchConfirm",
+                        "RealmRaidRetreatLateCancel"
                     ],
                     "strict": true
                 }
@@ -1914,5 +1921,63 @@
             }
         },
         "doc": "只检查所选卡片右上角20×18空白区（卡片框内x+290~310、y+4~22），未挑战卡几乎全为米色（实测358~360/360），攻破印记与失败角标都会覆盖该区（实测0）。区域高于昵称行：原27×28区（y+12~40）与昵称行重叠，昵称较长的卡（如“我起的名字肯定欧”，末字压进角落区，实测655/756）会被误判为已标记，导致选卡确认超时失败。"
+    },
+    "RealmRaidRetreatLateCancel": {
+        "doc": "退出确认框盖在胜利奖励页上（框下方能看到暗化的“点击屏幕继续”）：战斗已打赢，点“取消”保留这场胜利。2026-11-22 模拟器实测：第4次退出点了返回，确认框弹出前强队已打赢。只用模板（提示 + 暗化的继续文字），不触发合并OCR；取消中心约(525,438)。没有打完时由 RealmRaidRetreatConfirm 照常确认退出。",
+        "pre_delay": 0,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    {
+                        "recognition": {
+                            "type": "TemplateMatch",
+                            "param": {
+                                "template": "RealmRaid/RetreatConfirmPrompt.png",
+                                "roi": [
+                                    300,
+                                    200,
+                                    680,
+                                    160
+                                ],
+                                "threshold": 0.8
+                            }
+                        }
+                    },
+                    {
+                        "recognition": {
+                            "type": "TemplateMatch",
+                            "param": {
+                                "template": "RealmRaid/WinContinueDimmed.png",
+                                "roi": [
+                                    500,
+                                    650,
+                                    280,
+                                    70
+                                ],
+                                "threshold": 0.8
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    452,
+                    415,
+                    146,
+                    46
+                ]
+            }
+        },
+        "post_delay": 800,
+        "max_hit": 3,
+        "on_error": [],
+        "next": []
     }
 }
