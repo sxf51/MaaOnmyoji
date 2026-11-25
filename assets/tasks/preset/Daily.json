@@ -9,6 +9,9 @@
                     "name": "startup"
                 },
                 {
+                    "name": "exploration"
+                },
+                {
                     "name": "mitama"
                 },
                 {
@@ -17,16 +20,15 @@
                 {
                     "name": "realm_raid"
                 },
-                // {
-                //     "name": "exploration"
-                // },
-                // {
-                //     "name": "realm_raid"
-                // },
-                // {
-                //     "name": "daily_rewards"
-                // },
-                // 通用挑战依赖手动进入目标页面，单独运行，不加入自动日常。
+                {
+                    "name": "guild_raid"
+                },
+                {
+                    "name": "bondling_search"
+                },
+                {
+                    "name": "goryou"
+                },
                 {
                     "name": "shutdown"
                 }

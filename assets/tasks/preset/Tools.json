@@ -9,6 +9,9 @@
                     "name": "team_member"
                 },
                 {
+                    "name": "explore_raid_loop"
+                },
+                {
                     "name": "common_activity"
                 }
             ]
