@@ -6,13 +6,16 @@
             "description": "小工具集合",
             "task": [
                 {
-                    "name": "team_member"
+                    "name": "team_member",
+                    "enabled": false
                 },
                 {
-                    "name": "explore_raid_loop"
+                    "name": "explore_raid_loop",
+                    "enabled": false
                 },
                 {
-                    "name": "common_activity"
+                    "name": "common_activity",
+                    "enabled": false
                 }
             ]
         }

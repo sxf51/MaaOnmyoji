@@ -9,7 +9,8 @@
                     "name": "startup"
                 },
                 {
-                    "name": "exploration"
+                    "name": "exploration",
+                    "enabled": false
                 },
                 {
                     "name": "mitama"
@@ -21,13 +22,20 @@
                     "name": "realm_raid"
                 },
                 {
-                    "name": "guild_raid"
+                    "name": "guild_raid",
+                    "enabled": false
                 },
                 {
-                    "name": "bondling_search"
+                    "name": "bondling_search",
+                    "enabled": false
                 },
                 {
-                    "name": "goryou"
+                    "name": "sougenbi",
+                    "enabled": false
+                },
+                {
+                    "name": "goryou",
+                    "enabled": false
                 },
                 {
                     "name": "shutdown"
