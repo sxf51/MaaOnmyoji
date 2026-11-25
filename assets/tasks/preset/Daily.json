@@ -34,6 +34,14 @@
                     "enabled": false
                 },
                 {
+                    "name": "fallen_sun",
+                    "enabled": false
+                },
+                {
+                    "name": "eternity_sea",
+                    "enabled": false
+                },
+                {
                     "name": "goryou",
                     "enabled": false
                 },
