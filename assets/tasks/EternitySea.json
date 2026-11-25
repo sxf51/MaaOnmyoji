@@ -1,0 +1,750 @@
+{
+    "task": [
+        {
+            "name": "eternity_sea",
+            "label": "$eternity_sea_task",
+            "entry": "EternitySeaTask",
+            "option": [
+                "永生之海层数",
+                "永生之海作战次数",
+                "永生之海锁定阵容",
+                "永生之海更换队伍预设",
+                "永生之海组队",
+                "永生之海友方绿标"
+            ],
+            "description": "$eternity_sea_task_doc"
+        }
+    ],
+    "option": {
+        "永生之海层数": {
+            "type": "select",
+            "label": "层数",
+            "default_case": "肆层",
+            "cases": [
+                {
+                    "name": "壹层",
+                    "pipeline_override": {
+                        "EternitySeaLayerText": {
+                            "recognition": {
+                                "param": {
+                                    "expected": "^(壹|一)层$"
+                                }
+                            }
+                        },
+                        "EternitySeaLayerSelected": {
+                            "recognition": {
+                                "param": {
+                                    "all_of": [
+                                        "PageEternitySeaStage",
+                                        {
+                                            "sub_name": "EternitySeaSelectedLayerText",
+                                            "recognition": {
+                                                "type": "OCR",
+                                                "param": {
+                                                    "expected": "^(壹|一)层$",
+                                                    "roi": [
+                                                        128,
+                                                        95,
+                                                        140,
+                                                        370
+                                                    ]
+                                                }
+                                            }
+                                        },
+                                        {
+                                            "recognition": {
+                                                "type": "ColorMatch",
+                                                "param": {
+                                                    "roi": "EternitySeaSelectedLayerText",
+                                                    "roi_offset": [
+                                                        -28,
+                                                        -8,
+                                                        60,
+                                                        16
+                                                    ],
+                                                    "method": 4,
+                                                    "lower": [
+                                                        120,
+                                                        15,
+                                                        10
+                                                    ],
+                                                    "upper": [
+                                                        255,
+                                                        110,
+                                                        100
+                                                    ],
+                                                    "count": 120
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        },
+                        "EternitySeaRoomLayer": {
+                            "recognition": {
+                                "param": {
+                                    "expected": "(壹|一)层"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "贰层",
+                    "pipeline_override": {
+                        "EternitySeaLayerText": {
+                            "recognition": {
+                                "param": {
+                                    "expected": "^(贰|二)层$"
+                                }
+                            }
+                        },
+                        "EternitySeaLayerSelected": {
+                            "recognition": {
+                                "param": {
+                                    "all_of": [
+                                        "PageEternitySeaStage",
+                                        {
+                                            "sub_name": "EternitySeaSelectedLayerText",
+                                            "recognition": {
+                                                "type": "OCR",
+                                                "param": {
+                                                    "expected": "^(贰|二)层$",
+                                                    "roi": [
+                                                        128,
+                                                        95,
+                                                        140,
+                                                        370
+                                                    ]
+                                                }
+                                            }
+                                        },
+                                        {
+                                            "recognition": {
+                                                "type": "ColorMatch",
+                                                "param": {
+                                                    "roi": "EternitySeaSelectedLayerText",
+                                                    "roi_offset": [
+                                                        -28,
+                                                        -8,
+                                                        60,
+                                                        16
+                                                    ],
+                                                    "method": 4,
+                                                    "lower": [
+                                                        120,
+                                                        15,
+                                                        10
+                                                    ],
+                                                    "upper": [
+                                                        255,
+                                                        110,
+                                                        100
+                                                    ],
+                                                    "count": 120
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        },
+                        "EternitySeaRoomLayer": {
+                            "recognition": {
+                                "param": {
+                                    "expected": "(贰|二)层"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "叁层",
+                    "pipeline_override": {
+                        "EternitySeaLayerText": {
+                            "recognition": {
+                                "param": {
+                                    "expected": "^(叁|三)层$"
+                                }
+                            }
+                        },
+                        "EternitySeaLayerSelected": {
+                            "recognition": {
+                                "param": {
+                                    "all_of": [
+                                        "PageEternitySeaStage",
+                                        {
+                                            "sub_name": "EternitySeaSelectedLayerText",
+                                            "recognition": {
+                                                "type": "OCR",
+                                                "param": {
+                                                    "expected": "^(叁|三)层$",
+                                                    "roi": [
+                                                        128,
+                                                        95,
+                                                        140,
+                                                        370
+                                                    ]
+                                                }
+                                            }
+                                        },
+                                        {
+                                            "recognition": {
+                                                "type": "ColorMatch",
+                                                "param": {
+                                                    "roi": "EternitySeaSelectedLayerText",
+                                                    "roi_offset": [
+                                                        -28,
+                                                        -8,
+                                                        60,
+                                                        16
+                                                    ],
+                                                    "method": 4,
+                                                    "lower": [
+                                                        120,
+                                                        15,
+                                                        10
+                                                    ],
+                                                    "upper": [
+                                                        255,
+                                                        110,
+                                                        100
+                                                    ],
+                                                    "count": 120
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        },
+                        "EternitySeaRoomLayer": {
+                            "recognition": {
+                                "param": {
+                                    "expected": "(叁|三)层"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "肆层",
+                    "pipeline_override": {
+                        "EternitySeaLayerText": {
+                            "recognition": {
+                                "param": {
+                                    "expected": "^(肆|四)层$"
+                                }
+                            }
+                        },
+                        "EternitySeaLayerSelected": {
+                            "recognition": {
+                                "param": {
+                                    "all_of": [
+                                        "PageEternitySeaStage",
+                                        {
+                                            "sub_name": "EternitySeaSelectedLayerText",
+                                            "recognition": {
+                                                "type": "OCR",
+                                                "param": {
+                                                    "expected": "^(肆|四)层$",
+                                                    "roi": [
+                                                        128,
+                                                        95,
+                                                        140,
+                                                        370
+                                                    ]
+                                                }
+                                            }
+                                        },
+                                        {
+                                            "recognition": {
+                                                "type": "ColorMatch",
+                                                "param": {
+                                                    "roi": "EternitySeaSelectedLayerText",
+                                                    "roi_offset": [
+                                                        -28,
+                                                        -8,
+                                                        60,
+                                                        16
+                                                    ],
+                                                    "method": 4,
+                                                    "lower": [
+                                                        120,
+                                                        15,
+                                                        10
+                                                    ],
+                                                    "upper": [
+                                                        255,
+                                                        110,
+                                                        100
+                                                    ],
+                                                    "count": 120
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        },
+                        "EternitySeaRoomLayer": {
+                            "recognition": {
+                                "param": {
+                                    "expected": "(肆|四)层"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "永生之海作战次数": {
+            "type": "input",
+            "label": "$battle_count",
+            "inputs": [
+                {
+                    "name": "永生之海作战次数",
+                    "pipeline_type": "int",
+                    "default": "10",
+                    "pattern_msg": "请输入作战次数，达到次数、本周次数已满（30 次）或体力不足时停止",
+                    "verify": "^[1-9]\\d*$",
+                    "description": "请输入作战次数，达到次数、本周次数已满（30 次）或体力不足时停止"
+                }
+            ],
+            "pipeline_override": {
+                "EternitySeaTask": {
+                    "attach": {
+                        "target_count": "{永生之海作战次数}"
+                    }
+                }
+            }
+        },
+        "永生之海锁定阵容": {
+            "type": "switch",
+            "label": "锁定阵容（自动准备）",
+            "description": "挑战前确认左下角阵容锁已锁定，未锁定时点击锁图标；关闭时不检查也不改变锁定状态。",
+            "default_case": "Yes",
+            "cases": [
+                {
+                    "name": "No",
+                    "pipeline_override": {
+                        "EternitySeaLockTeam": {
+                            "enabled": false
+                        }
+                    }
+                },
+                {
+                    "name": "Yes",
+                    "pipeline_override": {
+                        "EternitySeaLockTeam": {
+                            "enabled": true
+                        }
+                    }
+                }
+            ]
+        },
+        "永生之海更换队伍预设": {
+            "type": "switch",
+            "label": "更换队伍预设",
+            "default_case": "No",
+            "cases": [
+                {
+                    "name": "No",
+                    "pipeline_override": {
+                        "EternitySeaPreset": {
+                            "enabled": false
+                        }
+                    }
+                },
+                {
+                    "name": "Yes",
+                    "pipeline_override": {
+                        "EternitySeaPreset": {
+                            "enabled": true
+                        }
+                    },
+                    "option": [
+                        "永生之海预设分组与队伍"
+                    ]
+                }
+            ],
+            "description": "开始挑战前选好分组和队伍并应用预设御魂，看到“全队正在使用”后：单人模式点出战（队伍须满 5 人）；组队模式不点出战，关闭窗口后再建房；分组或队伍不在当前一屏时下滑列表查找；未找到入口或同款预设窗口时停止，不跳过换队。"
+        },
+        "永生之海预设分组与队伍": {
+            "type": "input",
+            "label": "预设分组与队伍",
+            "inputs": [
+                {
+                    "name": "分组",
+                    "pipeline_type": "string",
+                    "default": "默认分组",
+                    "pattern_msg": "分组名称",
+                    "description": "分组名称",
+                    "verify": "^.*\\S.*$"
+                },
+                {
+                    "name": "队伍",
+                    "pipeline_type": "string",
+                    "default": "默认队伍",
+                    "pattern_msg": "队伍名称",
+                    "description": "队伍名称",
+                    "verify": "^.*\\S.*$"
+                }
+            ],
+            "pipeline_override": {
+                "TeamPresetSelectGroup": {
+                    "recognition": {
+                        "param": {
+                            "expected": [
+                                "{分组}"
+                            ]
+                        }
+                    }
+                },
+                "TeamPresetGroupSelected": {
+                    "recognition": {
+                        "param": {
+                            "all_of": [
+                                {
+                                    "sub_name": "TeamPresetSelectedGroupText",
+                                    "recognition": {
+                                        "type": "OCR",
+                                        "param": {
+                                            "roi": [
+                                                411,
+                                                161,
+                                                112,
+                                                372
+                                            ],
+                                            "expected": [
+                                                "{分组}"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "recognition": {
+                                        "type": "ColorMatch",
+                                        "param": {
+                                            "roi": "TeamPresetSelectedGroupText",
+                                            "method": 4,
+                                            "lower": [
+                                                235,
+                                                175,
+                                                80
+                                            ],
+                                            "upper": [
+                                                255,
+                                                230,
+                                                175
+                                            ],
+                                            "count": 50
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                },
+                "TeamPresetSelectTeamConfigured": {
+                    "recognition": {
+                        "param": {
+                            "expected": [
+                                "{队伍}"
+                            ]
+                        }
+                    }
+                },
+                "TeamPresetApplyIcon": {
+                    "recognition": {
+                        "param": {
+                            "all_of": [
+                                {
+                                    "sub_name": "TeamPresetTeamText",
+                                    "recognition": {
+                                        "type": "OCR",
+                                        "param": {
+                                            "roi": [
+                                                544,
+                                                160,
+                                                376,
+                                                320
+                                            ],
+                                            "expected": [
+                                                "{队伍}"
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    "recognition": {
+                                        "type": "TemplateMatch",
+                                        "param": {
+                                            "roi": "TeamPresetTeamText",
+                                            "roi_offset": [
+                                                0,
+                                                -5,
+                                                300,
+                                                15
+                                            ],
+                                            "template": [
+                                                "TeamPreset/PresetApply.png",
+                                                "TeamPreset/PresetApplySelected.png"
+                                            ],
+                                            "threshold": [
+                                                0.8,
+                                                0.9
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "永生之海组队": {
+            "type": "switch",
+            "label": "组队（作为队长）",
+            "description": "作为队长建房、邀请队友并开战。组队前请先在游戏里手动选好出战式神：任务不会在组队房间里更换阵容，队伍预设也只换预设御魂、不点出战。",
+            "default_case": "No",
+            "cases": [
+                {
+                    "name": "No",
+                    "pipeline_override": {
+                        "EternitySeaBattleModeDestination": {
+                            "next": [
+                                "EternitySeaBattleEntry",
+                                "[JumpBack]CommonBountyInterrupt",
+                                "CommonUnknownPopup"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Yes",
+                    "pipeline_override": {
+                        "TeamPresetInUse": {
+                            "next": [
+                                "TeamPresetClose",
+                                "[JumpBack]CommonBountyInterrupt",
+                                "CommonUnknownPopup"
+                            ]
+                        },
+                        "TeamPresetCloseRetry": {
+                            "next": [
+                                "TeamPresetWindowClosed",
+                                "TeamPresetClose",
+                                "[JumpBack]CommonBountyInterrupt",
+                                "CommonUnknownPopup"
+                            ]
+                        },
+                        "EternitySeaTeamResume": {
+                            "enabled": true
+                        },
+                        "EternitySeaBattleModeDestination": {
+                            "next": [
+                                "EternitySeaTeamEntry",
+                                "[JumpBack]CommonBountyInterrupt",
+                                "CommonUnknownPopup"
+                            ]
+                        }
+                    },
+                    "option": [
+                        "永生之海队友"
+                    ]
+                }
+            ]
+        },
+        "永生之海队友": {
+            "type": "input",
+            "label": "队友",
+            "inputs": [
+                {
+                    "name": "永生之海队友昵称",
+                    "pipeline_type": "string",
+                    "default": "",
+                    "pattern_msg": "请输入队友昵称",
+                    "description": "队友的完整昵称，名字含 + * ? ( ) [ ] { } | ^ $ 等符号时，把符号换成英文句点 . 即可（句点匹配任意一个字）",
+                    "verify": "^\\S(.*\\S)?$"
+                },
+                {
+                    "name": "永生之海第二个队友昵称",
+                    "pipeline_type": "string",
+                    "default": "",
+                    "pattern_msg": "三人组队时填写第二位队友的完整昵称，两人组队留空",
+                    "description": "三人组队时填写第二位队友的完整昵称，两人组队留空；名字含 + * ? ( ) [ ] { } | ^ $ 等符号时，把符号换成英文句点 . 即可（句点匹配任意一个字）",
+                    "verify": "^(\\S(.*\\S)?)?$"
+                }
+            ],
+            "pipeline_override": {
+                "TeamLeaderTeammateName": {
+                    "recognition": {
+                        "param": {
+                            "expected": "^{永生之海队友昵称}$"
+                        }
+                    }
+                },
+                "TeamLeaderTeammate2Name": {
+                    "recognition": {
+                        "param": {
+                            "expected": "^{永生之海第二个队友昵称}$"
+                        }
+                    }
+                },
+                "TeamLeaderRoomTeammate": {
+                    "recognition": {
+                        "param": {
+                            "expected": "{永生之海队友昵称}"
+                        }
+                    }
+                },
+                "TeamLeaderRoomTeammate2": {
+                    "recognition": {
+                        "param": {
+                            "expected": "{永生之海第二个队友昵称}"
+                        }
+                    }
+                }
+            }
+        },
+        "永生之海友方绿标": {
+            "type": "switch",
+            "label": "友方绿标",
+            "description": "按固定战斗镜头下的友方站位点击，每场正式战斗最多一次；默认关闭。镜头旋转或站位变化后落点可能不对应，请保持镜头固定。",
+            "default_case": "No",
+            "cases": [
+                {
+                    "name": "No",
+                    "pipeline_override": {
+                        "CommonBattleMark": {
+                            "enabled": false
+                        }
+                    }
+                },
+                {
+                    "name": "Yes",
+                    "pipeline_override": {
+                        "CommonBattleMark": {
+                            "enabled": true
+                        }
+                    },
+                    "option": [
+                        "永生之海绿标站位"
+                    ]
+                }
+            ]
+        },
+        "永生之海绿标站位": {
+            "type": "select",
+            "label": "绿标站位",
+            "default_case": "左一",
+            "cases": [
+                {
+                    "name": "左一",
+                    "pipeline_override": {
+                        "CommonBattleMark": {
+                            "action": {
+                                "param": {
+                                    "target": [
+                                        205,
+                                        530,
+                                        60,
+                                        50
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "左二",
+                    "pipeline_override": {
+                        "CommonBattleMark": {
+                            "action": {
+                                "param": {
+                                    "target": [
+                                        425,
+                                        495,
+                                        60,
+                                        50
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "左三",
+                    "pipeline_override": {
+                        "CommonBattleMark": {
+                            "action": {
+                                "param": {
+                                    "target": [
+                                        614,
+                                        450,
+                                        45,
+                                        35
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "左四",
+                    "pipeline_override": {
+                        "CommonBattleMark": {
+                            "action": {
+                                "param": {
+                                    "target": [
+                                        780,
+                                        495,
+                                        55,
+                                        50
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "左五",
+                    "pipeline_override": {
+                        "CommonBattleMark": {
+                            "action": {
+                                "param": {
+                                    "target": [
+                                        955,
+                                        495,
+                                        60,
+                                        50
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "阴阳师",
+                    "pipeline_override": {
+                        "CommonBattleMark": {
+                            "action": {
+                                "param": {
+                                    "target": [
+                                        585,
+                                        575,
+                                        60,
+                                        45
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        }
+    }
+}

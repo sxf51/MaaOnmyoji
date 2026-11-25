@@ -2926,5 +2926,284 @@
             "CommonUnknownPopup"
         ],
         "timeout": 60000
+    },
+    "PageFallenSunStage": {
+        "doc": "日轮之陨层数页：左上角标题“御魂”、层数列表含“日蚀”（只出现在日轮之陨）、挑战按钮可见。右上角“日轮之陨”是动态艺术字，不用于判定。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "expected": "^御魂$",
+                                "roi": [
+                                    140,
+                                    5,
+                                    180,
+                                    65
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "expected": "^日蚀$",
+                                "roi": [
+                                    128,
+                                    95,
+                                    140,
+                                    370
+                                ]
+                            }
+                        }
+                    },
+                    "FallenSunChallengeButton"
+                ]
+            }
+        }
+    },
+    "NativeAtFallenSun": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "doc": "确认已在日轮之陨层数页。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageFallenSunStage"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": []
+    },
+    "NativeToFallenSunSwitchTab": {
+        "doc": "在八岐大蛇、业原火等其它御魂层数页点击左侧“卑弥呼”页签。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageMitamaZoneTab"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    25,
+                    410,
+                    45,
+                    135
+                ]
+            }
+        },
+        "next": [],
+        "pre_delay": 0,
+        "post_delay": 1500,
+        "pre_wait_freezes": 0,
+        "on_error": [],
+        "max_hit": 5
+    },
+    "NativeToFallenSunOpenPanel": {
+        "doc": "在御魂菜单点击日轮之陨立绘。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageMitamaMenu"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    720,
+                    100,
+                    200,
+                    330
+                ]
+            }
+        },
+        "next": [],
+        "pre_delay": 0,
+        "post_delay": 1500,
+        "pre_wait_freezes": 0,
+        "on_error": [],
+        "max_hit": 5
+    },
+    "NavigateFallenSun": {
+        "doc": "识别当前页并导航到日轮之陨层数页，已在日轮之陨时直接返回；探索→御魂、庭院→探索两步复用八岐大蛇导航节点。",
+        "next": [
+            "NativeNavigationBlocked",
+            "[JumpBack]NativeResultDismiss",
+            "[JumpBack]NativeDailyRewardPopup",
+            "[JumpBack]NativeNavCancelNoResource",
+            "[JumpBack]NativeNavConfirmExitExplore",
+            "[JumpBack]NativeNavConfirmExitTeam",
+            "[JumpBack]NativeNavDismissRaidTarget",
+            "[JumpBack]NativeNavCancelInvite",
+            "[JumpBack]NativeNavCancelCreate",
+            "[JumpBack]NativeLoading",
+            "NativeAtFallenSun",
+            "[JumpBack]NativeToFallenSunSwitchTab",
+            "[JumpBack]NativeToFallenSunOpenPanel",
+            "[JumpBack]NativeToMitamaStageNavOpenMitama",
+            "[JumpBack]NativeToMitamaStageNavOpenExplore",
+            "[JumpBack]StartupCloseAnnouncement",
+            "[JumpBack]StartupCancelIllustration",
+            "[JumpBack]NativeNavClose",
+            "[JumpBack]NativeNavBack",
+            "[JumpBack]NativeReturnMainHomeButton",
+            "[JumpBack]NativeExitXianTing",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ],
+        "timeout": 60000
+    },
+    "PageEternitySeaStage": {
+        "doc": "永生之海层数页：左上角标题“御魂”、右侧“本周次数（x/30）”（30 次周上限只出现在永生之海；八岐大蛇列表滚到顶部也有“肆层”，不能用层名区分）、挑战按钮可见。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "expected": "^御魂$",
+                                "roi": [
+                                    140,
+                                    5,
+                                    180,
+                                    65
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "expected": "次数（\\d+/30",
+                                "roi": [
+                                    975,
+                                    180,
+                                    190,
+                                    32
+                                ],
+                                "only_rec": true
+                            }
+                        }
+                    },
+                    "EternitySeaChallengeButton"
+                ]
+            }
+        }
+    },
+    "NativeAtEternitySea": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "doc": "确认已在永生之海层数页。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageEternitySeaStage"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": []
+    },
+    "NativeToEternitySeaSwitchTab": {
+        "doc": "在八岐大蛇、业原火等其它御魂层数页点击左侧“永生之海”页签。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageMitamaZoneTab"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    25,
+                    565,
+                    45,
+                    130
+                ]
+            }
+        },
+        "next": [],
+        "pre_delay": 0,
+        "post_delay": 1500,
+        "pre_wait_freezes": 0,
+        "on_error": [],
+        "max_hit": 5
+    },
+    "NativeToEternitySeaOpenPanel": {
+        "doc": "在御魂菜单点击永生之海立绘。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageMitamaMenu"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    1040,
+                    100,
+                    180,
+                    300
+                ]
+            }
+        },
+        "next": [],
+        "pre_delay": 0,
+        "post_delay": 1500,
+        "pre_wait_freezes": 0,
+        "on_error": [],
+        "max_hit": 5
+    },
+    "NavigateEternitySea": {
+        "doc": "识别当前页并导航到永生之海层数页，已在永生之海时直接返回；探索→御魂、庭院→探索两步复用八岐大蛇导航节点。",
+        "next": [
+            "NativeNavigationBlocked",
+            "[JumpBack]NativeResultDismiss",
+            "[JumpBack]NativeDailyRewardPopup",
+            "[JumpBack]NativeNavCancelNoResource",
+            "[JumpBack]NativeNavConfirmExitExplore",
+            "[JumpBack]NativeNavConfirmExitTeam",
+            "[JumpBack]NativeNavDismissRaidTarget",
+            "[JumpBack]NativeNavCancelInvite",
+            "[JumpBack]NativeNavCancelCreate",
+            "[JumpBack]NativeLoading",
+            "NativeAtEternitySea",
+            "[JumpBack]NativeToEternitySeaSwitchTab",
+            "[JumpBack]NativeToEternitySeaOpenPanel",
+            "[JumpBack]NativeToMitamaStageNavOpenMitama",
+            "[JumpBack]NativeToMitamaStageNavOpenExplore",
+            "[JumpBack]StartupCloseAnnouncement",
+            "[JumpBack]StartupCancelIllustration",
+            "[JumpBack]NativeNavClose",
+            "[JumpBack]NativeNavBack",
+            "[JumpBack]NativeReturnMainHomeButton",
+            "[JumpBack]NativeExitXianTing",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ],
+        "timeout": 60000
     }
 }

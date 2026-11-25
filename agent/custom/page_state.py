@@ -5,7 +5,7 @@ from __future__ import annotations
 PAGES = (
     "NoResource", "Bounty", "Reward", "ExitExplore", "ExitTeam", "RaidTarget", "Mail",
     "TeamInvite", "TeamCreate", "TeamList", "TeamRoom", "QuestTasks", "Quests",
-    "Raid", "ChapterField", "Chapter", "SougenbiStage", "MitamaStage", "MitamaMenu",
+    "Raid", "ChapterField", "Chapter", "SougenbiStage", "FallenSunStage", "EternitySeaStage", "MitamaStage", "MitamaMenu",
     "AwakeningStage", "AwakeningMenu", "GoryouStage", "GoryouMenu", "Bondling", "Explore", "Home", "BattleEntering", "Battle", "Result", "Loading",
 )
 

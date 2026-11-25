@@ -166,6 +166,7 @@ STEP_DONE = {
     "MitamaLockedTeam", "MitamaPresetDone", "MitamaCheckBuffStatusOpen", "MitamaCheckBuffStatusClose",
     "AwakeningLockedTeam", "AwakeningPresetDone", "AwakeningBuffEnabled", "AwakeningBuffDisabled",
     "GoryouLockedTeam", "GoryouPresetDone", "SougenbiLockedTeam", "SougenbiPresetDone",
+    "FallenSunLockedTeam", "FallenSunPresetDone", "EternitySeaLockedTeam", "EternitySeaPresetDone",
     "ExploreRaidLoopRound",
 }
 
@@ -256,7 +257,7 @@ def run_case(resource, controller, nodes, name, entry, flags, events=(), expecte
         if "next" in original:
             node["next"] = original["next"]
         override[key] = node
-    for entry_node in ("MitamaTask", "ExplorationTask", "RealmRaidTask", "GuildRaidTask", "CommonActivityTask", "AwakeningTask", "GoryouTask", "SougenbiTask", "BondlingSearchTask", "TeamMemberTask"):
+    for entry_node in ("MitamaTask", "ExplorationTask", "RealmRaidTask", "GuildRaidTask", "CommonActivityTask", "AwakeningTask", "GoryouTask", "SougenbiTask", "FallenSunTask", "EternitySeaTask", "BondlingSearchTask", "TeamMemberTask"):
         # Same shape as task options: the report option replaces custom_action_param whole, the count lives in attach.
         override[entry_node]["attach"] = {"target_count": requested_count}
         override[entry_node]["action"] = {"param": {"custom_action_param": {"report_drops": False}}}
@@ -272,6 +273,8 @@ def run_case(resource, controller, nodes, name, entry, flags, events=(), expecte
     override["AwakeningPreset"]["enabled"] = preset_task == "Awakening"
     override["GoryouPreset"]["enabled"] = preset_task == "Goryou"
     override["SougenbiPreset"]["enabled"] = preset_task == "Sougenbi"
+    override["FallenSunPreset"]["enabled"] = preset_task == "FallenSun"
+    override["EternitySeaPreset"]["enabled"] = preset_task == "EternitySea"
     if stop_after_input:
         override[stop_after_input]['next'] = []
     # Cases entering the shared leader flow midway never pass an entry node, so give them Mitama's ending.
@@ -343,7 +346,7 @@ def main():
         case('invitation hiding the challenge is refused, then the challenge is clicked', 'MitamaBattleModeDestination', {'CommonRefuseBounty'},
             [('CommonRefuseBounty', {'MitamaChallenge'}), ('MitamaChallenge', set())], stop_after_input='MitamaChallenge')
         for page, entry in [('Home', 'NavigateHome'), ('Explore', 'NavigateExplore'),
-                            ('MitamaStage', 'NavigateMitamaStage'), ('AwakeningStage', 'NavigateAwakening'), ('GoryouStage', 'NavigateGoryou'), ('SougenbiStage', 'NavigateSougenbi'), ('Bondling', 'NavigateBondling'),
+                            ('MitamaStage', 'NavigateMitamaStage'), ('AwakeningStage', 'NavigateAwakening'), ('GoryouStage', 'NavigateGoryou'), ('SougenbiStage', 'NavigateSougenbi'), ('FallenSunStage', 'NavigateFallenSun'), ('EternitySeaStage', 'NavigateEternitySea'), ('Bondling', 'NavigateBondling'),
                             ('Raid', 'NavigateRaid'), ('Chapter', 'NavigateChapter'), ('Mail', 'NavigateMail'),
                             ('QuestTasks', 'NavigateQuestTasks'), ('Quests', 'NavigateQuests')]:
             # The invite is rare, so it is checked only once the page itself is no longer recognized.
@@ -1399,7 +1402,7 @@ def main():
         anchored = {"TeamLeaderFinish": {"next": ["[JumpBack]CommonBountyInterrupt", "[Anchor]TeamLeaderFinishTarget"]},
                     "TeamLeaderBattleNoResource": {"next": ["[JumpBack]CommonBountyInterrupt", "[Anchor]TeamLeaderNoResourceTarget"]},
                     "TeamLeaderOpen": {"next": ["TeamLeaderFight"]}}
-        for scope in ("Mitama", "Awakening"):
+        for scope in ("Mitama", "Awakening", "FallenSun", "EternitySea"):
             case(scope + " team run ends through its own finish", scope + "TeamEntry", {"TeamLeaderOpen"}, [
                 ("TeamLeaderOpen", room),
                 ("TeamLeaderStart", {"DailyBattleResult"}),
@@ -1410,6 +1413,64 @@ def main():
         case("Mitama team run finishes normally when resources run out", "MitamaTeamEntry", {"TeamLeaderOpen"}, [
             ("TeamLeaderOpen", room),
             ("TeamLeaderStart", {"DailyNoResource"})], pipeline_override=anchored)
+        fallenSun_stage = {"PageFallenSunStage", "PageMitamaZoneTab", "FallenSunLayerSelected", "FallenSunLockedTeam", "FallenSunChallengeButton"}
+        case("fallen sun already at target needs only challenge and settlement", "FallenSunTask", fallenSun_stage, [
+            ("FallenSunChallenge", {"DailyBattleResult"}),
+            ("FallenSunBattleResult", fallenSun_stage)], expected_count=1, expected_steps=["FallenSunLockedTeam"])
+        case("fallen sun routes from courtyard through explore and the mitama menu", "FallenSunTask", {"PageHome", "NavOpenExplore"}, [
+            ("NativeToMitamaStageNavOpenExplore", {"PageExplore", "NavOpenMitama"}),
+            ("NativeToMitamaStageNavOpenMitama", {"PageMitamaMenu"}),
+            ("NativeToFallenSunOpenPanel", fallenSun_stage),
+            ("FallenSunChallenge", {"DailyBattleResult"}),
+            ("FallenSunBattleResult", fallenSun_stage)], expected_count=1)
+        case("fallen sun switches from another mitama tab then selects the floor", "FallenSunTask", {"PageMitamaStage", "PageMitamaZoneTab"}, [
+            ("NativeToFallenSunSwitchTab", {"PageFallenSunStage", "PageMitamaZoneTab", "FallenSunLayerText", "FallenSunChallengeButton"}),
+            ("FallenSunSelectLayer", fallenSun_stage),
+            ("FallenSunChallenge", {"DailyBattleResult"}),
+            ("FallenSunBattleResult", fallenSun_stage)], expected_count=1)
+        case("fallen sun at its play limit finishes without challenging", "FallenSunTask", fallenSun_stage | {"FallenSunLimitFull"}, expected_count=0)
+        case("fallen sun reaching its play limit ends normally before the target count", "FallenSunTask", fallenSun_stage, [
+            ("FallenSunChallenge", {"DailyBattleResult"}),
+            ("FallenSunBattleResult", fallenSun_stage | {"FallenSunLimitFull"})], requested_count=3, expected_count=1)
+        case("fallen sun stops on a stamina prompt without challenging", "FallenSunBattleEntry", fallenSun_stage | {"DailyNoResource"}, succeeds=False)
+        case("fallen sun defeat stops without counting", "FallenSunTask", fallenSun_stage, [
+            ("FallenSunChallenge", {"DailyBattleFailed", "DailyBattleResult"}),
+            ("FallenSunFailedBattleResult", fallenSun_stage)], succeeds=False)
+        case("fallen sun team option opens the shared team page", "FallenSunBattleModeDestination", {"TeamLeaderOpen"},
+             [("TeamLeaderOpen", set())], pipeline_override={"FallenSunBattleModeDestination": {"next": ["[JumpBack]CommonBountyInterrupt", "FallenSunTeamEntry"]},
+                                                              "TeamLeaderOpen": {"next": []}})
+        case("fallen sun team run stops at its no resource handler", "FallenSunTeamEntry", {"TeamLeaderOpen"}, [
+            ("TeamLeaderOpen", room),
+            ("TeamLeaderStart", {"DailyNoResource"})], succeeds=False, pipeline_override=anchored)
+        eternitySea_stage = {"PageEternitySeaStage", "PageMitamaZoneTab", "EternitySeaLayerSelected", "EternitySeaLockedTeam", "EternitySeaChallengeButton"}
+        case("eternity sea already at target needs only challenge and settlement", "EternitySeaTask", eternitySea_stage, [
+            ("EternitySeaChallenge", {"DailyBattleResult"}),
+            ("EternitySeaBattleResult", eternitySea_stage)], expected_count=1, expected_steps=["EternitySeaLockedTeam"])
+        case("eternity sea routes from courtyard through explore and the mitama menu", "EternitySeaTask", {"PageHome", "NavOpenExplore"}, [
+            ("NativeToMitamaStageNavOpenExplore", {"PageExplore", "NavOpenMitama"}),
+            ("NativeToMitamaStageNavOpenMitama", {"PageMitamaMenu"}),
+            ("NativeToEternitySeaOpenPanel", eternitySea_stage),
+            ("EternitySeaChallenge", {"DailyBattleResult"}),
+            ("EternitySeaBattleResult", eternitySea_stage)], expected_count=1)
+        case("eternity sea switches from another mitama tab then selects the floor", "EternitySeaTask", {"PageSougenbiStage", "PageMitamaZoneTab"}, [
+            ("NativeToEternitySeaSwitchTab", {"PageEternitySeaStage", "PageMitamaZoneTab", "EternitySeaLayerText", "EternitySeaChallengeButton"}),
+            ("EternitySeaSelectLayer", eternitySea_stage),
+            ("EternitySeaChallenge", {"DailyBattleResult"}),
+            ("EternitySeaBattleResult", eternitySea_stage)], expected_count=1)
+        case("eternity sea at its play limit finishes without challenging", "EternitySeaTask", eternitySea_stage | {"EternitySeaLimitFull"}, expected_count=0)
+        case("eternity sea reaching its play limit ends normally before the target count", "EternitySeaTask", eternitySea_stage, [
+            ("EternitySeaChallenge", {"DailyBattleResult"}),
+            ("EternitySeaBattleResult", eternitySea_stage | {"EternitySeaLimitFull"})], requested_count=3, expected_count=1)
+        case("eternity sea stops on a stamina prompt without challenging", "EternitySeaBattleEntry", eternitySea_stage | {"DailyNoResource"}, succeeds=False)
+        case("eternity sea defeat stops without counting", "EternitySeaTask", eternitySea_stage, [
+            ("EternitySeaChallenge", {"DailyBattleFailed", "DailyBattleResult"}),
+            ("EternitySeaFailedBattleResult", eternitySea_stage)], succeeds=False)
+        case("eternity sea team option opens the shared team page", "EternitySeaBattleModeDestination", {"TeamLeaderOpen"},
+             [("TeamLeaderOpen", set())], pipeline_override={"EternitySeaBattleModeDestination": {"next": ["[JumpBack]CommonBountyInterrupt", "EternitySeaTeamEntry"]},
+                                                              "TeamLeaderOpen": {"next": []}})
+        case("eternity sea team run stops at its no resource handler", "EternitySeaTeamEntry", {"TeamLeaderOpen"}, [
+            ("TeamLeaderOpen", room),
+            ("TeamLeaderStart", {"DailyNoResource"})], succeeds=False, pipeline_override=anchored)
         awakening_team = {"AwakeningBattleModeDestination": {"next": ["[JumpBack]CommonBountyInterrupt", "AwakeningTeamEntry"]},
                           "TeamLeaderOpen": {"next": []}}
         case("awakening team option opens the shared team page", "AwakeningBattleModeDestination", {"TeamLeaderOpen"},
