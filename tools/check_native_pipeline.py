@@ -165,7 +165,7 @@ class Input(CustomAction):
 STEP_DONE = {
     "MitamaLockedTeam", "MitamaPresetDone", "MitamaCheckBuffStatusOpen", "MitamaCheckBuffStatusClose",
     "AwakeningLockedTeam", "AwakeningPresetDone", "AwakeningBuffEnabled", "AwakeningBuffDisabled",
-    "GoryouLockedTeam", "GoryouPresetDone",
+    "GoryouLockedTeam", "GoryouPresetDone", "SougenbiLockedTeam", "SougenbiPresetDone",
     "ExploreRaidLoopRound",
 }
 
@@ -256,7 +256,7 @@ def run_case(resource, controller, nodes, name, entry, flags, events=(), expecte
         if "next" in original:
             node["next"] = original["next"]
         override[key] = node
-    for entry_node in ("MitamaTask", "ExplorationTask", "RealmRaidTask", "GuildRaidTask", "CommonActivityTask", "AwakeningTask", "GoryouTask", "BondlingSearchTask", "TeamMemberTask"):
+    for entry_node in ("MitamaTask", "ExplorationTask", "RealmRaidTask", "GuildRaidTask", "CommonActivityTask", "AwakeningTask", "GoryouTask", "SougenbiTask", "BondlingSearchTask", "TeamMemberTask"):
         # Same shape as task options: the report option replaces custom_action_param whole, the count lives in attach.
         override[entry_node]["attach"] = {"target_count": requested_count}
         override[entry_node]["action"] = {"param": {"custom_action_param": {"report_drops": False}}}
@@ -271,6 +271,7 @@ def run_case(resource, controller, nodes, name, entry, flags, events=(), expecte
         override[step]["enabled"] = awakening_buff
     override["AwakeningPreset"]["enabled"] = preset_task == "Awakening"
     override["GoryouPreset"]["enabled"] = preset_task == "Goryou"
+    override["SougenbiPreset"]["enabled"] = preset_task == "Sougenbi"
     if stop_after_input:
         override[stop_after_input]['next'] = []
     # Cases entering the shared leader flow midway never pass an entry node, so give them Mitama's ending.
@@ -342,7 +343,7 @@ def main():
         case('invitation hiding the challenge is refused, then the challenge is clicked', 'MitamaBattleModeDestination', {'CommonRefuseBounty'},
             [('CommonRefuseBounty', {'MitamaChallenge'}), ('MitamaChallenge', set())], stop_after_input='MitamaChallenge')
         for page, entry in [('Home', 'NavigateHome'), ('Explore', 'NavigateExplore'),
-                            ('MitamaStage', 'NavigateMitamaStage'), ('AwakeningStage', 'NavigateAwakening'), ('GoryouStage', 'NavigateGoryou'), ('Bondling', 'NavigateBondling'),
+                            ('MitamaStage', 'NavigateMitamaStage'), ('AwakeningStage', 'NavigateAwakening'), ('GoryouStage', 'NavigateGoryou'), ('SougenbiStage', 'NavigateSougenbi'), ('Bondling', 'NavigateBondling'),
                             ('Raid', 'NavigateRaid'), ('Chapter', 'NavigateChapter'), ('Mail', 'NavigateMail'),
                             ('QuestTasks', 'NavigateQuestTasks'), ('Quests', 'NavigateQuests')]:
             # The invite is rare, so it is checked only once the page itself is no longer recognized.
@@ -1616,6 +1617,32 @@ def main():
             ("BondlingSearchStart", {"DailyBattleFailed", "DailyBattleResult"}),
             ("BondlingSearchFailedBattleResult", bond)], succeeds=False)
         case("bondling stops on stamina prompt without searching", "BondlingSearchBattleEntry", bond | {"DailyNoResource"}, succeeds=False)
+        sougenbi_stage = {"PageSougenbiStage", "PageMitamaZoneTab", "SougenbiLayerSelected", "SougenbiLockedTeam", "SougenbiChallengeButton"}
+        case("sougenbi already at target needs only challenge and settlement", "SougenbiTask", sougenbi_stage, [
+            ("SougenbiChallenge", {"DailyBattleResult"}),
+            ("SougenbiBattleResult", sougenbi_stage)], expected_count=1, expected_steps=["SougenbiLockedTeam"])
+        case("sougenbi routes from courtyard through explore and the mitama menu", "SougenbiTask", {"PageHome", "NavOpenExplore"}, [
+            ("NativeToMitamaStageNavOpenExplore", {"PageExplore", "NavOpenMitama"}),
+            ("NativeToMitamaStageNavOpenMitama", {"PageMitamaMenu"}),
+            ("NativeToSougenbiOpenPanel", sougenbi_stage),
+            ("SougenbiChallenge", {"DailyBattleResult"}),
+            ("SougenbiBattleResult", sougenbi_stage)], expected_count=1)
+        case("sougenbi switches from the orochi tab then selects the difficulty", "SougenbiTask", {"PageMitamaStage", "PageMitamaZoneTab"}, [
+            ("NativeToSougenbiSwitchTab", {"PageSougenbiStage", "PageMitamaZoneTab", "SougenbiLayerText", "SougenbiChallengeButton"}),
+            ("SougenbiSelectLayer", sougenbi_stage),
+            ("SougenbiChallenge", {"DailyBattleResult"}),
+            ("SougenbiBattleResult", sougenbi_stage)], expected_count=1)
+        case("sougenbi with no tickets finishes without challenging", "SougenbiTask", sougenbi_stage | {"SougenbiTicketEmpty"}, expected_count=0)
+        case("sougenbi tickets running out ends the task normally before the target count", "SougenbiTask", sougenbi_stage, [
+            ("SougenbiChallenge", {"DailyBattleResult"}),
+            ("SougenbiBattleResult", sougenbi_stage | {"SougenbiTicketEmpty"})], requested_count=3, expected_count=1)
+        case("sougenbi ticket shortage toast after challenge ends the task normally", "SougenbiTask", sougenbi_stage, [
+            ("SougenbiChallenge", sougenbi_stage | {"SougenbiNoTicketToast"})], expected_count=0)
+        case("sougenbi counter reaching zero after a missed tap ends without retrying", "SougenbiTask", sougenbi_stage, [
+            ("SougenbiChallenge", sougenbi_stage - {"SougenbiChallengeButton"} | {"PageSougenbiStage", "SougenbiTicketEmpty"})], expected_count=0)
+        case("sougenbi defeat stops without counting", "SougenbiTask", sougenbi_stage, [
+            ("SougenbiChallenge", {"DailyBattleFailed", "DailyBattleResult"}),
+            ("SougenbiFailedBattleResult", sougenbi_stage)], succeeds=False)
         goryou_stage = {"PageGoryouStage", "GoryouTargetType", "GoryouLayerSelected", "GoryouLockedTeam", "GoryouChallengeButton"}
         case("goryou already at target needs only challenge and settlement", "GoryouTask", goryou_stage, [
             ("GoryouChallenge", {"DailyBattleResult"}),

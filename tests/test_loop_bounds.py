@@ -13,7 +13,7 @@ ALLOWED_RETURNS = {
     "StartupCheckServer": "等待资源下载，时长不可预估",
     "StartupDownloading": "等待资源下载，时长不可预估",
     **{f"Navigate{page}": "到达目标页才返回；调用方同帧认可目标页，导航动作已限次"
-       for page in ("Awakening", "Bondling", "Chapter", "Goryou", "Explore", "Home", "Mail", "QuestTasks", "Quests", "Raid")},
+       for page in ("Awakening", "Bondling", "Chapter", "Goryou", "Sougenbi", "Explore", "Home", "Mail", "QuestTasks", "Quests", "Raid")},
 }
 
 
@@ -154,6 +154,7 @@ class PerBattleBudgetTest(unittest.TestCase):
                                   "CommonBattleWait", "CommonBattleEnteringWait", "DailyRewardPopup"},
         "AwakeningBattleEntry": {"AwakeningChallenge", "DailyPrepare", "AwakeningBattleResult"} | SHARED,
         "GoryouBattleEntry": {"GoryouChallenge", "DailyPrepare", "GoryouBattleResult"} | SHARED,
+        "SougenbiBattleEntry": {"SougenbiChallenge", "DailyPrepare", "SougenbiBattleResult"} | SHARED,
         "BondlingSearchBattleEntry": {"BondlingSearchStart", "DailyPrepare", "BondlingSearchBattleResult",
                                       "BondlingSearchGatherLater"} | SHARED,
         "ExplorationFieldReady": {"DailyPrepare", "ExplorationBattleResult", "ExplorationBattleFailedResult",

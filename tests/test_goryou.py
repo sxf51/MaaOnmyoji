@@ -83,6 +83,7 @@ class GoryouTest(unittest.TestCase):
                          ['PageGoryouStage', 'GoryouKeyEmpty'])
         self.assertEqual(self.nodes['GoryouNoKey']['next'][0], 'GoryouFinish')
         self.assertEqual(self.nodes['GoryouKeyEmpty']['recognition']['param']['expected'], '^0$')
+        self.assertTrue(self.nodes['GoryouKeyEmpty']['recognition']['param']['only_rec'])
         self.assertEqual(self.nodes['GoryouFinish']['action']['param']['custom_action'], 'TargetCountFinish')
         self.assertIn('GoryouNoKeyPopup', self.nodes['GoryouWaitBattleStart']['next'])
 

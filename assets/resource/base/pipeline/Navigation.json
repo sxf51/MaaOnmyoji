@@ -2749,5 +2749,182 @@
             "CommonUnknownPopup"
         ],
         "timeout": 60000
+    },
+    "PageSougenbiStage": {
+        "doc": "业原火层数页：左上角标题“御魂”、左侧阵名列表含“嗔之阵”（三个阵名总是同时显示，且只出现在业原火）、挑战按钮可见。右上角“业原火”是动态艺术字，实测会被读成“北原火”，不用于判定。与八岐大蛇层数页（PageMitamaStage）互不命中。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "expected": "^御魂$",
+                                "roi": [
+                                    140,
+                                    5,
+                                    180,
+                                    65
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "expected": "^嗔之阵$",
+                                "roi": [
+                                    128,
+                                    95,
+                                    140,
+                                    270
+                                ]
+                            }
+                        }
+                    },
+                    "SougenbiChallengeButton"
+                ]
+            }
+        }
+    },
+    "PageMitamaZoneTab": {
+        "doc": "御魂下带左侧页签的层数页（八岐大蛇/业原火/卑弥呼/永生之海）：标题“御魂”且有“队伍预设”；御魂菜单页没有队伍预设。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "expected": "^御魂$",
+                                "roi": [
+                                    140,
+                                    5,
+                                    180,
+                                    65
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "expected": "^队伍预设$",
+                                "roi": [
+                                    728,
+                                    605,
+                                    103,
+                                    40
+                                ]
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    },
+    "NativeAtSougenbi": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "doc": "确认已在业原火层数页。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageSougenbiStage"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": []
+    },
+    "NativeToSougenbiSwitchTab": {
+        "doc": "在八岐大蛇、卑弥呼或永生之海层数页点击左侧“业原火”页签。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageMitamaZoneTab"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    25,
+                    250,
+                    45,
+                    135
+                ]
+            }
+        },
+        "next": [],
+        "pre_delay": 0,
+        "post_delay": 1500,
+        "pre_wait_freezes": 0,
+        "on_error": [],
+        "max_hit": 5
+    },
+    "NativeToSougenbiOpenPanel": {
+        "doc": "在御魂菜单点击业原火立绘。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageMitamaMenu"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    430,
+                    100,
+                    190,
+                    280
+                ]
+            }
+        },
+        "next": [],
+        "pre_delay": 0,
+        "post_delay": 1500,
+        "pre_wait_freezes": 0,
+        "on_error": [],
+        "max_hit": 5
+    },
+    "NavigateSougenbi": {
+        "doc": "识别当前页并导航到业原火层数页，已在业原火时直接返回；探索→御魂、庭院→探索两步复用八岐大蛇导航节点。",
+        "next": [
+            "NativeNavigationBlocked",
+            "[JumpBack]NativeResultDismiss",
+            "[JumpBack]NativeDailyRewardPopup",
+            "[JumpBack]NativeNavCancelNoResource",
+            "[JumpBack]NativeNavConfirmExitExplore",
+            "[JumpBack]NativeNavConfirmExitTeam",
+            "[JumpBack]NativeNavDismissRaidTarget",
+            "[JumpBack]NativeNavCancelInvite",
+            "[JumpBack]NativeNavCancelCreate",
+            "[JumpBack]NativeLoading",
+            "NativeAtSougenbi",
+            "[JumpBack]NativeToSougenbiSwitchTab",
+            "[JumpBack]NativeToSougenbiOpenPanel",
+            "[JumpBack]NativeToMitamaStageNavOpenMitama",
+            "[JumpBack]NativeToMitamaStageNavOpenExplore",
+            "[JumpBack]StartupCloseAnnouncement",
+            "[JumpBack]StartupCancelIllustration",
+            "[JumpBack]NativeNavClose",
+            "[JumpBack]NativeNavBack",
+            "[JumpBack]NativeReturnMainHomeButton",
+            "[JumpBack]NativeExitXianTing",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ],
+        "timeout": 60000
     }
 }
