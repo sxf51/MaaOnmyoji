@@ -2566,5 +2566,183 @@
                 ]
             }
         }
+    },
+    "PageGoryouMenu": {
+        "doc": "御灵之境（四种御灵立绘选择页）：左上角标题。",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "^御灵之境$",
+                "roi": [
+                    140,
+                    5,
+                    180,
+                    65
+                ]
+            }
+        }
+    },
+    "PageGoryouStage": {
+        "doc": "御灵层数页：左上角标题“御灵”且右下角挑战按钮可见。御灵挑战按钮比觉醒更靠左，挑战识别区域单独设置。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "expected": "^御灵$",
+                                "roi": [
+                                    140,
+                                    5,
+                                    180,
+                                    65
+                                ]
+                            }
+                        }
+                    },
+                    "GoryouChallengeButton"
+                ]
+            }
+        }
+    },
+    "NavGoryouEntry": {
+        "doc": "探索地图底部的御灵文字标签。底栏 OCR 常把整排入口合并，优先模板，文字单独成框时 OCR 兜底。",
+        "recognition": {
+            "type": "Or",
+            "param": {
+                "any_of": [
+                    {
+                        "recognition": {
+                            "type": "TemplateMatch",
+                            "param": {
+                                "template": "Navigation/GoryouEntry.png",
+                                "roi": [
+                                    5,
+                                    614,
+                                    1270,
+                                    106
+                                ],
+                                "threshold": 0.8
+                            }
+                        }
+                    },
+                    {
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "expected": "^御灵$",
+                                "roi": [
+                                    5,
+                                    614,
+                                    1270,
+                                    106
+                                ]
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    },
+    "NativeToGoryouNavOpenGoryou": {
+        "doc": "从探索地图底部入口进入御灵之境。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageExplore",
+                    "NavGoryouEntry"
+                ],
+                "box_index": 1
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true,
+                "target_offset": [
+                    0,
+                    -45,
+                    0,
+                    45
+                ]
+            }
+        },
+        "next": [],
+        "pre_delay": 0,
+        "post_delay": 2000,
+        "pre_wait_freezes": 0,
+        "on_error": [],
+        "max_hit": 5
+    },
+    "NativeToGoryouNavOpenExplore": {
+        "doc": "从庭院进入探索地图，再前往御灵。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageHome",
+                    "NavOpenExplore"
+                ],
+                "box_index": 1
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "next": [],
+        "pre_delay": 0,
+        "post_delay": 2000,
+        "pre_wait_freezes": 0,
+        "on_error": [],
+        "max_hit": 5
+    },
+    "NativeAtGoryou": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "doc": "确认已在御灵之境或御灵层数页。",
+        "recognition": {
+            "type": "Or",
+            "param": {
+                "any_of": [
+                    "PageGoryouMenu",
+                    "PageGoryouStage"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": []
+    },
+    "NavigateGoryou": {
+        "doc": "识别当前页并导航到御灵，已在御灵页面时直接返回。",
+        "next": [
+            "NativeNavigationBlocked",
+            "NativeResultBlocked",
+            "[JumpBack]NativeDailyRewardPopup",
+            "[JumpBack]NativeNavCancelNoResource",
+            "[JumpBack]NativeNavConfirmExitExplore",
+            "[JumpBack]NativeNavConfirmExitTeam",
+            "[JumpBack]NativeNavDismissRaidTarget",
+            "[JumpBack]NativeNavCancelInvite",
+            "[JumpBack]NativeNavCancelCreate",
+            "[JumpBack]NativeLoading",
+            "NativeAtGoryou",
+            "[JumpBack]NativeToGoryouNavOpenGoryou",
+            "[JumpBack]NativeToGoryouNavOpenExplore",
+            "[JumpBack]StartupCloseAnnouncement",
+            "[JumpBack]StartupCancelIllustration",
+            "[JumpBack]NativeNavClose",
+            "[JumpBack]NativeNavBack",
+            "[JumpBack]NativeReturnMainHomeButton",
+            "[JumpBack]NativeExitXianTing",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ],
+        "timeout": 60000
     }
 }

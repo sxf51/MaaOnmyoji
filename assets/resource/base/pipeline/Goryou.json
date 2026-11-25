@@ -1,0 +1,822 @@
+{
+    "GoryouTask": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "doc": "导航到配置的御灵和层数，按成功结算次数重复挑战；达到次数或御灵境之钥清零时结束。御灵不消耗体力、无加成、不能组队。",
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "TargetCountInit",
+                "custom_action_param": {
+                    "target_count": 10
+                }
+            }
+        },
+        "next": [
+            "GoryouNavigate",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ]
+    },
+    "GoryouNavigate": {
+        "doc": "从当前页面进入御灵之境或御灵层数页。",
+        "next": [
+            "NativeNavigationBlocked",
+            "NativeResultBlocked",
+            "[JumpBack]NativeDailyRewardPopup",
+            "[JumpBack]NativeNavCancelNoResource",
+            "[JumpBack]NativeNavConfirmExitExplore",
+            "[JumpBack]NativeNavConfirmExitTeam",
+            "[JumpBack]NativeNavDismissRaidTarget",
+            "[JumpBack]NativeNavCancelInvite",
+            "[JumpBack]NativeNavCancelCreate",
+            "[JumpBack]NativeLoading",
+            "GoryouNavigationReady",
+            "[JumpBack]NavigateGoryou",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ],
+        "timeout": 60000
+    },
+    "GoryouNavigationReady": {
+        "doc": "进入御灵页面后选择配置的御灵。",
+        "recognition": {
+            "type": "Or",
+            "param": {
+                "any_of": [
+                    "PageGoryouMenu",
+                    "PageGoryouStage"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "GoryouSelectType"
+        ]
+    },
+    "GoryouTargetType": {
+        "doc": "识别层数页右上角的御灵名称（艺术字）；由“御灵类型”选项改写。",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "^暗神龙$",
+                "roi": [
+                    920,
+                    92,
+                    340,
+                    88
+                ]
+            }
+        }
+    },
+    "GoryouSelectType": {
+        "doc": "当前御灵不符合配置时，切换到指定御灵。",
+        "next": [
+            "GoryouTypeReady",
+            "GoryouOpenType",
+            "GoryouSwitchType",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ],
+        "timeout": 15000
+    },
+    "GoryouTypeReady": {
+        "doc": "确认当前御灵正确后选择层数。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageGoryouStage",
+                    "GoryouTargetType"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "GoryouSearchLayer"
+        ]
+    },
+    "GoryouOpenType": {
+        "doc": "在御灵之境点击配置的御灵立绘；点击区域由“御灵类型”选项改写。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageGoryouMenu"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    130,
+                    150,
+                    170,
+                    300
+                ]
+            }
+        },
+        "next": [
+            "GoryouSelectType"
+        ],
+        "pre_delay": 0,
+        "post_delay": 1000,
+        "pre_wait_freezes": 0,
+        "on_error": [],
+        "max_hit": 3
+    },
+    "GoryouSwitchType": {
+        "doc": "在层数页左侧竖排页签切换到配置的御灵；点击区域由“御灵类型”选项改写。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageGoryouStage"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": [
+                    25,
+                    95,
+                    45,
+                    130
+                ]
+            }
+        },
+        "next": [
+            "GoryouSelectType"
+        ],
+        "pre_delay": 0,
+        "post_delay": 1000,
+        "pre_wait_freezes": 0,
+        "on_error": [],
+        "max_hit": 3
+    },
+    "GoryouLayerText": {
+        "doc": "识别配置的御灵层数文字（仅三层，一屏可见无需滚动）；ROI 避开左侧鸟居图标（否则 OCR 读成“开叁层”）；由“御灵层数”选项改写。",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "^(叁|三)层$",
+                "roi": [
+                    128,
+                    95,
+                    120,
+                    320
+                ]
+            }
+        }
+    },
+    "GoryouLayerSelected": {
+        "doc": "确认目标层数文字及红色选中背景；由“御灵层数”选项改写。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageGoryouStage",
+                    "GoryouTargetType",
+                    {
+                        "sub_name": "GoryouSelectedLayerText",
+                        "recognition": {
+                            "type": "OCR",
+                            "param": {
+                                "expected": "^(叁|三)层$",
+                                "roi": [
+                                    128,
+                                    95,
+                                    120,
+                                    320
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "recognition": {
+                            "type": "ColorMatch",
+                            "param": {
+                                "roi": "GoryouSelectedLayerText",
+                                "roi_offset": [
+                                    -28,
+                                    -8,
+                                    60,
+                                    16
+                                ],
+                                "method": 4,
+                                "lower": [
+                                    120,
+                                    15,
+                                    10
+                                ],
+                                "upper": [
+                                    255,
+                                    110,
+                                    100
+                                ],
+                                "count": 120
+                            }
+                        }
+                    }
+                ],
+                "box_index": 2
+            }
+        }
+    },
+    "GoryouSearchLayer": {
+        "doc": "查找配置层数；选中后才进入战前准备。",
+        "next": [
+            "GoryouLayerReady",
+            "GoryouSelectLayer",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ],
+        "timeout": 20000
+    },
+    "GoryouLayerReady": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "doc": "已确认目标层数选中，开始战前准备。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "GoryouLayerSelected"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "GoryouPreparation"
+        ]
+    },
+    "GoryouSelectLayer": {
+        "doc": "点击配置的御灵层数。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageGoryouStage",
+                    "GoryouTargetType",
+                    "GoryouLayerText"
+                ],
+                "box_index": 2
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "next": [
+            "GoryouSearchLayer"
+        ],
+        "pre_delay": 0,
+        "post_delay": 1000,
+        "pre_wait_freezes": 0,
+        "on_error": [],
+        "max_hit": 3
+    },
+    "GoryouPreparation": {
+        "doc": "按顺序进入首个启用的准备步骤；选项关闭的步骤由 enabled 原生跳过。御灵没有加成步骤。",
+        "action": "DoNothing",
+        "next": [
+            "GoryouLockTeam",
+            "GoryouPreset",
+            "GoryouBattleEntry",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ]
+    },
+    "GoryouLockTeam": {
+        "doc": "确认阵容锁定；未锁定时点击锁图标。",
+        "next": [
+            "GoryouLockedTeam",
+            "[JumpBack]GoryouUnlockTeam",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ],
+        "action": "DoNothing"
+    },
+    "GoryouLockedTeam": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "TemplateMatch",
+            "param": {
+                "template": "Common/FormationLocked.png",
+                "roi": [
+                    680,
+                    645,
+                    80,
+                    65
+                ],
+                "threshold": 0.9
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "GoryouPreset",
+            "GoryouBattleEntry",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ]
+    },
+    "GoryouUnlockTeam": {
+        "doc": "点击未锁定图标，锁定御灵阵容。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageGoryouStage",
+                    {
+                        "recognition": {
+                            "type": "TemplateMatch",
+                            "param": {
+                                "template": "Common/FormationUnlocked.png",
+                                "roi": [
+                                    680,
+                                    645,
+                                    80,
+                                    65
+                                ],
+                                "threshold": 0.9
+                            }
+                        }
+                    }
+                ],
+                "box_index": 1
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "next": [],
+        "pre_delay": 0,
+        "post_delay": 1000,
+        "pre_wait_freezes": 0,
+        "on_error": [],
+        "max_hit": 3
+    },
+    "GoryouPreset": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "doc": "配置本任务的预设页面与返回位置，完成换队后才继续准备。",
+        "enabled": false,
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "NodeOverride",
+                "custom_action_param": {
+                    "TeamPresetContext": {
+                        "recognition": {
+                            "type": "And",
+                            "param": {
+                                "all_of": [
+                                    "PageGoryouStage"
+                                ]
+                            }
+                        }
+                    },
+                    "TeamPresetEntryText": {
+                        "recognition": {
+                            "param": {
+                                "roi": [
+                                    728,
+                                    605,
+                                    103,
+                                    40
+                                ]
+                            }
+                        }
+                    },
+                    "TeamPresetOpen": {
+                        "action": {
+                            "param": {
+                                "target": [
+                                    750,
+                                    558,
+                                    52,
+                                    50
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "anchor": {
+            "TeamPresetReturn": "GoryouPresetDone"
+        },
+        "next": [
+            "TeamPresetRun"
+        ]
+    },
+    "GoryouPresetDone": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "doc": "确认预设已应用并返回挑战页，开始挑战。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageGoryouStage"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "GoryouBattleEntry",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ]
+    },
+    "GoryouKeyCount": {
+        "doc": "右上角御灵境之钥数量（御灵之境与层数页同一位置）。",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "^\\d+$",
+                "roi": [
+                    900,
+                    10,
+                    145,
+                    40
+                ]
+            }
+        }
+    },
+    "GoryouKeyEmpty": {
+        "doc": "御灵境之钥为 0。",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "^0$",
+                "roi": [
+                    900,
+                    10,
+                    145,
+                    40
+                ]
+            }
+        }
+    },
+    "GoryouNoKey": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "doc": "挑战前在层数页确认御灵境之钥已清零，正常结束任务（不视为失败）。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageGoryouStage",
+                    "GoryouKeyEmpty"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "GoryouFinish",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ]
+    },
+    "GoryouNoKeyPopup": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "doc": "兜底：点击挑战后弹出钥匙不足提示时，取消提示并正常结束。",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": [
+                    "钥不足",
+                    "之钥不足",
+                    "钥匙不足"
+                ],
+                "roi": [
+                    289,
+                    206,
+                    709,
+                    277
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "GoryouNoKeyPopupClose"
+        ]
+    },
+    "GoryouNoKeyPopupClose": {
+        "doc": "关闭钥匙不足提示，回到层数页后结束。",
+        "next": [
+            "GoryouNoKeyPopupClosed",
+            "[JumpBack]NativeNavCancelNoResource",
+            "[JumpBack]NativeNavClose",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ],
+        "timeout": 10000
+    },
+    "GoryouNoKeyPopupClosed": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageGoryouStage"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "GoryouFinish",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ]
+    },
+    "GoryouBattleEntry": {
+        "doc": "开始一场新挑战前重置点击重试上限；钥匙清零时结束。",
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "ResetCount",
+                "custom_action_param": {
+                    "nodes": [
+                        "GoryouChallenge",
+                        "CommonBattleEnableAuto",
+                        "CommonNetworkRetry",
+                        "CommonRewardOverflow",
+                        "MitamaTreasurePopup",
+                        "CommonBattleMark",
+                        "DailyPrepare",
+                        "GoryouBattleResult",
+                        "CommonBattleWait",
+                        "CommonBattleEnteringWait",
+                        "CommonCutscene",
+                        "DailyRewardPopup",
+                        "CommonRewardItemDetail",
+                        "CommonSoulMismatch",
+                        "CommonSoulMismatchConfirm"
+                    ]
+                }
+            }
+        },
+        "next": [
+            "GoryouNoKey",
+            "GoryouNoKeyPopup",
+            "GoryouChallenge",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ],
+        "pre_delay": 0,
+        "post_delay": 0,
+        "anchor": {
+            "CommonBattleAuto": "CommonBattleEnableAuto"
+        }
+    },
+    "GoryouChallengeButton": {
+        "doc": "御灵挑战按钮比觉醒/御魂更靠左（文字约 x1052-1137, y600-635），ROI 左移以完整包含。",
+        "recognition": {
+            "type": "OCR",
+            "param": {
+                "expected": "^挑战$",
+                "roi": [
+                    1020,
+                    560,
+                    200,
+                    150
+                ]
+            }
+        }
+    },
+    "GoryouChallenge": {
+        "doc": "确认御灵、层数和挑战按钮后开始战斗。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "GoryouLayerSelected",
+                    "GoryouChallengeButton"
+                ],
+                "box_index": 1
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "next": [
+            "GoryouWaitBattleStart"
+        ],
+        "pre_delay": 0,
+        "post_delay": 1000,
+        "pre_wait_freezes": 0,
+        "on_error": [],
+        "max_hit": 3
+    },
+    "GoryouWaitBattleStart": {
+        "doc": "等待过场、布阵载入、准备、正式战斗或结算；仅原挑战目标仍存在时允许有界重试。",
+        "next": [
+            "GoryouNoKeyPopup",
+            "GoryouBattleStarted",
+            "[JumpBack]CommonSoulMismatch",
+            "GoryouChallenge",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ],
+        "timeout": 60000
+    },
+    "GoryouBattleStarted": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "doc": "已进入准备、战斗或结算，转入战斗处理。",
+        "recognition": {
+            "type": "Or",
+            "param": {
+                "any_of": [
+                    "DailyPrepare",
+                    "PageBattle",
+                    "DailyBattleResult",
+                    "DailyBattleFailed",
+                    "MitamaTreasurePopup",
+                    "PageLoading",
+                    "PageBattleEntering"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "GoryouBattle"
+        ],
+        "anchor": {
+            "CommonBattleAuto": "CommonBattleEnableAuto"
+        }
+    },
+    "GoryouBattle": {
+        "doc": "处理准备、自动战斗、结算与特殊奖励，不将等待画面计为胜利。",
+        "next": [
+            "[JumpBack][Anchor]CommonBattleAuto",
+            "[JumpBack]CommonBattleMark",
+            "[JumpBack]CommonBattleWait",
+            "[JumpBack]MitamaTreasurePopup",
+            "GoryouBattleFailure",
+            "[JumpBack]CommonRewardItemDetail",
+            "[JumpBack]CommonRewardOverflow",
+            "GoryouBattleResult",
+            "[JumpBack]CommonBattleEnteringWait",
+            "[JumpBack]CommonSoulMismatch",
+            "[JumpBack]DailyPrepare",
+            "[JumpBack]DailyRewardPopup",
+            "[JumpBack]CommonNetworkRetry",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ],
+        "timeout": 180000,
+        "pre_delay": 0,
+        "post_delay": 0
+    },
+    "GoryouBattleResult": {
+        "doc": "关闭御灵成功结算，等待返回所选御灵和层数。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "DailyBattleResult"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "next": [
+            "[JumpBack]MitamaTreasurePopup",
+            "GoryouBattleFailure",
+            "GoryouBattleResult",
+            "[JumpBack]DailyRewardPopup",
+            "GoryouAfterResult",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ],
+        "pre_delay": 0,
+        "post_delay": 600,
+        "pre_wait_freezes": 0,
+        "on_error": [],
+        "post_wait_freezes": 0,
+        "max_hit": 5
+    },
+    "GoryouAfterResult": {
+        "doc": "确认成功结算已返回正确御灵和层数后，累计成功次数并决定继续或收尾。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageGoryouStage",
+                    "GoryouLayerSelected"
+                ],
+                "box_index": 0
+            }
+        },
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "TargetCountProgress",
+                "custom_action_param": {
+                    "count": 1,
+                    "continue_node": "GoryouBattleEntry",
+                    "finish_node": "GoryouFinish"
+                }
+            }
+        },
+        "next": [
+            "GoryouBattleEntry"
+        ],
+        "pre_delay": 0,
+        "post_delay": 0
+    },
+    "GoryouFinish": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "doc": "达到成功次数或钥匙清零后结束，停留在御灵层数页。",
+        "action": {
+            "type": "Custom",
+            "param": {
+                "custom_action": "TargetCountFinish"
+            }
+        }
+    },
+    "GoryouBattleFailure": {
+        "doc": "战斗失败进入独立退出路径，不增加成功次数。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "DailyBattleFailed"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "GoryouFailedBattleResult",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ],
+        "timeout": 30000
+    },
+    "GoryouFailedBattleResult": {
+        "doc": "关闭御灵失败结算，返回后停止任务。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "DailyBattleResult"
+                ]
+            }
+        },
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "next": [
+            "GoryouFailedReturn",
+            "GoryouFailedBattleResult",
+            "[JumpBack]CommonBountyInterrupt",
+            "CommonUnknownPopup"
+        ],
+        "pre_delay": 0,
+        "post_delay": 1500,
+        "pre_wait_freezes": 0,
+        "on_error": [],
+        "max_hit": 5
+    },
+    "GoryouFailedReturn": {
+        "pre_delay": 0,
+        "post_delay": 0,
+        "doc": "返回御灵层数页后以失败结束。",
+        "recognition": {
+            "type": "And",
+            "param": {
+                "all_of": [
+                    "PageGoryouStage"
+                ]
+            }
+        },
+        "action": "DoNothing",
+        "next": [
+            "NativeFlowFailed"
+        ]
+    }
+}

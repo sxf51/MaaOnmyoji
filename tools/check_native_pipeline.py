@@ -165,6 +165,7 @@ class Input(CustomAction):
 STEP_DONE = {
     "MitamaLockedTeam", "MitamaPresetDone", "MitamaCheckBuffStatusOpen", "MitamaCheckBuffStatusClose",
     "AwakeningLockedTeam", "AwakeningPresetDone", "AwakeningBuffEnabled", "AwakeningBuffDisabled",
+    "GoryouLockedTeam", "GoryouPresetDone",
     "ExploreRaidLoopRound",
 }
 
@@ -255,7 +256,7 @@ def run_case(resource, controller, nodes, name, entry, flags, events=(), expecte
         if "next" in original:
             node["next"] = original["next"]
         override[key] = node
-    for entry_node in ("MitamaTask", "ExplorationTask", "RealmRaidTask", "GuildRaidTask", "CommonActivityTask", "AwakeningTask", "BondlingSearchTask", "TeamMemberTask"):
+    for entry_node in ("MitamaTask", "ExplorationTask", "RealmRaidTask", "GuildRaidTask", "CommonActivityTask", "AwakeningTask", "GoryouTask", "BondlingSearchTask", "TeamMemberTask"):
         # Same shape as task options: the report option replaces custom_action_param whole, the count lives in attach.
         override[entry_node]["attach"] = {"target_count": requested_count}
         override[entry_node]["action"] = {"param": {"custom_action_param": {"report_drops": False}}}
@@ -269,6 +270,7 @@ def run_case(resource, controller, nodes, name, entry, flags, events=(), expecte
     for step in ("AwakeningEnableBuff", "AwakeningDisableBuff"):
         override[step]["enabled"] = awakening_buff
     override["AwakeningPreset"]["enabled"] = preset_task == "Awakening"
+    override["GoryouPreset"]["enabled"] = preset_task == "Goryou"
     if stop_after_input:
         override[stop_after_input]['next'] = []
     # Cases entering the shared leader flow midway never pass an entry node, so give them Mitama's ending.
@@ -340,7 +342,7 @@ def main():
         case('invitation hiding the challenge is refused, then the challenge is clicked', 'MitamaBattleModeDestination', {'CommonRefuseBounty'},
             [('CommonRefuseBounty', {'MitamaChallenge'}), ('MitamaChallenge', set())], stop_after_input='MitamaChallenge')
         for page, entry in [('Home', 'NavigateHome'), ('Explore', 'NavigateExplore'),
-                            ('MitamaStage', 'NavigateMitamaStage'), ('AwakeningStage', 'NavigateAwakening'), ('Bondling', 'NavigateBondling'),
+                            ('MitamaStage', 'NavigateMitamaStage'), ('AwakeningStage', 'NavigateAwakening'), ('GoryouStage', 'NavigateGoryou'), ('Bondling', 'NavigateBondling'),
                             ('Raid', 'NavigateRaid'), ('Chapter', 'NavigateChapter'), ('Mail', 'NavigateMail'),
                             ('QuestTasks', 'NavigateQuestTasks'), ('Quests', 'NavigateQuests')]:
             # The invite is rare, so it is checked only once the page itself is no longer recognized.
@@ -1608,6 +1610,31 @@ def main():
             ("BondlingSearchStart", {"DailyBattleFailed", "DailyBattleResult"}),
             ("BondlingSearchFailedBattleResult", bond)], succeeds=False)
         case("bondling stops on stamina prompt without searching", "BondlingSearchBattleEntry", bond | {"DailyNoResource"}, succeeds=False)
+        goryou_stage = {"PageGoryouStage", "GoryouTargetType", "GoryouLayerSelected", "GoryouLockedTeam", "GoryouChallengeButton"}
+        case("goryou already at target needs only challenge and settlement", "GoryouTask", goryou_stage, [
+            ("GoryouChallenge", {"DailyBattleResult"}),
+            ("GoryouBattleResult", goryou_stage)], expected_count=1, expected_steps=["GoryouLockedTeam"])
+        case("goryou routes from courtyard through the explore bottom bar and menu", "GoryouTask", {"PageHome", "NavOpenExplore"}, [
+            ("NativeToGoryouNavOpenExplore", {"PageExplore", "NavGoryouEntry"}),
+            ("NativeToGoryouNavOpenGoryou", {"PageGoryouMenu"}),
+            ("GoryouOpenType", goryou_stage),
+            ("GoryouChallenge", {"DailyBattleResult"}),
+            ("GoryouBattleResult", goryou_stage)], expected_count=1)
+        case("goryou switches wrong spirit then selects the floor", "GoryouTask", {"PageGoryouStage", "GoryouChallengeButton"}, [
+            ("GoryouSwitchType", {"PageGoryouStage", "GoryouTargetType", "GoryouLayerText", "GoryouChallengeButton"}),
+            ("GoryouSelectLayer", goryou_stage),
+            ("GoryouChallenge", {"DailyBattleResult"}),
+            ("GoryouBattleResult", goryou_stage)], expected_count=1)
+        case("goryou with no keys finishes without challenging", "GoryouTask", goryou_stage | {"GoryouKeyEmpty"}, expected_count=0)
+        case("goryou keys running out ends the task normally before the target count", "GoryouTask", goryou_stage, [
+            ("GoryouChallenge", {"DailyBattleResult"}),
+            ("GoryouBattleResult", goryou_stage | {"GoryouKeyEmpty"})], requested_count=3, expected_count=1)
+        case("goryou key shortage popup after challenge ends the task normally", "GoryouTask", goryou_stage, [
+            ("GoryouChallenge", {"GoryouNoKeyPopup", "NavCancelNoResource"}),
+            ("NativeNavCancelNoResource", goryou_stage)], expected_count=0)
+        case("goryou defeat stops without counting", "GoryouTask", goryou_stage, [
+            ("GoryouChallenge", {"DailyBattleFailed", "DailyBattleResult"}),
+            ("GoryouFailedBattleResult", goryou_stage)], succeeds=False)
         case("awakening routes from courtyard without forcing a return between battles", "AwakeningTask", {"PageHome", "NavOpenExplore"}, [
             ("NativeToAwakeningNavOpenExplore", {"PageExplore", "NavOpenAwakening"}),
             ("NativeToAwakeningNavOpenAwakening", {"PageAwakeningMenu"}),

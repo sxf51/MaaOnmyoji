@@ -6,7 +6,7 @@ PAGES = (
     "NoResource", "Bounty", "Reward", "ExitExplore", "ExitTeam", "RaidTarget", "Mail",
     "TeamInvite", "TeamCreate", "TeamList", "TeamRoom", "QuestTasks", "Quests",
     "Raid", "ChapterField", "Chapter", "MitamaStage", "MitamaMenu",
-    "AwakeningStage", "AwakeningMenu", "Bondling", "Explore", "Home", "BattleEntering", "Battle", "Result", "Loading",
+    "AwakeningStage", "AwakeningMenu", "GoryouStage", "GoryouMenu", "Bondling", "Explore", "Home", "BattleEntering", "Battle", "Result", "Loading",
 )
 
 

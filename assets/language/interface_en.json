@@ -1,6 +1,8 @@
 {
     "awakening_task": "Awakening dungeon",
     "awakening_task_doc": "Solo farming for the selected Kirin and floor, with optional team preset and awakening-material buff; count completed victories and stop on purchase or insufficient-stamina prompts.",
+    "goryou_task": "Goryou (Spirit) dungeon",
+    "goryou_task_doc": "Solo farming for the selected Goryou and floor; stops after the configured number of victories or when Goryou keys run out. No stamina or buff involved; optional formation lock, team preset and friendly mark.",
     "bondling_search_task": "Bondling Fairyland - Explore",
     "bondling_search_task_doc": "Navigate to the Bondling Fairyland explore page and repeat solo explores, counting completed victories; supports team lock, team preset, auto-ready and ally green mark. Stops when three explore clicks fail to start a battle (five bondlings already found), or on purchase or insufficient-stamina prompts.",
     "project_name": "Onmyoji Assistant",
