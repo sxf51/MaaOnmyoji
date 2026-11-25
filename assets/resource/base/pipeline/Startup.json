@@ -359,7 +359,7 @@
     "ReturnMain": {
         "next": [
             "NativeNavigationBlocked",
-            "NativeResultBlocked",
+            "[JumpBack]NativeResultDismiss",
             "[JumpBack]NativeDailyRewardPopup",
             "[JumpBack]NativeNavCancelNoResource",
             "[JumpBack]NativeNavConfirmExitExplore",

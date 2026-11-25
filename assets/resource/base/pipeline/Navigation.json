@@ -1116,9 +1116,12 @@
         "recognition": "DirectHit",
         "inverse": true
     },
-    "NativeResultBlocked": {
+    "NativeResultDismiss": {
         "pre_delay": 0,
-        "post_delay": 0,
+        "post_delay": 1200,
+        "pre_wait_freezes": 0,
+        "post_wait_freezes": 0,
+        "doc": "导航开始时停在上一场遗留的结算页（“点击屏幕继续”）时，点击提示文字关闭结算后继续导航；不计入任何挑战次数。正式战斗与布阵载入仍由 NativeNavigationBlocked 拦截。",
         "recognition": {
             "type": "And",
             "param": {
@@ -1127,13 +1130,15 @@
                 ]
             }
         },
-        "action": "DoNothing",
-        "next": [
-            "NativeNever",
-            "[JumpBack]CommonBountyInterrupt",
-            "CommonUnknownPopup"
-        ],
-        "timeout": 1
+        "action": {
+            "type": "Click",
+            "param": {
+                "target": true
+            }
+        },
+        "max_hit": 10,
+        "next": [],
+        "on_error": []
     },
     "NativeNavConfirmExitExplore": {
         "recognition": {
@@ -1435,10 +1440,10 @@
         "action": "DoNothing"
     },
     "NavigateHome": {
-        "doc": "原生导航：目标页优先；点击后回跳重新识别，战斗/结算中拒绝导航。 登录公告和插画下载提示只出现在登录后的庭院上，所以只有回庭院时在确认到达之前检查；其它目的地放在到达检查之后。",
+        "doc": "原生导航：目标页优先；点击后回跳重新识别，战斗中拒绝导航，遗留结算页先点击关闭。 登录公告和插画下载提示只出现在登录后的庭院上，所以只有回庭院时在确认到达之前检查；其它目的地放在到达检查之后。",
         "next": [
             "NativeNavigationBlocked",
-            "NativeResultBlocked",
+            "[JumpBack]NativeResultDismiss",
             "[JumpBack]NativeDailyRewardPopup",
             "[JumpBack]NativeNavCancelNoResource",
             "[JumpBack]NativeNavConfirmExitExplore",
@@ -1499,10 +1504,10 @@
         "doc": "从庭院打开探索地图。"
     },
     "NavigateExplore": {
-        "doc": "原生导航：目标页优先；点击后回跳重新识别，战斗/结算中拒绝导航。",
+        "doc": "原生导航：目标页优先；点击后回跳重新识别，战斗中拒绝导航，遗留结算页先点击关闭。",
         "next": [
             "NativeNavigationBlocked",
-            "NativeResultBlocked",
+            "[JumpBack]NativeResultDismiss",
             "[JumpBack]NativeDailyRewardPopup",
             "[JumpBack]NativeNavCancelNoResource",
             "[JumpBack]NativeNavConfirmExitExplore",
@@ -1621,10 +1626,10 @@
         "doc": "从庭院打开探索地图。"
     },
     "NavigateMitamaStage": {
-        "doc": "原生导航：目标页优先；点击后回跳重新识别，战斗/结算中拒绝导航。",
+        "doc": "原生导航：目标页优先；点击后回跳重新识别，战斗中拒绝导航，遗留结算页先点击关闭。",
         "next": [
             "NativeNavigationBlocked",
-            "NativeResultBlocked",
+            "[JumpBack]NativeResultDismiss",
             "[JumpBack]NativeDailyRewardPopup",
             "[JumpBack]NativeNavCancelNoResource",
             "[JumpBack]NativeNavConfirmExitExplore",
@@ -1714,10 +1719,10 @@
         "doc": "从庭院打开探索地图。"
     },
     "NavigateRaid": {
-        "doc": "原生导航：目标页优先；点击后回跳重新识别，战斗/结算中拒绝导航。",
+        "doc": "原生导航：目标页优先；点击后回跳重新识别，战斗中拒绝导航，遗留结算页先点击关闭。",
         "next": [
             "NativeNavigationBlocked",
-            "NativeResultBlocked",
+            "[JumpBack]NativeResultDismiss",
             "[JumpBack]NativeDailyRewardPopup",
             "[JumpBack]NativeNavCancelNoResource",
             "[JumpBack]NativeNavConfirmExitExplore",
@@ -1778,10 +1783,10 @@
         "doc": "从庭院打开邮件。"
     },
     "NavigateMail": {
-        "doc": "原生导航：目标页优先；点击后回跳重新识别，战斗/结算中拒绝导航。",
+        "doc": "原生导航：目标页优先；点击后回跳重新识别，战斗中拒绝导航，遗留结算页先点击关闭。",
         "next": [
             "NativeNavigationBlocked",
-            "NativeResultBlocked",
+            "[JumpBack]NativeResultDismiss",
             "[JumpBack]NativeDailyRewardPopup",
             "[JumpBack]NativeNavCancelNoResource",
             "[JumpBack]NativeNavConfirmExitExplore",
@@ -1895,10 +1900,10 @@
         "doc": "展开庭院功能菜单。"
     },
     "NavigateQuestTasks": {
-        "doc": "原生导航：目标页优先；点击后回跳重新识别，战斗/结算中拒绝导航。",
+        "doc": "原生导航：目标页优先；点击后回跳重新识别，战斗中拒绝导航，遗留结算页先点击关闭。",
         "next": [
             "NativeNavigationBlocked",
-            "NativeResultBlocked",
+            "[JumpBack]NativeResultDismiss",
             "[JumpBack]NativeDailyRewardPopup",
             "[JumpBack]NativeNavCancelNoResource",
             "[JumpBack]NativeNavConfirmExitExplore",
@@ -2014,10 +2019,10 @@
         "doc": "展开庭院功能菜单。"
     },
     "NavigateQuests": {
-        "doc": "原生导航：目标页优先；点击后回跳重新识别，战斗/结算中拒绝导航。",
+        "doc": "原生导航：目标页优先；点击后回跳重新识别，战斗中拒绝导航，遗留结算页先点击关闭。",
         "next": [
             "NativeNavigationBlocked",
-            "NativeResultBlocked",
+            "[JumpBack]NativeResultDismiss",
             "[JumpBack]NativeDailyRewardPopup",
             "[JumpBack]NativeNavCancelNoResource",
             "[JumpBack]NativeNavConfirmExitExplore",
@@ -2082,10 +2087,10 @@
         "doc": "返回当前页面的上一级。"
     },
     "NavigateChapter": {
-        "doc": "原生导航：目标页优先；点击后回跳重新识别，战斗/结算中拒绝导航。",
+        "doc": "原生导航：目标页优先；点击后回跳重新识别，战斗中拒绝导航，遗留结算页先点击关闭。",
         "next": [
             "NativeNavigationBlocked",
-            "NativeResultBlocked",
+            "[JumpBack]NativeResultDismiss",
             "[JumpBack]NativeDailyRewardPopup",
             "[JumpBack]NativeNavCancelNoResource",
             "[JumpBack]NativeNavConfirmExitExplore",
@@ -2365,7 +2370,7 @@
         "doc": "识别当前页并导航到觉醒，已在觉醒页面时直接返回。",
         "next": [
             "NativeNavigationBlocked",
-            "NativeResultBlocked",
+            "[JumpBack]NativeResultDismiss",
             "[JumpBack]NativeDailyRewardPopup",
             "[JumpBack]NativeNavCancelNoResource",
             "[JumpBack]NativeNavConfirmExitExplore",
@@ -2527,7 +2532,7 @@
         "doc": "识别当前页并导航到契灵之境探查页，已在探查页时直接返回。",
         "next": [
             "NativeNavigationBlocked",
-            "NativeResultBlocked",
+            "[JumpBack]NativeResultDismiss",
             "[JumpBack]NativeDailyRewardPopup",
             "[JumpBack]NativeNavCancelNoResource",
             "[JumpBack]NativeNavConfirmExitExplore",
@@ -2722,7 +2727,7 @@
         "doc": "识别当前页并导航到御灵，已在御灵页面时直接返回。",
         "next": [
             "NativeNavigationBlocked",
-            "NativeResultBlocked",
+            "[JumpBack]NativeResultDismiss",
             "[JumpBack]NativeDailyRewardPopup",
             "[JumpBack]NativeNavCancelNoResource",
             "[JumpBack]NativeNavConfirmExitExplore",

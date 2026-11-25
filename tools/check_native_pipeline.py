@@ -1583,6 +1583,12 @@ def main():
         case('persistent deployment times out without preparation clicks or count', 'CommonBattleEnteringWait', entering,
             succeeds=False)
         case('deployment blocks navigation without clicking back', 'NavigateHome', entering, succeeds=False)
+        case('leftover settlement is dismissed before navigating home', 'NavigateHome', {'PageResult'}, [
+            ('NativeResultDismiss', {'PageHome'})])
+        case('two-page leftover settlement is dismissed before daily rewards navigate', 'NavigateMail', {'PageResult'}, [
+            ('NativeResultDismiss', {'PageResult'}), ('NativeResultDismiss', {'PageMail'})])
+        case('settlement that never closes stops navigation after ten taps', 'NavigateHome', {'PageResult'},
+            [('NativeResultDismiss', {'PageResult'})] * 10, succeeds=False)
         bond = {"PageBondling", "BondlingSearchButton", "BondlingSearchLockedTeam"}
         case("bondling already on explore page searches and counts once", "BondlingSearchTask", bond, [
             ("BondlingSearchStart", {"DailyBattleResult"}),

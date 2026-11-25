@@ -22,7 +22,7 @@
         "doc": "从当前页面进入御灵之境或御灵层数页。",
         "next": [
             "NativeNavigationBlocked",
-            "NativeResultBlocked",
+            "[JumpBack]NativeResultDismiss",
             "[JumpBack]NativeDailyRewardPopup",
             "[JumpBack]NativeNavCancelNoResource",
             "[JumpBack]NativeNavConfirmExitExplore",

@@ -2,7 +2,7 @@
     "DailyRewardsTask": {
         "next": [
             "NativeNavigationBlocked",
-            "NativeResultBlocked",
+            "[JumpBack]NativeResultDismiss",
             "[JumpBack]NativeDailyRewardPopup",
             "[JumpBack]NativeNavCancelNoResource",
             "[JumpBack]NativeNavConfirmExitExplore",
@@ -534,7 +534,7 @@
     "NativeRewardsToTasks": {
         "next": [
             "NativeNavigationBlocked",
-            "NativeResultBlocked",
+            "[JumpBack]NativeResultDismiss",
             "[JumpBack]NativeDailyRewardPopup",
             "[JumpBack]NativeNavCancelNoResource",
             "[JumpBack]NativeNavConfirmExitExplore",
@@ -552,7 +552,7 @@
     "NativeRewardsToRewards": {
         "next": [
             "NativeNavigationBlocked",
-            "NativeResultBlocked",
+            "[JumpBack]NativeResultDismiss",
             "[JumpBack]NativeDailyRewardPopup",
             "[JumpBack]NativeNavCancelNoResource",
             "[JumpBack]NativeNavConfirmExitExplore",
